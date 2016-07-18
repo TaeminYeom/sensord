@@ -94,6 +94,9 @@ bool physical_sensor::read_fd(std::vector<uint32_t> &ids)
 
 	size = m_sensor_device->read_fd(&_ids);
 
+	if (size == 0)
+		return false;
+
 	for (int i = 0; i < size; ++i)
 		ids.push_back(_ids[i]);
 
