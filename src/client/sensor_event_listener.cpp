@@ -45,7 +45,7 @@ sensor_event_listener::sensor_event_listener()
 , m_thread_state(THREAD_STATE_TERMINATE)
 , m_hup_observer(NULL)
 , m_client_info(sensor_client_info::get_instance())
-, m_axis(SENSORD_AXIS_DEVICE_ORIENTED)
+, m_axis(SENSORD_AXIS_DISPLAY_ORIENTED)
 , m_display_rotation(AUTO_ROTATION_DEGREE_UNKNOWN)
 {
 }
