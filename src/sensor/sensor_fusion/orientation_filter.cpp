@@ -64,8 +64,6 @@ orientation_filter<TYPE>::orientation_filter()
 	m_var_pitch = vec;
 	m_var_azimuth = vec;
 
-	m_magnetic_alignment_factor = 1;
-
 	m_gyro.m_time_stamp = 0;
 }
 
@@ -106,7 +104,7 @@ template <typename TYPE>
 inline void orientation_filter<TYPE>::orientation_triad_algorithm()
 {
 	TYPE arr_acc_e[V1x3S] = {0.0, 0.0, 1.0};
-	TYPE arr_mag_e[V1x3S] = {0.0, (TYPE) m_magnetic_alignment_factor, 0.0};
+	TYPE arr_mag_e[V1x3S] = {0.0, 1.0, 0.0};
 
 	vect<TYPE, V1x3S> acc_e(arr_acc_e);
 	vect<TYPE, V1x3S> mag_e(arr_mag_e);
