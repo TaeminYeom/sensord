@@ -53,6 +53,7 @@ void usage()
 	printf("[ultraviolet] ");
 	printf("[light]\n");
 	printf("[gyro_uncal]");
+	printf("[face_down]");
 
 }
 

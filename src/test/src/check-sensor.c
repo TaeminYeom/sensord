@@ -84,6 +84,9 @@ void printpollinglogs(sensor_type_t type,sensor_data_t data)
 	case(GYROSCOPE_UNCAL_SENSOR):
 		printf("Gyroscope Uncal [%lld] [%6.6f] [%6.6f] [%6.6f] [%6.6f] [%6.6f] [%6.6f]\n\n", data.timestamp, data.values[0], data.values[1], data.values[2], data.values[3], data.values[4], data.values[5]);
 		break;
+	case(GESTURE_FACE_DOWN_SENSOR):
+		printf("Face Down [%lld] [%6.6f]\n\n", data.timestamp, data.values[0]);
+		break;
 	default:
 		return;
 	}
@@ -164,6 +167,10 @@ int get_event(sensor_type_t sensor_type, char str[])
 		if (strcmp(str, "RAW_DATA_EVENT") == 0)
 			return GYROSCOPE_UNCAL_RAW_DATA_EVENT;
 		break;
+	case GESTURE_FACE_DOWN_SENSOR:
+		if (strcmp(str, "RAW_DATA_EVENT") == 0)
+			return FACE_DOWN_RAW_DATA_EVENT;
+		break;
 
 	default:
 		return -1;
@@ -229,6 +236,9 @@ void callback(sensor_t sensor, unsigned int event_type, sensor_data_t *data, voi
 		break;
 	case GYROSCOPE_UNCAL_SENSOR:
 		printf("Gyroscope Uncal [%lld] [%6.6f] [%6.6f] [%6.6f] [%6.6f] [%6.6f] [%6.6f]\n\n", data->timestamp, data->values[0], data->values[1], data->values[2], data->values[3], data->values[4], data->values[5]);
+		break;
+	case GESTURE_FACE_DOWN_SENSOR:
+		printf("Face Down [%lld] [%6.6f] \n", data->timestamp, data->values[0]);
 		break;
 
 	default:

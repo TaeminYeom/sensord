@@ -50,6 +50,9 @@
 #include <magnetic_rv_sensor.h>
 #include <gyro_rv_sensor.h>
 #endif
+#ifdef ENABLE_FACE_DOWN
+#include <face_down_sensor.h>
+#endif
 
 using std::vector;
 using std::string;
@@ -185,6 +188,9 @@ void sensor_loader::create_sensors(void)
 #endif
 #ifdef ENABLE_ORIENTATION
 	create_virtual_sensors<orientation_sensor>("Orientation");
+#endif
+#ifdef ENABLE_FACE_DOWN
+	create_virtual_sensors<face_down_sensor>("Face Down");
 #endif
 }
 
