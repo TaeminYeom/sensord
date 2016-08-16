@@ -83,7 +83,7 @@ void fusion_base::push_mag(sensor_data_t &data)
 
 }
 
-bool fusion_base::get_rv(unsigned long long timestamp, float &x, float &y, float &z, float &w)
+bool fusion_base::get_rv(unsigned long long &timestamp, float &x, float &y, float &z, float &w)
 {
 	if (m_timestamp == 0)
 		return false;

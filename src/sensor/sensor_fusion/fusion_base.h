@@ -30,7 +30,7 @@ public:
 	virtual void push_accel(sensor_data_t &data);
 	virtual void push_gyro(sensor_data_t &data);
 	virtual void push_mag(sensor_data_t &data);
-	virtual bool get_rv(unsigned long long timestamp, float &w, float &x, float &y, float &z);
+	virtual bool get_rv(unsigned long long &timestamp, float &w, float &x, float &y, float &z);
 
 protected:
 
