@@ -47,6 +47,7 @@
 #endif
 #ifdef ENABLE_ROTATION_VECTOR
 #include <rv_sensor.h>
+#include <magnetic_rv_sensor.h>
 #endif
 
 using std::vector;
@@ -172,6 +173,7 @@ void sensor_loader::create_sensors(void)
 #endif
 #ifdef ENABLE_ROTATION_VECTOR
 	create_virtual_sensors<rv_sensor>("Rotation Vector");
+	create_virtual_sensors<magnetic_rv_sensor>("Magnetic Rotation Vector");
 #endif
 #ifdef ENABLE_GRAVITY
 	create_virtual_sensors<gravity_sensor>("Gravity");
