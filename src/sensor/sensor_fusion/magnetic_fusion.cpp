@@ -33,7 +33,7 @@ bool magnetic_fusion::get_orientation(void)
 	if (!m_enable_accel || !m_enable_magnetic)
 		return false;
 
-	m_orientation_filter.get_device_orientation(&m_accel, &m_magnetic, NULL);
+	m_orientation_filter.get_device_orientation(&m_accel, NULL, &m_magnetic);
 	m_timestamp = fmax(m_accel.m_time_stamp, m_magnetic.m_time_stamp);
 	return true;
 }
