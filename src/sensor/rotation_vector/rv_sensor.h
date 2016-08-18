@@ -22,11 +22,12 @@
 
 #include <virtual_sensor.h>
 #include <sensor_types.h>
+#include <gyro_magnetic_fusion.h>
 
-class rotation_vector_sensor : public virtual_sensor {
+class rv_sensor : public virtual_sensor {
 public:
-	rotation_vector_sensor();
-	virtual ~rotation_vector_sensor();
+	rv_sensor();
+	virtual ~rv_sensor();
 
 	/* initialize sensor */
 	bool init(void);
@@ -49,18 +50,16 @@ public:
 private:
 	sensor_base *m_accel_sensor;
 	sensor_base *m_mag_sensor;
+	sensor_base *m_gyro_sensor;
+	gyro_magnetic_fusion m_fusion;
 
 	float m_x;
 	float m_y;
 	float m_z;
 	float m_w;
-	int m_accuracy;
 	unsigned long long m_time;
 	unsigned long m_interval;
-
-	float m_acc[3];
-	float m_mag[3];
-	int m_state;
+	int m_accuracy;
 
 	virtual bool set_interval(unsigned long interval);
 	virtual bool set_batch_latency(unsigned long latency);

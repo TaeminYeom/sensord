@@ -26,7 +26,6 @@
 #include <sensor_base.h>
 #include <cmath>
 #include "fusion_base.h"
-#include "orientation_filter.h"
 
 #define ACCEL_COMPENSATION -1
 #define GYRO_COMPENSATION 1

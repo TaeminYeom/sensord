@@ -46,7 +46,7 @@
 #include <orientation_sensor.h>
 #endif
 #ifdef ENABLE_ROTATION_VECTOR
-#include <rotation_vector_sensor.h>
+#include <rv_sensor.h>
 #endif
 
 using std::vector;
@@ -171,7 +171,7 @@ void sensor_loader::create_sensors(void)
 	create_virtual_sensors<auto_rotation_sensor>("Auto Rotation");
 #endif
 #ifdef ENABLE_ROTATION_VECTOR
-	create_virtual_sensors<rotation_vector_sensor>("Rotation Vector");
+	create_virtual_sensors<rv_sensor>("Rotation Vector");
 #endif
 #ifdef ENABLE_GRAVITY
 	create_virtual_sensors<gravity_sensor>("Gravity");

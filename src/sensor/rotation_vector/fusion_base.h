@@ -20,7 +20,7 @@
 #define __FUSION_BASE_H__
 
 #include <fusion.h>
-#include <orientation_filter.h>
+#include "fusion_utils/orientation_filter.h"
 
 class fusion_base : public virtual fusion {
 public:
