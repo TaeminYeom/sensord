@@ -28,9 +28,24 @@
 #include <string>
 #include <map>
 
+class attribute_info {
+public:
+	attribute_info();
+	~attribute_info();
+
+	char *get(void);
+	bool set(const char *value, unsigned int len);
+
+	unsigned int size(void);
+
+private:
+	char *m_attr;
+	unsigned int m_len;
+};
+
 typedef std::unordered_map<unsigned int, reg_event_info> event_info_map;
 typedef std::map<int, int> sensor_attribute_int_map;
-typedef std::map<int, std::string> sensor_attribute_str_map;
+typedef std::map<int, attribute_info *> sensor_attribute_str_map;
 
 class sensor_handle_info {
 public:
@@ -47,6 +62,7 @@ public:
 	void get_batch(unsigned int &interval, unsigned int &latency);
 	unsigned int get_reg_event_count(void);
 
+	void clear(void);
 	void clear_all_events(void);
 	static unsigned long long renew_event_id(void);
 
