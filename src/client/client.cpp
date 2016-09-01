@@ -194,10 +194,10 @@ bool restore_attributes(int client_id, sensor_id_t sensor, command_channel *cmd_
 		for (auto it = info.attributes_str.begin(); it != info.attributes_str.end(); ++it) {
 			int attribute = it->first;
 			const char *value = it->second->get();
-			int value_len = it->second->size();
-			if (!cmd_channel->cmd_set_attribute_str(attribute, value, value_len)) {
+			int len = it->second->size();
+			if (!cmd_channel->cmd_set_attribute_str(attribute, value, len)) {
 				_E("Failed to send cmd_set_attribute_str(%d, %d, %s) for %s",
-				    client_id, value_len, value, get_client_name());
+				    client_id, len, value, get_client_name());
 				return false;
 			}
 		}

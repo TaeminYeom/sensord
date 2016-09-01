@@ -132,7 +132,7 @@ typedef struct  {
 
 typedef struct  {
 	int attribute;
-	int value_len;
+	int len;
 	char value[0];
 } cmd_set_attribute_str_t;
 
