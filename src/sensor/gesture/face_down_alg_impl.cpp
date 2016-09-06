@@ -20,7 +20,7 @@
 #include <climits>
 #include <sensor_log.h>
 #include <face_down_alg_impl.h>
-#include <euler_angles.h>
+
 #define GRAVITY 9.80665
 #define TWENTY_DEGREES 0.349066
 #define ONE_SIXTY_DEGREES 2.79253
