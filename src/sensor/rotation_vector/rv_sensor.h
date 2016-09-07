@@ -49,8 +49,8 @@ public:
 	virtual int get_data(sensor_data_t **data, int *length);
 private:
 	sensor_base *m_accel_sensor;
-	sensor_base *m_mag_sensor;
 	sensor_base *m_gyro_sensor;
+	sensor_base *m_mag_sensor;
 	gyro_magnetic_fusion m_fusion;
 
 	float m_x;
