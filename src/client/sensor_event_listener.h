@@ -41,25 +41,12 @@
 #include <sensor_handle_info.h>
 #include <sensor_client_info.h>
 #include <command_channel.h>
+#include <sensor_callback_deliverer.h>
 
 typedef std::vector<unsigned int> handle_vector;
 typedef std::vector<sensor_id_t> sensor_id_vector;
 typedef std::unordered_map<int, sensor_handle_info> sensor_handle_info_map;
 typedef std::unordered_map<sensor_id_t, command_channel*> sensor_command_channel_map;
-
-typedef struct {
-	unsigned long long event_id;
-	int handle;
-	sensor_t sensor;
-	unsigned int event_type;
-	void *cb;
-	std::shared_ptr<void> sensor_data;
-	void *user_data;
-	sensor_accuracy_changed_cb_t accuracy_cb;
-	unsigned long long timestamp;
-	int accuracy;
-	void *accuracy_user_data;
-} client_callback_info;
 
 typedef void (*hup_observer_t)(void);
 
@@ -98,6 +85,8 @@ private:
 
 	sensor_client_info &m_client_info;
 
+	sensor_callback_deliverer *m_cb_deliverer;
+
 	/* WC1's rotation control */
 	/* SENSORD_AXIS_DEVICE_ORIENTED, SENSORD_AXIS_DISPLAY_ORIENTED */
 	int m_axis;
@@ -106,30 +95,26 @@ private:
 	sensor_event_listener();
 	~sensor_event_listener();
 
-	sensor_event_listener& operator=(const sensor_event_listener&);
-
 	bool create_event_channel(void);
 	void close_event_channel(void);
 
 	ssize_t sensor_event_poll(void *buffer, int buffer_len, struct epoll_event &event);
 
 	void listen_events(void);
-	client_callback_info* handle_calibration_cb(sensor_handle_info &handle_info, unsigned event_type, unsigned long long time, int accuracy);
 	void handle_events(void* event);
 
+	client_callback_info* handle_calibration_cb(sensor_handle_info &handle_info, unsigned event_type, unsigned long long time, int accuracy);
 	client_callback_info* get_callback_info(sensor_id_t sensor_id, const reg_event_info *event_info, std::shared_ptr<void> sensor_data);
 
 	unsigned long long renew_event_id(void);
 
-	void post_callback_to_main_loop(client_callback_info *cb_info);
-
-	bool is_valid_callback(client_callback_info *cb_info);
-	static gboolean callback_dispatcher(gpointer data);
-
 	void set_thread_state(thread_state state);
 
 	/* WC1's sensor axis alignment */
-	void align_sensor_axis(sensor_t sensor, sensor_data_t *data);
+	void align_sensor_axis(sensor_id_t sensor, sensor_data_t *data);
+
+	bool start_deliverer(void);
+	bool stop_deliverer(void);
 };
 
 #endif /* _SENSOR_EVENT_LISTENER_H_ */
