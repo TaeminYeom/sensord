@@ -308,6 +308,7 @@ void server::initialize(void)
 	m_mainloop = g_main_loop_new(NULL, false);
 
 	sensor_event_dispatcher::get_instance().run();
+	external_sensor_service::get_instance().run();
 
 	listen_command_channel();
 	listen_event_channel();
