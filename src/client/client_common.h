@@ -25,7 +25,24 @@
 #include <reg_event_info.h>
 #include <sensor_log.h>
 
+#include <memory>
+
 #define BASE_GATHERING_INTERVAL	100
+#define THREAD_TERMINATION -1
+
+typedef struct {
+	unsigned long long event_id;
+	int handle;
+	sensor_t sensor;
+	unsigned int event_type;
+	sensor_cb_t cb;
+	std::shared_ptr<void> sensor_data;
+	void *user_data;
+	sensor_accuracy_changed_cb_t accuracy_cb;
+	unsigned long long timestamp;
+	int accuracy;
+	void *accuracy_user_data;
+} client_callback_info;
 
 const char *get_sensor_name(sensor_id_t sensor_id);
 const char *get_event_name(unsigned int event_type);
