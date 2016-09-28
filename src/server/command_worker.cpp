@@ -214,6 +214,8 @@ bool command_worker::stopped(void *ctx)
 		if (get_client_info_manager().is_started(inst->m_client_id, inst->m_sensor_id)) {
 			_W("Does not receive cmd_stop before connection broken for [%s]!!", inst->m_module->get_name());
 			inst->m_module->delete_interval(inst->m_client_id, false);
+			inst->m_module->delete_batch(inst->m_client_id);
+			inst->m_module->delete_attribute(inst->m_client_id);
 			inst->m_module->stop();
 		}
 
@@ -784,7 +786,7 @@ bool command_worker::cmd_set_attribute_str(void *payload)
 		goto out;
 	}
 
-	ret_value = m_module->add_attribute(m_client_id, cmd->attribute, cmd->value, cmd->value_len);
+	ret_value = m_module->add_attribute(m_client_id, cmd->attribute, cmd->value, cmd->len);
 
 out:
 	if (!send_cmd_done(ret_value))

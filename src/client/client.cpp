@@ -117,6 +117,8 @@ void clean_up(void)
 		sensord_disconnect(*it_handle);
 		++it_handle;
 	}
+
+	sensor_event_listener::get_instance().clear();
 }
 
 static int get_power_save_state(void)
@@ -191,11 +193,11 @@ bool restore_attributes(int client_id, sensor_id_t sensor, command_channel *cmd_
 
 		for (auto it = info.attributes_str.begin(); it != info.attributes_str.end(); ++it) {
 			int attribute = it->first;
-			const char *value = it->second.c_str();
-			int value_len = it->second.size();
-			if (!cmd_channel->cmd_set_attribute_str(attribute, value, value_len)) {
+			const char *value = it->second->get();
+			int len = it->second->size();
+			if (!cmd_channel->cmd_set_attribute_str(attribute, value, len)) {
 				_E("Failed to send cmd_set_attribute_str(%d, %d, %s) for %s",
-				    client_id, value_len, value, get_client_name());
+				    client_id, len, value, get_client_name());
 				return false;
 			}
 		}
@@ -1169,7 +1171,7 @@ API int sensord_set_attribute_str(int handle, int attribute, const char *value, 
 		return -EPERM;
 	}
 
-	sensor_client_info::get_instance().set_attribute(handle, attribute, value);
+	sensor_client_info::get_instance().set_attribute(handle, attribute, value, value_len);
 
 	return OP_SUCCESS;
 }

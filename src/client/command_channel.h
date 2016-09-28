@@ -48,7 +48,7 @@ public:
 	bool cmd_unset_batch(void);
 	bool cmd_get_data(unsigned int type, sensor_data_t *values);
 	bool cmd_set_attribute_int(int attribute, int value);
-	bool cmd_set_attribute_str(int attribute, const char *value, int value_len);
+	bool cmd_set_attribute_str(int attribute, const char *value, int len);
 	bool cmd_flush(void);
 
 private:

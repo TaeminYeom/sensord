@@ -17,16 +17,17 @@
  *
  */
 
-#ifndef _ROTATION_VECTOR_SENSOR_H_
-#define _ROTATION_VECTOR_SENSOR_H_
+#ifndef __GYRO_RV_SENSOR_H__
+#define __GYRO_RV_SENSOR_H__
 
 #include <virtual_sensor.h>
 #include <sensor_types.h>
+#include <gyro_fusion.h>
 
-class rotation_vector_sensor : public virtual_sensor {
+class gyro_rv_sensor : public virtual_sensor {
 public:
-	rotation_vector_sensor();
-	virtual ~rotation_vector_sensor();
+	gyro_rv_sensor();
+	virtual ~gyro_rv_sensor();
 
 	/* initialize sensor */
 	bool init(void);
@@ -48,19 +49,16 @@ public:
 	virtual int get_data(sensor_data_t **data, int *length);
 private:
 	sensor_base *m_accel_sensor;
-	sensor_base *m_mag_sensor;
+	sensor_base *m_gyro_sensor;
+	gyro_fusion m_fusion;
 
 	float m_x;
 	float m_y;
 	float m_z;
 	float m_w;
-	int m_accuracy;
 	unsigned long long m_time;
 	unsigned long m_interval;
-
-	float m_acc[3];
-	float m_mag[3];
-	int m_state;
+	int m_accuracy;
 
 	virtual bool set_interval(unsigned long interval);
 	virtual bool set_batch_latency(unsigned long latency);
@@ -69,4 +67,4 @@ private:
 	virtual bool on_stop(void);
 };
 
-#endif /* _ROTATION_VECTOR_SENSOR_H_ */
+#endif /* __GYRO_SENSOR_H__ */

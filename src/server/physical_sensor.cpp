@@ -94,6 +94,9 @@ bool physical_sensor::read_fd(std::vector<uint32_t> &ids)
 
 	size = m_sensor_device->read_fd(&_ids);
 
+	if (size == 0)
+		return false;
+
 	for (int i = 0; i < size; ++i)
 		ids.push_back(_ids[i]);
 
@@ -165,14 +168,14 @@ int physical_sensor::set_attribute(int32_t attribute, int32_t value)
 	return OP_SUCCESS;
 }
 
-int physical_sensor::set_attribute(int32_t attribute, char *value, int value_len)
+int physical_sensor::set_attribute(int32_t attribute, char *value, int len)
 {
 	AUTOLOCK(m_mutex);
 
 	if (!m_sensor_device)
 		return OP_ERROR;
 
-	if (!m_sensor_device->set_attribute_str(m_info->id, attribute, value, value_len))
+	if (!m_sensor_device->set_attribute_str(m_info->id, attribute, value, len))
 		return OP_ERROR;
 
 	return OP_SUCCESS;

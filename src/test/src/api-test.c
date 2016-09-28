@@ -262,6 +262,9 @@ int main(int argc, char **argv)
 	result = check_sensor_api(BIO_LED_RED_RAW_DATA_EVENT, interval);
 	fprintf(fp, "BIO_LED_RED - RAW_DATA_REPORT_ON_TIME - %d\n", result);
 
+	result = check_sensor_api(FACE_DOWN_RAW_DATA_EVENT, interval);
+	fprintf(fp, "Face Down - RAW_DATA_REPORT_ON_TIME - %d\n", result);
+
 	printf("Logs printed in ./auto_test.output\n");
 	fclose(fp);
 	return 0;

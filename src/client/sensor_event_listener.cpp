@@ -45,7 +45,7 @@ sensor_event_listener::sensor_event_listener()
 , m_thread_state(THREAD_STATE_TERMINATE)
 , m_hup_observer(NULL)
 , m_client_info(sensor_client_info::get_instance())
-, m_axis(SENSORD_AXIS_DEVICE_ORIENTED)
+, m_axis(SENSORD_AXIS_DISPLAY_ORIENTED)
 , m_display_rotation(AUTO_ROTATION_DEGREE_UNKNOWN)
 {
 }
@@ -113,12 +113,14 @@ void sensor_event_listener::handle_events(void* event)
 	unsigned int event_type = *((unsigned int *)(event));
 
 	client_callback_info* callback_info = NULL;
-	vector<client_callback_info *> client_callback_infos;
 
 	sensor_event_t *sensor_event = (sensor_event_t *)event;
 	sensor_id = sensor_event->sensor_id;
 	cur_time = sensor_event->data->timestamp;
 	accuracy = sensor_event->data->accuracy;
+
+	align_sensor_axis(sensor_id, sensor_event->data);
+
 	std::shared_ptr<void> sensor_data(sensor_event->data, free_data());
 
 	{	/* scope for the lock */
@@ -141,7 +143,7 @@ void sensor_event_listener::handle_events(void* event)
 			client_callback_info* cal_callback_info = handle_calibration_cb(sensor_handle_info, event_type, cur_time, accuracy);
 
 			if (cal_callback_info)
-				client_callback_infos.push_back(cal_callback_info);
+				m_cb_deliverer->push(cal_callback_info);
 
 			callback_info = get_callback_info(sensor_id, event_info, sensor_data);
 
@@ -159,17 +161,10 @@ void sensor_event_listener::handle_events(void* event)
 				callback_info->accuracy_user_data = sensor_handle_info.m_accuracy_user_data;
 			}
 
-			client_callback_infos.push_back(callback_info);
+			m_cb_deliverer->push(callback_info);
 
 			print_event_occurrence_log(sensor_handle_info);
 		}
-	}
-
-	auto it_calback_info = client_callback_infos.begin();
-
-	while (it_calback_info != client_callback_infos.end()) {
-		post_callback_to_main_loop(*it_calback_info);
-		++it_calback_info;
 	}
 }
 
@@ -183,7 +178,7 @@ client_callback_info* sensor_event_listener::get_callback_info(sensor_id_t senso
 	callback_info->sensor = sensor_info_to_sensor(sensor_info_manager::get_instance().get_info(sensor_id));
 	callback_info->event_id = event_info->m_id;
 	callback_info->handle = event_info->m_handle;
-	callback_info->cb = event_info->m_cb;
+	callback_info->cb = (sensor_cb_t)(event_info->m_cb);
 	callback_info->event_type = event_info->type;
 	callback_info->user_data = event_info->m_user_data;
 	callback_info->accuracy_cb = NULL;
@@ -195,24 +190,14 @@ client_callback_info* sensor_event_listener::get_callback_info(sensor_id_t senso
 	return callback_info;
 }
 
-void sensor_event_listener::post_callback_to_main_loop(client_callback_info* cb_info)
-{
-	g_idle_add_full(G_PRIORITY_DEFAULT, callback_dispatcher, cb_info, NULL);
-}
-
-bool sensor_event_listener::is_valid_callback(client_callback_info *cb_info)
-{
-	return m_client_info.is_event_active(cb_info->handle, cb_info->event_type, cb_info->event_id);
-}
-
 void sensor_event_listener::set_sensor_axis(int axis)
 {
 	m_axis = axis;
 }
 
-void sensor_event_listener::align_sensor_axis(sensor_t sensor, sensor_data_t *data)
+void sensor_event_listener::align_sensor_axis(sensor_id_t sensor, sensor_data_t *data)
 {
-	sensor_type_t type = sensor_to_sensor_info(sensor)->get_type();
+	sensor_id_t type = CONVERT_ID_TYPE(sensor);
 
 	if (m_axis != SENSORD_AXIS_DISPLAY_ORIENTED)
 		return;
@@ -241,33 +226,6 @@ void sensor_event_listener::align_sensor_axis(sensor_t sensor, sensor_data_t *da
 
 	data->values[0] = x;
 	data->values[1] = y;
-}
-
-gboolean sensor_event_listener::callback_dispatcher(gpointer data)
-{
-	client_callback_info *cb_info = (client_callback_info*) data;
-
-	if (!sensor_event_listener::get_instance().is_valid_callback(cb_info)) {
-		_W("Discard invalid callback cb(%#x)(%s, %#x, %#x) with id: %llu",
-		cb_info->cb, get_event_name(cb_info->event_type), cb_info->sensor_data.get(),
-		cb_info->user_data, cb_info->event_id);
-
-		delete cb_info;
-		return false;
-	}
-
-	if (cb_info->accuracy_cb)
-		cb_info->accuracy_cb(cb_info->sensor, cb_info->timestamp, cb_info->accuracy, cb_info->accuracy_user_data);
-
-	sensor_event_listener::get_instance().align_sensor_axis(cb_info->sensor, (sensor_data_t *)cb_info->sensor_data.get());
-	((sensor_cb_t) cb_info->cb)(cb_info->sensor, cb_info->event_type, (sensor_data_t *)cb_info->sensor_data.get(), cb_info->user_data);
-
-	delete cb_info;
-
-/*
-* 	To be called only once, it returns false
-*/
-	return false;
 }
 
 ssize_t sensor_event_listener::sensor_event_poll(void* buffer, int buffer_len, struct epoll_event &event)
@@ -332,13 +290,6 @@ void sensor_event_listener::listen_events(void)
 
 		handle_events((void *)buffer);
 	} while (true);
-
-	if (m_poller != NULL) {
-		delete m_poller;
-		m_poller = NULL;
-	}
-
-	close_event_channel();
 
 	{ /* the scope for the lock */
 		lock l(m_thread_mutex);
@@ -408,24 +359,6 @@ void sensor_event_listener::close_event_channel(void)
 	m_event_socket.close();
 }
 
-void sensor_event_listener::stop_event_listener(void)
-{
-	const int THREAD_TERMINATING_TIMEOUT = 2;
-
-	ulock u(m_thread_mutex);
-
-	if (m_thread_state != THREAD_STATE_TERMINATE) {
-		m_thread_state = THREAD_STATE_STOP;
-
-		_D("%s is waiting listener thread[state: %d] to be terminated", get_client_name(), m_thread_state);
-		if (m_thread_cond.wait_for(u, std::chrono::seconds(THREAD_TERMINATING_TIMEOUT))
-			== std::cv_status::timeout)
-			_E("Fail to stop listener thread after waiting %d seconds", THREAD_TERMINATING_TIMEOUT);
-		else
-			_D("Listener thread for %s is terminated", get_client_name());
-	}
-}
-
 void sensor_event_listener::set_thread_state(thread_state state)
 {
 	lock l(m_thread_mutex);
@@ -453,6 +386,9 @@ bool sensor_event_listener::start_event_listener(void)
 		return false;
 	}
 
+	if (!start_deliverer())
+		return false;
+
 	m_event_socket.set_transfer_mode();
 
 	m_poller = new(std::nothrow) poller(m_event_socket.get_socket_fd());
@@ -463,6 +399,59 @@ bool sensor_event_listener::start_event_listener(void)
 	thread listener(&sensor_event_listener::listen_events, this);
 	listener.detach();
 
+	return true;
+}
+
+void sensor_event_listener::stop_event_listener(void)
+{
+	const int THREAD_TERMINATING_TIMEOUT = 2;
+	std::cv_status status;
+
+	ulock u(m_thread_mutex);
+
+	/* TOBE: it can be changed to join() simply */
+	if (m_thread_state != THREAD_STATE_TERMINATE) {
+		m_thread_state = THREAD_STATE_STOP;
+
+		_D("%s is waiting listener thread[state: %d] to be terminated", get_client_name(), m_thread_state);
+
+		status = m_thread_cond.wait_for(u, std::chrono::seconds(THREAD_TERMINATING_TIMEOUT));
+		if (status == std::cv_status::timeout)
+			_E("Fail to stop listener thread after waiting %d seconds", THREAD_TERMINATING_TIMEOUT);
+		else
+			_D("Listener thread for %s is terminated", get_client_name());
+	}
+
+	if (m_poller) {
+		delete m_poller;
+		m_poller = NULL;
+	}
+
+	stop_deliverer();
+	close_event_channel();
+}
+
+bool sensor_event_listener::start_deliverer(void)
+{
+	if (!m_cb_deliverer) {
+		m_cb_deliverer = new(std::nothrow) sensor_callback_deliverer();
+		retvm_if(!m_cb_deliverer, false, "Failed to allocated memory");
+	}
+
+	m_cb_deliverer->start();
+	return true;
+}
+
+bool sensor_event_listener::stop_deliverer(void)
+{
+	if (!m_cb_deliverer)
+		return false;
+
+	if (!m_cb_deliverer->stop())
+		return false;
+
+	delete m_cb_deliverer;
+	m_cb_deliverer = NULL;
 	return true;
 }
 

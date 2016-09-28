@@ -639,24 +639,24 @@ bool command_channel::cmd_set_attribute_int(int attribute, int value)
 	return true;
 }
 
-bool command_channel::cmd_set_attribute_str(int attribute, const char* value, int value_len)
+bool command_channel::cmd_set_attribute_str(int attribute, const char* value, int len)
 {
 	cpacket *packet;
 	cmd_set_attribute_str_t *cmd_set_attribute_str;
 	cmd_done_t *cmd_done;
 
-	packet = new(std::nothrow) cpacket(sizeof(cmd_set_attribute_str_t) + value_len);
+	packet = new(std::nothrow) cpacket(sizeof(cmd_set_attribute_str_t) + len);
 	retvm_if(!packet, false, "Failed to allocate memory");
 
 	packet->set_cmd(CMD_SET_ATTRIBUTE_STR);
 
 	cmd_set_attribute_str = (cmd_set_attribute_str_t*)packet->data();
 	cmd_set_attribute_str->attribute = attribute;
-	cmd_set_attribute_str->value_len = value_len;
-	memcpy(cmd_set_attribute_str->value, value, value_len);
+	cmd_set_attribute_str->len = len;
+	memcpy(cmd_set_attribute_str->value, value, len);
 
 	_I("%s send cmd_set_attribute_str(client_id=%d, attribute = %#x, value_len = %d, value = %#x)",
-		get_client_name(), m_client_id, attribute, value_len, value);
+		get_client_name(), m_client_id, attribute, len, value);
 
 	if (!command_handler(packet, (void **)&cmd_done)) {
 		_E("%s failed to send/receive command with client_id [%d]",

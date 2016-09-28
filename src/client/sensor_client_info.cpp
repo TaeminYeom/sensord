@@ -682,7 +682,7 @@ bool sensor_client_info::set_attribute(int handle, int attribute, int value)
 	return true;
 }
 
-bool sensor_client_info::set_attribute(int handle, int attribute, std::string value)
+bool sensor_client_info::set_attribute(int handle, int attribute, const char *value, int value_len)
 {
 	AUTOLOCK(m_handle_info_lock);
 
@@ -693,13 +693,29 @@ bool sensor_client_info::set_attribute(int handle, int attribute, std::string va
 		return false;
 	}
 
-	it_handle->second.attributes_str[attribute] = value;
+	auto it_attribute = it_handle->second.attributes_str.find(attribute);
+
+	if (it_attribute != it_handle->second.attributes_str.end()) {
+		it_attribute->second->set(value, value_len);
+		return true;
+	}
+
+	attribute_info *info = new(std::nothrow) attribute_info();
+	retvm_if(!info, false, "Failed to allocate memory");
+
+	info->set(value, value_len);
+	it_handle->second.attributes_str[attribute] = info;
 
 	return true;
 }
 
 void sensor_client_info::clear(void)
 {
+	auto it_handle = m_sensor_handle_infos.begin();
+
+	while (it_handle != m_sensor_handle_infos.end())
+		it_handle->second.clear();
+
 	close_command_channel();
 	m_sensor_handle_infos.clear();
 	m_command_channels.clear();

@@ -46,7 +46,12 @@
 #include <orientation_sensor.h>
 #endif
 #ifdef ENABLE_ROTATION_VECTOR
-#include <rotation_vector_sensor.h>
+#include <rv_sensor.h>
+#include <magnetic_rv_sensor.h>
+#include <gyro_rv_sensor.h>
+#endif
+#ifdef ENABLE_FACE_DOWN
+#include <face_down_sensor.h>
 #endif
 
 using std::vector;
@@ -171,7 +176,9 @@ void sensor_loader::create_sensors(void)
 	create_virtual_sensors<auto_rotation_sensor>("Auto Rotation");
 #endif
 #ifdef ENABLE_ROTATION_VECTOR
-	create_virtual_sensors<rotation_vector_sensor>("Rotation Vector");
+	create_virtual_sensors<rv_sensor>("Rotation Vector");
+	create_virtual_sensors<magnetic_rv_sensor>("Magnetic Rotation Vector");
+	create_virtual_sensors<gyro_rv_sensor>("Gyroscope Rotation Vector");
 #endif
 #ifdef ENABLE_GRAVITY
 	create_virtual_sensors<gravity_sensor>("Gravity");
@@ -181,6 +188,9 @@ void sensor_loader::create_sensors(void)
 #endif
 #ifdef ENABLE_ORIENTATION
 	create_virtual_sensors<orientation_sensor>("Orientation");
+#endif
+#ifdef ENABLE_FACE_DOWN
+	create_virtual_sensors<face_down_sensor>("Face Down");
 #endif
 }
 

@@ -45,8 +45,6 @@ void orientation_sensor::get_device_orientation(sensor_data<float> *accel_data,
 	if (magnetic_data != NULL) {
 		pre_process_data(magnetic_data, magnetic_data, bias_magnetic, sign_magnetic, scale_magnetic);
 		normalize(*magnetic_data);
-
-		orien_filter.m_magnetic_alignment_factor = magnetic_alignment_factor;
 	}
 
 	orien_filter.get_device_orientation(accel_data, gyro_data, magnetic_data);

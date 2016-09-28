@@ -73,8 +73,6 @@ public:
 	euler_angles<TYPE> m_euler_error;
 	TYPE m_gyro_dt;
 
-	int m_magnetic_alignment_factor;
-
 	orientation_filter(void);
 	~orientation_filter(void);
 

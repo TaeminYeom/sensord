@@ -79,25 +79,22 @@ bool external_sensor_worker::working(void *ctx)
 		return false;
 	}
 
-	if (header.size > 0) {
-		payload = new(std::nothrow) char[header.size];
-		retvm_if(!payload, false, "Failed to allocate memory");
+	retvm_if(header.size == 0, false, "Invalid header size");
 
-		if (inst->m_socket.recv(payload, header.size) <= 0) {
-			string info;
-			inst->get_info(info);
-			_D("%s failed to receive data of packet", info.c_str());
-			delete[] payload;
-			return false;
-		}
-	} else {
-		payload = NULL;
+	payload = new(std::nothrow) char[header.size];
+	retvm_if(!payload, false, "Failed to allocate memory");
+
+	if (inst->m_socket.recv(payload, header.size) <= 0) {
+		string info;
+		inst->get_info(info);
+		_D("%s failed to receive data of packet", info.c_str());
+		delete[] payload;
+		return false;
 	}
 
 	ret = inst->dispatch_command(header.cmd, payload);
 
-	if (payload)
-		delete[] payload;
+	delete[] payload;
 
 	return ret;
 }

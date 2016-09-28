@@ -49,6 +49,7 @@ void usage()
 	printf("[bio_led_red] ");
 	printf("[light]\n");
 	printf("[gyroscope_uncal]");
+	printf("[face_down]");
 	printf("event:");
 	printf("[RAW_DATA_EVENT]\n");
 	printf("-p: [polling]\n");
@@ -147,6 +148,10 @@ int main(int argc, char **argv)
 	else if (strcmp(argv[1], "bio_led_red") == 0) {
 		 sensor_type = BIO_LED_RED_SENSOR;
 		 event = BIO_LED_RED_RAW_DATA_EVENT;
+	}
+	else if (strcmp(argv[1], "face_down") == 0) {
+		 sensor_type = GESTURE_FACE_DOWN_SENSOR;
+		 event = FACE_DOWN_RAW_DATA_EVENT;
 	}
 	else {
 		 usage();
