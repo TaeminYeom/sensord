@@ -66,7 +66,7 @@ public:
 	bool set_passive_mode(int handle, bool passive);
 
 	bool set_attribute(int handle, int attribute, int value);
-	bool set_attribute(int handle, int attribute, std::string value);
+	bool set_attribute(int handle, int attribute, const char *value, int value_len);
 
 	bool set_sensor_pause_policy(int handle, int pause_policy);
 	bool set_event_batch(int handle, unsigned int event_type, unsigned int interval, unsigned int latency);

@@ -25,6 +25,45 @@ using std::pair;
 
 unsigned long long sensor_handle_info::m_event_id = 0;
 
+attribute_info::attribute_info()
+: m_attr(NULL)
+, m_len(0)
+{
+}
+
+attribute_info::~attribute_info()
+{
+	if (m_attr) {
+		delete m_attr;
+		m_attr = NULL;
+	}
+	m_len = 0;
+}
+
+bool attribute_info::set(const char *value, unsigned int len)
+{
+	if (m_attr)
+		delete m_attr;
+
+	m_attr = new(std::nothrow) char[len];
+	retvm_if(!m_attr, false, "Failed to allocate memory");
+
+	memcpy(m_attr, value, len);
+	m_len = len;
+
+	return true;
+}
+
+char *attribute_info::get(void)
+{
+	return m_attr;
+}
+
+unsigned int attribute_info::size(void)
+{
+	return m_len;
+}
+
 sensor_handle_info::sensor_handle_info()
 : m_handle(0)
 , m_sensor_id(UNKNOWN_SENSOR)
@@ -99,6 +138,17 @@ bool sensor_handle_info::delete_reg_event_info(unsigned int event_type)
 	m_reg_event_infos.erase(it_event);
 
 	return true;
+}
+
+void sensor_handle_info::clear(void)
+{
+	sensor_attribute_str_map::iterator it_attribute;
+
+	for (it_attribute = attributes_str.begin(); it_attribute != attributes_str.end(); ++it_attribute)
+		delete it_attribute->second;
+
+	attributes_int.clear();
+	attributes_str.clear();
 }
 
 void sensor_handle_info::clear_all_events(void)
