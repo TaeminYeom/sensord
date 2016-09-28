@@ -62,7 +62,7 @@ public:
 	{
 		return true;
 	}
-	virtual bool set_attribute_str(uint32_t id, int32_t attribute, char *value, int value_len)
+	virtual bool set_attribute_str(uint32_t id, int32_t attribute, char *value, int len)
 	{
 		return true;
 	}

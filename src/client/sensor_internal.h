@@ -349,7 +349,7 @@ int sensord_set_attribute_int(int handle, int attribute, int value);
  * @retval -EINVAL Invalid parameter
  * @retval -EPERM Operation not permitted
  */
-int sensord_set_attribute_str(int handle, int attribute, const char *value, int value_len);
+int sensord_set_attribute_str(int handle, int attribute, const char *value, int len);
 
 /**
  * @brief Send data to sensorhub

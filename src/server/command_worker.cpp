@@ -786,7 +786,7 @@ bool command_worker::cmd_set_attribute_str(void *payload)
 		goto out;
 	}
 
-	ret_value = m_module->add_attribute(m_client_id, cmd->attribute, cmd->value, cmd->value_len);
+	ret_value = m_module->add_attribute(m_client_id, cmd->attribute, cmd->value, cmd->len);
 
 out:
 	if (!send_cmd_done(ret_value))
