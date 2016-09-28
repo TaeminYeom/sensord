@@ -24,7 +24,7 @@
 #define GRAVITY 9.80665
 #define TWENTY_DEGREES 0.349066
 #define ONE_SIXTY_DEGREES 2.79253
-#define WINDOW_SIZE (2000*100)
+#define WINDOW_SIZE (2000*1000)
 
 face_down_alg_impl::face_down_alg_impl()
 {
