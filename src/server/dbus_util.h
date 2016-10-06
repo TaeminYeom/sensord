@@ -37,6 +37,7 @@ void reset_lcdon_count(void);
 int get_total_count(void);
 void increase_total_count(void);
 void reset_total_count(void);
+void set_wrist_up_algo(int mode);
 
 void init_dbus(void);
 void fini_dbus(void);

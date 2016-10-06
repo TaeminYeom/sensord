@@ -23,6 +23,7 @@
 
 static int wrist_up_total_cnt;
 static int wrist_up_lcdon_cnt;
+static int wrist_up_algo;
 
 static GDBusNodeInfo *introspection_data = NULL;
 static guint owner_id;
@@ -37,6 +38,9 @@ static const gchar introspection_xml[] =
 "	   <arg type='i' name='response' direction='out'/>"
 "	 </method>"
 "	 <method name='wristup_total_cnt'>"
+"	   <arg type='i' name='response' direction='out'/>"
+"	 </method>"
+"	 <method name='wristup_algo'>"
 "	   <arg type='i' name='response' direction='out'/>"
 "	 </method>"
 "  </interface>"
@@ -59,6 +63,9 @@ static void method_call_handler(GDBusConnection *conn,
 	} else if (g_strcmp0(method_name, "wristup_total_cnt") == 0) {
 		_D("wristup_total_cnt called, %d", wrist_up_total_cnt);
 		ret = wrist_up_total_cnt;
+	} else if (g_strcmp0(method_name, "wristup_algo") == 0) {
+		_D("wristup_algo called, %d", wrist_up_algo);
+		ret = wrist_up_algo;
 	} else {
 		_D("No matched method call");
 		ret = DBUS_FAILED;
@@ -139,6 +146,11 @@ void increase_total_count(void)
 void reset_total_count(void)
 {
 	wrist_up_total_cnt = 0;
+}
+
+void set_wrist_up_algo(int mode)
+{
+	wrist_up_algo = mode;
 }
 
 void init_dbus(void)
