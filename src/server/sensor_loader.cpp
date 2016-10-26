@@ -57,7 +57,7 @@
 using std::vector;
 using std::string;
 
-#define DEVICE_HAL_DIR_PATH "/usr/lib/sensor"
+#define DEVICE_HAL_DIR_PATH LIBDIR "/sensor"
 
 sensor_loader::sensor_loader()
 {
