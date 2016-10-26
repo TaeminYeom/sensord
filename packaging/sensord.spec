@@ -20,10 +20,6 @@ BuildRequires:  pkgconfig(cynara-client)
 BuildRequires:  pkgconfig(cynara-session)
 Requires:   libsensord = %{version}-%{release}
 
-%ifarch %{ix86} x86_64
-%define BUILD_ARCH EMULATOR
-%endif
-
 %description
 Sensor daemon
 
@@ -61,8 +57,8 @@ Sensor functional testing
 %setup -q
 MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 
-cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix} -DMAJORVER=${MAJORVER} -DFULLVER=%{version} \
-	-DARCH=%{BUILD_ARCH}
+cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix} -DLIBDIR=%{_libdir} \
+        -DMAJORVER=${MAJORVER} -DFULLVER=%{version}
 
 %build
 make %{?jobs:-j%jobs}
