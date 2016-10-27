@@ -240,13 +240,13 @@ ssize_t sensor_event_listener::sensor_event_poll(void* buffer, int buffer_len, s
 		len = m_event_socket.recv(buffer, buffer_len);
 
 		if (!len) {
-			_I("%s failed to read after poll!", get_client_name());
+			_E("%s failed to read after poll!", get_client_name());
 			return -1;
 		}
 	}
 
 	if (len < 0) {
-		_I("%s failed to recv event from event socket", get_client_name());
+		_E("%s failed to recv event from event socket", get_client_name());
 		return -1;
 	}
 
@@ -277,6 +277,10 @@ void sensor_event_listener::listen_events(void)
 
 		sensor_event_t *sensor_event = reinterpret_cast<sensor_event_t *>(buffer);
 		data_len = sensor_event->data_length;
+
+		if (data_len == 0)
+			continue;
+
 		buffer_data = malloc(data_len);
 
 		len = sensor_event_poll(buffer_data, data_len, event);
@@ -290,6 +294,13 @@ void sensor_event_listener::listen_events(void)
 
 		handle_events((void *)buffer);
 	} while (true);
+
+	if (m_poller) {
+		delete m_poller;
+		m_poller = NULL;
+	}
+
+	close_event_channel();
 
 	{ /* the scope for the lock */
 		lock l(m_thread_mutex);
