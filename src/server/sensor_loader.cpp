@@ -105,8 +105,8 @@ bool sensor_loader::load(void)
 	for_each(unique_device_hal_paths.begin(), unique_device_hal_paths.end(),
 		[&](const string &path) {
 			void *handle;
-			load_sensor_devices(path, handle);
-			m_handles.push_back(handle);
+			if (load_sensor_devices(path, handle))
+				m_handles.push_back(handle);
 		}
 	);
 
