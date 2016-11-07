@@ -170,6 +170,7 @@ bool csocket::accept(csocket& client_socket) const
 
 	do {
 		client_socket.m_sock_fd = ::accept(m_sock_fd, (sockaddr *)&m_addr, (socklen_t *)&addr_length);
+		client_socket.set_sock_type();
 		if (!client_socket.is_valid())
 			err = errno;
 	} while (err == EINTR);
