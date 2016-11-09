@@ -342,7 +342,8 @@ void server::run(void)
 
 void server::stop(void)
 {
-	_I("Sensord server stopped");
+	if (!m_running)
+		return;
 
 	m_running = false;
 
@@ -351,6 +352,8 @@ void server::stop(void)
 		g_main_loop_unref(m_mainloop);
 		m_mainloop = NULL;
 	}
+
+	_I("Sensord server stopped");
 }
 
 server& server::get_instance(void)

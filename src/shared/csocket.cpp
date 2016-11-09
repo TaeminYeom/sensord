@@ -83,10 +83,8 @@ bool csocket::bind(const char *sock_path)
 	int length;
 	mode_t socket_mode;
 
-	if (!is_valid()) {
-		_E("%s's socket is invalid", get_client_name());
+	if (!is_valid())
 		return false;
-	}
 
 	if (!access(sock_path, F_OK)) {
 		unlink(sock_path);
@@ -116,10 +114,8 @@ bool csocket::bind(const char *sock_path)
 
 bool csocket::listen(const int max_connections)
 {
-	if (!is_valid()) {
-		_E("Socket(%d) is invalid", m_sock_fd);
+	if (!is_valid())
 		return false;
-	}
 
 	if (::listen(m_sock_fd, max_connections) < 0) {
 		_ERRNO(errno, _E, "Failed to listen for socket[%d]", m_sock_fd);
@@ -309,10 +305,8 @@ ssize_t csocket::recv_for_stream(void* buffer, size_t size) const
 
 ssize_t csocket::send(const void *buffer, size_t size) const
 {
-	if (!is_valid()) {
-		_E("Socket(%d) is invalid", m_sock_fd);
+	if (!is_valid())
 		return -EINVAL;
-	}
 
 	if (m_sock_type == SOCK_STREAM)
 		return send_for_stream(buffer, size);
@@ -322,10 +316,8 @@ ssize_t csocket::send(const void *buffer, size_t size) const
 
 ssize_t csocket::recv(void* buffer, size_t size) const
 {
-	if (!is_valid()) {
-		_E("Socket(%d) is invalid", m_sock_fd);
+	if (!is_valid())
 		return -EINVAL;
-	}
 
 	if (m_sock_type == SOCK_STREAM)
 		return recv_for_stream(buffer, size);
@@ -341,10 +333,8 @@ bool csocket::connect(const char *sock_path)
 	int addr_len;
 	bool prev_blocking_mode;
 
-	if (!is_valid()) {
-		_E("%s's socket is invalid", get_client_name());
+	if (!is_valid())
 		return false;
-	}
 
 	prev_blocking_mode = is_blocking_mode();
 
@@ -413,10 +403,8 @@ bool csocket::set_blocking_mode(bool blocking)
 {
 	int flags;
 
-	if (!is_valid()) {
-		_E("Socket(%d) is invalid", m_sock_fd);
+	if (!is_valid())
 		return false;
-	}
 
 	flags = fcntl(m_sock_fd, F_GETFL);
 
@@ -444,10 +432,8 @@ bool csocket::set_sock_type(void)
 
 	opt_len = sizeof(sock_type);
 
-	if (!is_valid()) {
-		_E("Socket(%d) is invalid", m_sock_fd);
+	if (!is_valid())
 		return false;
-	}
 
 	if (getsockopt(m_sock_fd, SOL_SOCKET, SO_TYPE, &sock_type, &opt_len) < 0) {
 	   _ERRNO(errno, _E, "getsockopt(SOL_SOCKET, SO_TYPE) failed for %s, m_sock_fd: %d",
@@ -469,10 +455,8 @@ bool csocket::set_connection_mode(void)
 	tv.tv_sec = TIMEOUT;
 	tv.tv_usec = 0;
 
-	if (!is_valid()) {
-		_E("Socket(%d) is invalid", m_sock_fd);
+	if (!is_valid())
 		return false;
-	}
 
 	if (setsockopt(m_sock_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
 		_ERRNO(errno, _E, "Set SO_RCVTIMEO failed for %s, m_sock_fd : %d", get_client_name(), m_sock_fd);
@@ -500,10 +484,8 @@ bool csocket::is_blocking_mode(void)
 {
 	int flags;
 
-	if (!is_valid()) {
-		_E("Socket(%d) is invalid", m_sock_fd);
+	if (!is_valid())
 		return false;
-	}
 
 	flags = fcntl(m_sock_fd, F_GETFL);
 
@@ -529,7 +511,7 @@ bool csocket::close(void)
 {
 	if (m_sock_fd >= 0) {
 		if (::close(m_sock_fd) < 0) {
-			_ERRNO(errno, _E, "Failed to close socket[%d]", m_sock_fd);
+			_ERRNO(errno, _W, "Failed to close socket[%d]", m_sock_fd);
 			return false;
 		}
 		m_sock_fd = -1;
