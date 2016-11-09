@@ -251,7 +251,7 @@ void sensor_loader::create_virtual_sensors(const char *name)
 	}
 
 	if (!instance->init()) {
-		_E("Failed to init %s", name);
+		_W("Failed to init %s", name);
 		delete instance;
 		return;
 	}

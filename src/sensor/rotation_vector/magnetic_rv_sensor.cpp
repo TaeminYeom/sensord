@@ -60,7 +60,7 @@ bool magnetic_rv_sensor::init(void)
 	m_mag_sensor = sensor_loader::get_instance().get_sensor(GEOMAGNETIC_SENSOR);
 
 	if (!m_accel_sensor || !m_mag_sensor) {
-		_E("cannot load sensors[%s]", SENSOR_NAME);
+		_W("cannot load sensors[%s]", SENSOR_NAME);
 		return false;
 	}
 

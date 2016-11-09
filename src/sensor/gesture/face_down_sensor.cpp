@@ -57,7 +57,7 @@ bool face_down_sensor::init(void)
 	m_gravity_sensor = sensor_loader::get_instance().get_sensor(GRAVITY_SENSOR);
 
 	if (!m_gravity_sensor) {
-		_E("cannot load gravity sensor sensor[%s]", SENSOR_NAME);
+		_W("cannot load gravity sensor sensor[%s]", SENSOR_NAME);
 		return false;
 	}
 

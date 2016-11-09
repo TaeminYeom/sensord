@@ -59,7 +59,7 @@ bool auto_rotation_sensor::init(void)
 	m_accel_sensor = sensor_loader::get_instance().get_sensor(ACCELEROMETER_SENSOR);
 
 	if (!m_accel_sensor) {
-		_E("cannot load accel sensor_hal from %s", get_name());
+		_W("cannot load accel sensor_hal from %s", get_name());
 		return false;
 	}
 

@@ -336,6 +336,12 @@ bool command_worker::send_cmd_get_sensor_list_done(void)
 		return false;
 	}
 
+	/*
+	 * TODO: get_sensor_list() command is processed on one-time connection in the current architecture.
+	 *       but it doesn't need to use one-time connection.
+	 */
+	m_socket.close();
+
 	return true;
 }
 
@@ -397,7 +403,7 @@ bool command_worker::cmd_hello(void *payload)
 	m_module = (sensor_base *)sensor_loader::get_instance().get_sensor(cmd->sensor);
 
 	if (!m_module) {
-		_E("Sensor type[%d] is not supported", cmd->sensor);
+		_W("Sensor type[%d] is not supported", cmd->sensor);
 		if (!get_client_info_manager().has_sensor_record(m_client_id))
 			get_client_info_manager().remove_client_record(m_client_id);
 

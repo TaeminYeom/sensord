@@ -57,7 +57,7 @@ bool orientation_sensor::init(void)
 	m_rotation_vector_sensor = sensor_loader::get_instance().get_sensor(ROTATION_VECTOR_SENSOR);
 
 	if (!m_rotation_vector_sensor) {
-		_E("cannot load sensor[%s]", SENSOR_NAME);
+		_W("cannot load sensor[%s]", SENSOR_NAME);
 		return false;
 	}
 	_I("%s is created!", SENSOR_NAME);

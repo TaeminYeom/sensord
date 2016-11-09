@@ -61,35 +61,35 @@ tilt_sensor::tilt_sensor()
 	register_supported_event(TILT_RAW_DATA_EVENT);
 
 	if (!config.get(SENSOR_TYPE_TILT, ELEMENT_VENDOR, m_vendor)) {
-		_E("[VENDOR] is empty\n");
+		_W("[VENDOR] is empty\n");
 		throw ENXIO;
 	}
 
 	_I("m_vendor = %s", m_vendor.c_str());
 
 	if (!config.get(SENSOR_TYPE_TILT, ELEMENT_RAW_DATA_UNIT, m_raw_data_unit)) {
-		_E("[RAW_DATA_UNIT] is empty\n");
+		_W("[RAW_DATA_UNIT] is empty\n");
 		throw ENXIO;
 	}
 
 	_I("m_raw_data_unit = %s", m_raw_data_unit.c_str());
 
 	if (!config.get(SENSOR_TYPE_TILT, ELEMENT_DEFAULT_SAMPLING_TIME, &m_default_sampling_time)) {
-		_E("[DEFAULT_SAMPLING_TIME] is empty\n");
+		_W("[DEFAULT_SAMPLING_TIME] is empty\n");
 		throw ENXIO;
 	}
 
 	_I("m_default_sampling_time = %d", m_default_sampling_time);
 
 	if (!config.get(SENSOR_TYPE_TILT, ELEMENT_PITCH_ROTATION_COMPENSATION, &m_pitch_rotation_compensation)) {
-		_E("[PITCH_ROTATION_COMPENSATION] is empty\n");
+		_W("[PITCH_ROTATION_COMPENSATION] is empty\n");
 		throw ENXIO;
 	}
 
 	_I("m_pitch_rotation_compensation = %d", m_pitch_rotation_compensation);
 
 	if (!config.get(SENSOR_TYPE_TILT, ELEMENT_ROLL_ROTATION_COMPENSATION, &m_roll_rotation_compensation)) {
-		_E("[ROLL_ROTATION_COMPENSATION] is empty\n");
+		_W("[ROLL_ROTATION_COMPENSATION] is empty\n");
 		throw ENXIO;
 	}
 
@@ -109,7 +109,7 @@ bool tilt_sensor::init(void)
 	m_fusion_sensor = sensor_loader::get_instance().get_sensor(FUSION_SENSOR);
 
 	if (!m_accel_sensor || !m_fusion_sensor) {
-		_E("Failed to load sensors,  accel: %#x, fusion: %#x",
+		_W("Failed to load sensors,  accel: %#x, fusion: %#x",
 			m_accel_sensor, m_fusion_sensor);
 		return false;
 	}

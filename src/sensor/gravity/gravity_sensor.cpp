@@ -77,7 +77,7 @@ bool gravity_sensor::init(void)
 	m_accel_sensor = sensor_loader::get_instance().get_sensor(ACCELEROMETER_SENSOR);
 
 	if (!m_accel_sensor) {
-		_E("cannot load accelerometer sensor_hal[%s]", get_name());
+		_W("cannot load accelerometer sensor_hal[%s]", get_name());
 		return false;
 	}
 
@@ -150,7 +150,7 @@ void gravity_sensor::synthesize_rv(const sensor_event_t& event)
 	int accuracy;
 
 	if (!m_fusion->get_rotation_vector(x, y, z, w, heading_accuracy, accuracy)) {
-		_E("Failed to get rotation vector");
+		_W("Failed to get rotation vector");
 		return;
 	}
 
