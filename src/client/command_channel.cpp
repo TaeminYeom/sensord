@@ -212,7 +212,7 @@ bool command_channel::cmd_hello(sensor_id_t sensor)
 	}
 
 	if (cmd_done->value < 0) {
-		_E("client %s got error[%d] from server with sensor [%s]",
+		_W("client %s got value[%d] from server with sensor [%s]",
 			get_client_name(), cmd_done->value, get_sensor_name(sensor));
 
 		delete[] (char *)cmd_done;

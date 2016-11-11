@@ -63,14 +63,14 @@ bool linear_accel_sensor::init(void)
 	m_accel_sensor = sensor_loader::get_instance().get_sensor(ACCELEROMETER_SENSOR);
 
 	if (!m_accel_sensor) {
-		_E("cannot load accelerometer sensor_hal[%s]", get_name());
+		_W("cannot load accelerometer sensor_hal[%s]", get_name());
 		return false;
 	}
 
 	m_gravity_sensor = sensor_loader::get_instance().get_sensor(GRAVITY_SENSOR);
 
 	if (!m_gravity_sensor) {
-		_E("cannot load gravity sensor_hal[%s]", get_name());
+		_W("cannot load gravity sensor_hal[%s]", get_name());
 		return false;
 	}
 

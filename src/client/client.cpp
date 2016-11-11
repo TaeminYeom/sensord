@@ -612,9 +612,7 @@ API int sensord_connect(sensor_t sensor)
 	bool first_connection = false;
 
 	sensor_info* info = sensor_to_sensor_info(sensor);
-
-	retvm_if(!sensor_info_manager::get_instance().is_valid(info),
-		OP_ERROR, "Invalid param: sensor (%p)", sensor);
+	retv_if(!sensor_info_manager::get_instance().is_valid(info), OP_ERROR);
 
 	sensor_id_t sensor_id = info->get_id();
 
@@ -783,7 +781,7 @@ static bool register_event(int handle, unsigned int event_type, unsigned int int
 	AUTOLOCK(lock);
 
 	if (!sensor_client_info::get_instance().get_sensor_id(handle, sensor_id)) {
-		_E("client %s failed to get handle information", get_client_name());
+		_W("client %s failed to get handle information", get_client_name());
 		return false;
 	}
 
