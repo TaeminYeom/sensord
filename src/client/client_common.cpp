@@ -72,6 +72,7 @@ unsigned int get_log_per_count(sensor_id_t id)
 	case GESTURE_WRIST_DOWN_SENSOR:
 	case GESTURE_MOVEMENT_SENSOR:
 	case WEAR_STATUS_SENSOR:
+	case PRESSURE_SENSOR:
 		return LOG_PER_COUNT_EVERY_EVENT;
 	default:
 		break;
