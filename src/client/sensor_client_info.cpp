@@ -682,7 +682,7 @@ bool sensor_client_info::set_attribute(int handle, int attribute, int value)
 	return true;
 }
 
-bool sensor_client_info::set_attribute(int handle, int attribute, const char *value, int value_len)
+bool sensor_client_info::set_attribute(int handle, int attribute, const char *value, int len)
 {
 	AUTOLOCK(m_handle_info_lock);
 
@@ -693,17 +693,17 @@ bool sensor_client_info::set_attribute(int handle, int attribute, const char *va
 		return false;
 	}
 
-	auto it_attribute = it_handle->second.attributes_str.find(attribute);
+	auto it_attr = it_handle->second.attributes_str.find(attribute);
 
-	if (it_attribute != it_handle->second.attributes_str.end()) {
-		it_attribute->second->set(value, value_len);
+	if (it_attr != it_handle->second.attributes_str.end()) {
+		it_attr->second->set(value, len);
 		return true;
 	}
 
 	attribute_info *info = new(std::nothrow) attribute_info();
 	retvm_if(!info, false, "Failed to allocate memory");
 
-	info->set(value, value_len);
+	info->set(value, len);
 	it_handle->second.attributes_str[attribute] = info;
 
 	return true;

@@ -95,7 +95,6 @@ bool external_sensor_worker::working(void *ctx)
 	ret = inst->dispatch_command(header.cmd, payload);
 
 	delete[] payload;
-
 	return ret;
 }
 
