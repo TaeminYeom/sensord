@@ -123,9 +123,5 @@ ln -sf %{_libdir}/libsensor.so.%{version} %{_libdir}/libsensor.so.1
 
 %files -n sensor-test
 %defattr(-,root,root,-)
-%{_bindir}/api-test
-%{_bindir}/sensor-test
-%{_bindir}/multi-thread-performance-test
-%{_bindir}/multi-process-performance-test
-%{_bindir}/fusion-data-collection
+%{_bindir}/sensorctl
 %license LICENSE.APLv2
