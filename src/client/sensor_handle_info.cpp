@@ -40,15 +40,17 @@ attribute_info::~attribute_info()
 	m_len = 0;
 }
 
-bool attribute_info::set(const char *value, unsigned int len)
+bool attribute_info::set(const char *value, int len)
 {
+	retvm_if(len < 0, false, "Invalid length");
+
 	if (m_attr)
 		delete m_attr;
 
 	m_attr = new(std::nothrow) char[len];
 	retvm_if(!m_attr, false, "Failed to allocate memory");
 
-	memcpy(m_attr, value, len);
+	memcpy(m_attr, value, (unsigned int)len);
 	m_len = len;
 
 	return true;
@@ -142,10 +144,10 @@ bool sensor_handle_info::delete_reg_event_info(unsigned int event_type)
 
 void sensor_handle_info::clear(void)
 {
-	sensor_attribute_str_map::iterator it_attribute;
+	sensor_attribute_str_map::iterator it_attr;
 
-	for (it_attribute = attributes_str.begin(); it_attribute != attributes_str.end(); ++it_attribute)
-		delete it_attribute->second;
+	for (it_attr = attributes_str.begin(); it_attr != attributes_str.end(); ++it_attr)
+		delete it_attr->second;
 
 	attributes_int.clear();
 	attributes_str.clear();

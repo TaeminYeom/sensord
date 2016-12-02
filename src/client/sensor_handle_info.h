@@ -34,7 +34,7 @@ public:
 	~attribute_info();
 
 	char *get(void);
-	bool set(const char *value, unsigned int len);
+	bool set(const char *value, int len);
 
 	unsigned int size(void);
 

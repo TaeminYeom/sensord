@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2014-15 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,33 @@
  * limitations under the License.
  *
  */
-#ifndef CHECK_SENSOR_H
-#define CHECK_SENSOR_H
 
-#include <sensor_types.h>
+#pragma once
 
-#define DEFAULT_EVENT_INTERVAL 100
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-int get_event(sensor_type_t sensor_type, char str[]);
-void callback(sensor_t sensor, unsigned int event_type, sensor_data_t *data, void *user_data);
-void *check_sensor(void *arg);
-void printpollinglogs(sensor_type_t type, sensor_data_t data);
-int polling_sensor(sensor_type_t sensor_type, unsigned int event);
+#define _cleanup_(x) __attribute__((cleanup(x)))
 
-struct pthread_arguments
+static inline void __freep(void *p)
 {
-	sensor_type_t sensor_type;
-	unsigned int event;
-	int interval;
-};
-#endif
+	free(*(void**) p);
+}
+
+static inline void __closep(int *fd)
+{
+	if (*fd >= 0)
+		close(*fd);
+}
+
+static inline void __fclosep(FILE **f)
+{
+	if (*f)
+		fclose(*f);
+}
+
+#define _cleanup_free_ _cleanup_(__freep)
+#define _cleanup_close_ _cleanup_(__closep)
+#define _cleanup_fclose_ _cleanup_(__fclosep)
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))

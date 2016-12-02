@@ -42,9 +42,8 @@ const char* get_sensor_name(sensor_id_t id)
 const char* get_event_name(unsigned int event_type)
 {
 	sensor_type_t type = (sensor_type_t) (event_type >> SENSOR_EVENT_SHIFT);
-	std::string name(util_sensor_type_t::get_string(type));
 
-	return name.append("_EVENT").c_str();
+	return util_sensor_type_t::get_string(type);
 }
 
 unsigned int get_calibration_event_type(unsigned int event_type)
@@ -73,6 +72,7 @@ unsigned int get_log_per_count(sensor_id_t id)
 	case GESTURE_WRIST_DOWN_SENSOR:
 	case GESTURE_MOVEMENT_SENSOR:
 	case WEAR_STATUS_SENSOR:
+	case PRESSURE_SENSOR:
 		return LOG_PER_COUNT_EVERY_EVENT;
 	default:
 		break;

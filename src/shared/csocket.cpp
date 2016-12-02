@@ -25,7 +25,7 @@
 
 csocket::csocket()
 : m_sock_fd(-1)
-, m_sock_type(SOCK_STREAM)
+, m_sock_type(SOCK_SEQPACKET)
 , m_send_flags(MSG_NOSIGNAL)
 , m_recv_flags(MSG_NOSIGNAL)
 {
@@ -34,7 +34,7 @@ csocket::csocket()
 
 csocket::csocket(int sock_fd)
 : m_sock_fd(-1)
-, m_sock_type(SOCK_STREAM)
+, m_sock_type(SOCK_SEQPACKET)
 , m_send_flags(MSG_NOSIGNAL)
 , m_recv_flags(MSG_NOSIGNAL)
 {
@@ -45,7 +45,7 @@ csocket::csocket(int sock_fd)
 
 csocket::csocket(const csocket &sock)
 : m_sock_fd(-1)
-, m_sock_type(SOCK_STREAM)
+, m_sock_type(SOCK_SEQPACKET)
 , m_send_flags(MSG_NOSIGNAL)
 , m_recv_flags(MSG_NOSIGNAL)
 {
@@ -170,6 +170,7 @@ bool csocket::accept(csocket& client_socket) const
 
 	do {
 		client_socket.m_sock_fd = ::accept(m_sock_fd, (sockaddr *)&m_addr, (socklen_t *)&addr_length);
+		client_socket.set_sock_type();
 		if (!client_socket.is_valid())
 			err = errno;
 	} while (err == EINTR);
@@ -305,8 +306,34 @@ ssize_t csocket::recv_for_stream(void* buffer, size_t size) const
 
 ssize_t csocket::send(const void *buffer, size_t size) const
 {
+	const int TIMEOUT = 5;
+	fd_set write_fds;
+	struct timeval tv;
+
 	if (!is_valid())
 		return -EINVAL;
+
+	FD_ZERO(&write_fds);
+	FD_SET(m_sock_fd, &write_fds);
+	tv.tv_sec = TIMEOUT;
+	tv.tv_usec = 0;
+
+	int ret;
+
+	ret = select(m_sock_fd + 1, NULL, &write_fds, NULL, &tv);
+
+	if (ret == -1) {
+		_ERRNO(errno, _E, "select error: sock_fd: %d\n for %s", m_sock_fd, get_client_name());
+		return false;
+	} else if (!ret) {
+		_ERRNO(errno, _E, "select timeout: %d seconds elapsed for %s", tv.tv_sec, get_client_name());
+		return false;
+	}
+
+	if (!FD_ISSET(m_sock_fd, &write_fds)) {
+		_ERRNO(errno, _E, "select failed for %s, nothing to write, m_sock_fd : %d", get_client_name(), m_sock_fd);
+		return false;
+	}
 
 	if (m_sock_type == SOCK_STREAM)
 		return send_for_stream(buffer, size);

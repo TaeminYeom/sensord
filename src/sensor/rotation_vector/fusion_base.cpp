@@ -100,5 +100,10 @@ void fusion_base::store_orientation(void)
 	m_y = m_orientation_filter.m_quaternion.m_quat.m_vec[1];
 	m_z = m_orientation_filter.m_quaternion.m_quat.m_vec[2];
 	m_w = m_orientation_filter.m_quaternion.m_quat.m_vec[3];
+
+	if (std::isnan(m_x) || std::isnan(m_y) || std::isnan(m_z) || std::isnan(m_w)) {
+		m_timestamp = 0;
+		m_orientation_filter = orientation_filter<float>();
+	}
 	clear();
 }
