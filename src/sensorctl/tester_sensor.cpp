@@ -36,8 +36,8 @@ static GMainLoop *mainloop;
 static int check_loop;
 
 static const char *result_str(bool result) {
-	if (result)		return KGRN"[PASS]"RESET;
-	else 			return KRED"[FAIL]"RESET;
+	if (result)		return KGRN "[PASS]" RESET;
+	else			return KRED "[FAIL]" RESET;
 }
 
 bool tester_sensor::init(void)

@@ -103,7 +103,7 @@ bool injector_manager::process(int argc, char *argv[])
 	option_count = argc - ARGC_BASE;
 	for (i = 0; i < option_count; ++i) {
 		options[i] = new char[NAME_MAX_TEST];
-		strncpy(options[i], argv[ARGC_BASE+i], sizeof(argv[ARGC_BASE+i]));
+		strncpy(options[i], argv[ARGC_BASE + i], strlen(argv[ARGC_BASE + i]));
 	}
 
 	result = injector->inject(option_count, options);

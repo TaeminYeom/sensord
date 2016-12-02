@@ -42,8 +42,6 @@ static void int_to_bytes(int32_t value, int length, char cmd[])
 
 bool loopback_manager::process(int argc, char *argv[])
 {
-	sensor_type_t type;
-
 	if (argc < DEFAULT_COMMAND_SIZE || argc > MAX_COMMAND_SIZE) {
 		usage();
 		return false;
