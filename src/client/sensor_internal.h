@@ -24,7 +24,7 @@
 #define API __attribute__((visibility("default")))
 #endif
 
-#include "stdbool.h"
+#include <stdbool.h>
 #include <sys/types.h>
 
 /*header for common sensor type*/
