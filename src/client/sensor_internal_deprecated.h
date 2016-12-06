@@ -24,7 +24,7 @@
 #define DEPRECATED __attribute__((deprecated))
 #endif
 
-#include "stdbool.h"
+#include <stdbool.h>
 
 #include <sys/types.h>
 
