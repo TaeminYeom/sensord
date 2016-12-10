@@ -194,6 +194,12 @@ bool auto_rotation_sensor::set_wakeup(int wakeup)
 	return false;
 }
 
+bool auto_rotation_sensor::pre_start(void)
+{
+	m_rotation = AUTO_ROTATION_DEGREE_UNKNOWN;
+	return true;
+}
+
 bool auto_rotation_sensor::on_start(void)
 {
 	int length;

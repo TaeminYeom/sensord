@@ -56,6 +56,7 @@ private:
 	virtual bool set_batch_latency(unsigned long latency);
 	virtual bool set_wakeup(int wakeup);
 
+	virtual bool pre_start(void);
 	virtual bool on_start(void);
 	virtual bool on_stop(void);
 

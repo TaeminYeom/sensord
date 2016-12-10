@@ -103,6 +103,7 @@ private:
 	virtual bool set_interval(unsigned long interval);
 	virtual bool set_batch_latency(unsigned long latency);
 
+	virtual bool pre_start(void);
 	virtual bool on_start(void);
 	virtual bool on_stop(void);
 
