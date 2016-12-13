@@ -53,6 +53,9 @@
 #ifdef ENABLE_FACE_DOWN
 #include <face_down_sensor.h>
 #endif
+#ifdef ENABLE_SENSORHUB
+#include <pedometer_sensor.h>
+#endif
 
 using std::vector;
 using std::string;
@@ -169,6 +172,9 @@ void sensor_loader::create_sensors(void)
 	create_physical_sensors<hrm_sensor>(HRM_LED_GREEN_SENSOR);
 	create_physical_sensors<hrm_sensor>(HRM_LED_IR_SENSOR);
 	create_physical_sensors<hrm_sensor>(HRM_LED_RED_SENSOR);
+#ifdef ENABLE_SENSORHUB
+	create_physical_sensors<pedometer_sensor>(HUMAN_PEDOMETER_SENSOR);
+#endif
 
 	create_physical_sensors<physical_sensor>(UNKNOWN_SENSOR);
 
