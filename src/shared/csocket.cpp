@@ -324,15 +324,15 @@ ssize_t csocket::send(const void *buffer, size_t size) const
 
 	if (ret == -1) {
 		_ERRNO(errno, _E, "select error: sock_fd: %d\n for %s", m_sock_fd, get_client_name());
-		return false;
+		return 0;
 	} else if (!ret) {
 		_ERRNO(errno, _E, "select timeout: %d seconds elapsed for %s", tv.tv_sec, get_client_name());
-		return false;
+		return 0;
 	}
 
 	if (!FD_ISSET(m_sock_fd, &write_fds)) {
 		_ERRNO(errno, _E, "select failed for %s, nothing to write, m_sock_fd : %d", get_client_name(), m_sock_fd);
-		return false;
+		return 0;
 	}
 
 	if (m_sock_type == SOCK_STREAM)
