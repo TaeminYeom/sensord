@@ -1,7 +1,7 @@
 /*
  * sensorctl
  *
- * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,51 @@
  *
  */
 
-#pragma once // _INJECTOR_H_
+#pragma once /* __INJECTOR_H__ */
 
 #include <sensor_internal.h>
+#include <string>
+#include <vector>
 
-#define SENSORD_BUS_NAME 		"org.tizen.system.sensord"
-#define SENSORD_OBJ_PATH		"/Org/Tizen/System/SensorD"
-#define SENSORD_INTERFACE_NAME	"org.tizen.system.sensord"
+#include "sensor_manager.h"
 
-class injector_interface {
+#define NAME_MAX_TEST 32
+#define INJECTOR_ARGC 4 /* e.g. {sensorctl, inject, wristup, conf} */
+
+#define REGISTER_INJECTOR(sensor_type, event_name, injector_type) \
+static injector_type injector(sensor_type, event_name);
+
+class injector {
 public:
-	virtual bool init(void) { return true; }
-	virtual bool inject(int option_count, char *options[]) = 0;
+	injector(sensor_type_t sensor_type, const char *event_name);
+	virtual ~injector() {}
+
+	virtual bool setup(void) { return true; }
+	virtual bool teardown(void) { return true; }
+
+	const std::string& name() const { return m_name; }
+	const sensor_type_t type() const { return m_type; }
+
+	virtual bool inject(int argc, char *argv[]) = 0;
+
+private:
+	sensor_type_t m_type;
+	std::string m_name;
+};
+
+class injector_manager : public sensor_manager {
+public:
+	static void register_injector(injector *injector);
+
+public:
+	injector_manager();
+	virtual ~injector_manager();
+
+	bool run(int argc, char *argv[]);
+
+private:
+	static std::vector<injector *> injectors;
+
+	injector *get_injector(sensor_type_t type, const char *name);
+	void usage(void);
 };

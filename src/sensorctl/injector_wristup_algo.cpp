@@ -23,18 +23,32 @@
 #include <gio/gio.h>
 #include <map>
 #include <string>
-#include <sensorctl_log.h>
-#include "dbus_util.h"
-#include "injector_manager.h"
-#include "injector_wrist_up_algo.h"
 
-#define WRIST_UP_ALGO_SIGNAL "algo"
+#include "log.h"
+#include "dbus_util.h"
+#include "injector.h"
+
+#define WRISTUP_ALGO_SIGNAL "algo"
 #define OPTION_INDEX 0
 
 typedef std::map<std::string, int> option_map_t;
 static option_map_t option_map;
 
-bool injector_wrist_up_algo::init(void)
+class injector_wristup_algo : public injector {
+public:
+	injector_wristup_algo(sensor_type_t sensor_type, const char *event_name);
+	virtual ~injector_wristup_algo() {}
+
+	bool setup(void);
+	bool inject(int argc, char *argv[]);
+};
+
+injector_wristup_algo::injector_wristup_algo(sensor_type_t sensor_type, const char *event_name)
+: injector(sensor_type, event_name)
+{
+}
+
+bool injector_wristup_algo::setup(void)
 {
 	option_map.insert(option_map_t::value_type("auto", 0));
 	option_map.insert(option_map_t::value_type("green", 1));
@@ -44,34 +58,27 @@ bool injector_wrist_up_algo::init(void)
 	return true;
 }
 
-bool injector_wrist_up_algo::inject(int option_count, char *options[])
+bool injector_wristup_algo::inject(int argc, char *argv[])
 {
 	int option;
 
-	if (option_count == 0) {
-		_E("ERROR: invalid argument\n");
-		return false;
-	}
+	RETVM_IF(argc == 0, false, "Invalid argument\n");
 
 	option_map_t::iterator it;
-	it = option_map.find(options[OPTION_INDEX]);
-
-	if (it == option_map.end()) {
-		_E("ERROR: no matched-option: %s\n", options[OPTION_INDEX]);
-		return false;
-	}
+	it = option_map.find(argv[INJECTOR_ARGC]);
+	RETVM_IF(it == option_map.end(), false, "No matched option: %s\n", argv[INJECTOR_ARGC]);
 
 	option = it->second;
 
 	dbus_emit_signal(NULL,
 			(gchar *)SENSORD_OBJ_PATH,
 			(gchar *)SENSORD_INTERFACE_NAME,
-			(gchar *)WRIST_UP_ALGO_SIGNAL,
+			(gchar *)WRISTUP_ALGO_SIGNAL,
 			g_variant_new("(i)", option),
 			NULL);
 
-	_I("set [%s] mode to wristup (%d)", options[OPTION_INDEX], option);
+	_I("Set up [%s] mode to wristup (%d)\n", argv[INJECTOR_ARGC], option);
 	return true;
 }
 
-REGISTER_INJECTOR(MOTION_SENSOR, "algo", injector_wrist_up_algo)
+REGISTER_INJECTOR(GESTURE_WRIST_UP_SENSOR, WRISTUP_ALGO_SIGNAL, injector_wristup_algo)

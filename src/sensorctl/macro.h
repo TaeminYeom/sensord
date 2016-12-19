@@ -1,7 +1,7 @@
 /*
  * sensorctl
  *
- * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,7 @@
  *
  */
 
-#pragma once // _TEST_MANAGER_H_
+#pragma once /* __MACRO_H__ */
 
-#include "sensor_manager.h"
-
-class tester_manager : public sensor_manager {
-public:
-	tester_manager() {}
-	virtual ~tester_manager() {}
-
-	bool process(int argc, char *argv[]);
-private:
-	void usage(void);
-};
+#define NAME_MAX_TEST 32
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))

@@ -17,10 +17,13 @@
  *
  */
 
+#include "dbus_util.h"
+
 #include <stdlib.h>
 #include <glib.h>
 #include <gio/gio.h>
-#include <sensorctl_log.h>
+
+#include "log.h"
 
 static GDBusConnection *connection;
 
@@ -39,7 +42,7 @@ bool dbus_init(void)
 	gaddr = g_dbus_address_get_for_bus_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
 
 	if (!gaddr) {
-		PRINT("ERROR: Failed to get dbus address : %s", error->message);
+		_E("Failed to get dbus address : %s\n", error->message);
 		g_error_free(error);
 		error = NULL;
 		return false;
@@ -52,13 +55,13 @@ bool dbus_init(void)
 	g_free(gaddr);
 
 	if (!connection) {
-		PRINT("ERROR: Failed to get dbus connection : %s", error->message);
+		_E("Failed to get dbus connection : %s\n", error->message);
 		g_error_free(error);
 		error = NULL;
 		return false;
 	}
 
-	PRINT("G-DBUS connected[%s]\n",
+	_I("G-DBUS connected[%s]\n",
 			g_dbus_connection_get_unique_name(connection));
 	return true;
 }
@@ -104,4 +107,3 @@ GVariant *make_variant_int(int count, char *options[])
 
 	return NULL;
 }
-

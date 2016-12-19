@@ -17,16 +17,17 @@
  *
  */
 
-#pragma once // _CONTEXT_INJECTOR_H_
+#pragma once /* __LOOPBACK_MANAGER_H__ */
 
-#include <glib.h>
-#include <gio/gio.h>
-#include "injector.h"
+#include <sensor_internal.h>
+#include "sensor_manager.h"
 
-class injector_context_orientation: public injector_interface {
+class loopback_manager : public sensor_manager {
 public:
-	injector_context_orientation() {}
-	virtual ~injector_context_orientation() {}
+	loopback_manager() {}
+	virtual ~loopback_manager() {}
 
-	bool inject(int option_count, char *options[]);
+	bool run(int argc, char *argv[]);
+private:
+	void usage(void);
 };

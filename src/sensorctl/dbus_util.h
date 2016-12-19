@@ -17,10 +17,14 @@
  *
  */
 
-#pragma once // _DBUS_UTIL_H_
+#pragma once /* __DBUS_UTIL_H__ */
 
 #include <glib.h>
 #include <gio/gio.h>
+
+#define SENSORD_BUS_NAME		"org.tizen.system.sensord"
+#define SENSORD_OBJ_PATH		"/Org/Tizen/System/SensorD"
+#define SENSORD_INTERFACE_NAME	"org.tizen.system.sensord"
 
 bool dbus_init(void);
 bool dbus_fini(void);

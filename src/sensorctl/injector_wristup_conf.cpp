@@ -1,7 +1,7 @@
 /*
  * sensorctl
  *
- * Copyright (c) 2016 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,22 +24,22 @@
 #include "dbus_util.h"
 #include "injector.h"
 
-#define CONTEXT_ORIENTATION_SIGNAL	"orientation"
+#define WRISTUP_CONF_SIGNAL			"conf"
 
-class injector_context_orientation : public injector {
+class injector_wristup_conf : public injector {
 public:
-	injector_context_orientation(sensor_type_t sensor_type, const char *event_name);
-	virtual ~injector_context_orientation() {}
+	injector_wristup_conf(sensor_type_t sensor_type, const char *event_name);
+	virtual ~injector_wristup_conf() {}
 
 	bool inject(int argc, char *argv[]);
 };
 
-injector_context_orientation::injector_context_orientation(sensor_type_t sensor_type, const char *event_name)
+injector_wristup_conf::injector_wristup_conf(sensor_type_t sensor_type, const char *event_name)
 : injector(sensor_type, event_name)
 {
 }
 
-bool injector_context_orientation::inject(int argc, char *argv[])
+bool injector_wristup_conf::inject(int argc, char *argv[])
 {
 	GVariant *variant;
 
@@ -51,7 +51,7 @@ bool injector_context_orientation::inject(int argc, char *argv[])
 	dbus_emit_signal(NULL,
 			(gchar *)SENSORD_OBJ_PATH,
 			(gchar *)SENSORD_INTERFACE_NAME,
-			(gchar *)CONTEXT_ORIENTATION_SIGNAL,
+			(gchar *)WRISTUP_CONF_SIGNAL,
 			variant,
 			NULL);
 
@@ -62,4 +62,4 @@ bool injector_context_orientation::inject(int argc, char *argv[])
 	return true;
 }
 
-REGISTER_INJECTOR(CONTEXT_SENSOR, CONTEXT_ORIENTATION_SIGNAL, injector_context_orientation)
+REGISTER_INJECTOR(GESTURE_WRIST_UP_SENSOR, WRISTUP_CONF_SIGNAL, injector_wristup_conf)

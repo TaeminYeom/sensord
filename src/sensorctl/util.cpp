@@ -17,27 +17,43 @@
  *
  */
 
-#pragma once /* __TESTER_H__ */
+#include <stdlib.h>
+#include "util.h"
 
-#include <sensor_internal.h>
-#include <string>
-#include <vector>
+bool util::is_number(const char *value)
+{
+	if (value == NULL || *value == 0)
+		return false;
 
-#include "sensor_manager.h"
+	while (*value) {
+		if (*value < '0' || *value > '9')
+			return false;
+		value++;
+	}
 
-class tester_manager : public sensor_manager {
-public:
-	tester_manager();
-	virtual ~tester_manager();
+	return true;
+}
 
-	bool run(int argc, char *argv[]);
-	void stop(void);
+bool util::is_hex(const char *value)
+{
+	if (value == NULL || *value == 0)
+		return false;
 
-private:
-	bool setup(int argc, char *argv[]);
-	bool setup_auto(int argc, char *argv[]);
-	bool setup_manual(int argc, char *argv[]);
+	if (value[0] != '0')
+		return false;
 
-	void usage(void);
-};
+	if (value[1] != 'x' && value[1] != 'X')
+		return false;
 
+	value += 2;
+
+	while (*value) {
+		if ((*value < '0' || *value > '9') &&
+			(*value < 'a' || *value > 'f') &&
+			(*value < 'A' || *value > 'F'))
+			return false;
+		value++;
+	}
+
+	return true;
+}

@@ -1,7 +1,7 @@
 /*
  * sensorctl
  *
- * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,18 @@
  *
  */
 
-#pragma once // _WRISTUP_INJECTOR_H_
+#pragma once /* __INFO_MANAGER_H__ */
 
-#include <glib.h>
-#include <gio/gio.h>
-#include "injector.h"
+#include <sensor_internal.h>
+#include "sensor_manager.h"
 
-class injector_wrist_up_algo: public injector_interface {
+class info_manager : public sensor_manager {
 public:
-	injector_wrist_up_algo() {}
-	virtual ~injector_wrist_up_algo() {}
+	info_manager() {}
+	virtual ~info_manager() {}
 
-	bool init(void);
-	bool inject(int option_count, char *options[]);
+	bool run(int argc, char *argv[]);
+private:
+	void show_info(sensor_t *sensors, int count);
+	void usage(void);
 };

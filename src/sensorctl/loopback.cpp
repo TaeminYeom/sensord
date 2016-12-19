@@ -1,7 +1,7 @@
 /*
  * sensorctl
  *
- * Copyright (c) 2016 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sensor_internal.h>
-#include <sensorctl_log.h>
-#include "loopback_manager.h"
+
+#include "log.h"
+#include "loopback.h"
 
 #define SHUB_INST_LIB_ADD      ((char)-79)
 #define SHUB_INST_LIB_REMOVE   ((char)-78)
@@ -40,7 +41,7 @@ static void int_to_bytes(int32_t value, int length, char cmd[])
 	}
 }
 
-bool loopback_manager::process(int argc, char *argv[])
+bool loopback_manager::run(int argc, char *argv[])
 {
 	if (argc < DEFAULT_COMMAND_SIZE || argc > MAX_COMMAND_SIZE) {
 		usage();
@@ -88,10 +89,10 @@ bool loopback_manager::process(int argc, char *argv[])
 
 void loopback_manager::usage(void)
 {
-	PRINT("usage: sensorctl loopback [start/stop] [14byte sensor char data]\n");
-	PRINT("ex: sensorctl loopback start 15000 1 1 19 1 (after 15000ms, wrist up event)\n");
-	PRINT("ex: sensorctl loopback stop\n");
-	PRINT(" * if not enought 14byte, remain bytes are filled with 0\n");
-	PRINT("\n");
+	_N("usage: sensorctl loopback [start/stop] [14byte sensor char data]\n");
+	_N("ex: sensorctl loopback start 15000 1 1 19 1 (after 15000ms, wrist up event)\n");
+	_N("ex: sensorctl loopback stop\n");
+	_N(" * if not enought 14byte, remain bytes are filled with 0\n");
+	_N("\n");
 }
 

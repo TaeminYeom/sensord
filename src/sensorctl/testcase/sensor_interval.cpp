@@ -1,7 +1,7 @@
 /*
  * sensorctl
  *
- * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,10 @@
  *
  */
 
-#pragma once // _SENSOR_TESTER_H_
+#include "test_bench.h"
 
-#include "tester.h"
-
-class tester_sensor : public tester_interface {
-public:
-	tester_sensor() {}
-	virtual ~tester_sensor() {}
-
-	virtual bool init(void);
-	virtual bool test(sensor_type_t type, int option_count, char *options[]);
-private:
-	void test_sensor(sensor_type_t type, int interval, int latency, int cnt_test, int cnt_event);
-	static void test_cb(sensor_t sensor, unsigned int event_type, sensor_data_t *data, void *user_data);
-};
+TESTCASE(sensor_interval, all_sensor_interval_10ms_p)
+{
+	/* TODO: test 10ms interval */
+	return true;
+}

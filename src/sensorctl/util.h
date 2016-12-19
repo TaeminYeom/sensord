@@ -1,7 +1,7 @@
 /*
  * sensorctl
  *
- * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,10 @@
  *
  */
 
-#pragma once // _WRISTUP_INJECTOR_H_
+#pragma once /* __UTIL_H__ */
 
-#include <glib.h>
-#include <gio/gio.h>
-#include "injector.h"
-
-#define NAME_MAX_TEST 32
-
-class injector_wrist_up_conf: public injector_interface {
+class util {
 public:
-	injector_wrist_up_conf() {}
-	virtual ~injector_wrist_up_conf() {}
-
-	bool inject(int option_count, char *options[]);
+	static bool is_number(const char *value);
+	static bool is_hex(const char *value);
 };

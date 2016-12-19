@@ -22,79 +22,85 @@
 #include <string.h>
 #include <signal.h>
 
-#include <sensorctl_log.h>
+#include "log.h"
 #include "sensor_manager.h"
-#include "tester_manager.h"
-#include "injector_manager.h"
-#include "info_manager.h"
-#include "loopback_manager.h"
+#include "tester.h"
+#include "injector.h"
+#include "info.h"
+#include "loopback.h"
 
-static void good_bye(void)
+static sensor_manager *manager;
+
+static void usage(void)
 {
+	_N("usage: sensorctl <command> <sensor_type> [<args>]\n");
+
+	_N("The sensorctl commands are:\n");
+	_N("  test:   test sensor(s)\n");
+	_N("  inject: inject the event to sensor\n");
+	_N("  info:   show sensor infos\n");
 }
 
-static void signal_handler(int signo)
-{
-	_E("\nReceived SIGNAL(%d)\n", signo);
-	exit(EXIT_SUCCESS);
-
-	return;
-}
-
-void usage(void)
-{
-	PRINT("usage: sensorctl <command> <sensor_type> [<args>]\n");
-
-	PRINT("The sensorctl commands are:\n");
-	PRINT("  test:   test sensor(s)\n");
-	PRINT("  inject: inject the event to sensor\n");
-	PRINT("  info:   show sensor infos\n");
-	PRINT("  loopback: sensor loopback test\n");
-}
-
-sensor_manager *create_manager(int argc, char *argv[2])
+static sensor_manager *create_manager(char *command)
 {
 	sensor_manager *manager = NULL;
 
-	if (!strcmp(argv[1], "test"))
+	if (!strcmp(command, "test"))
 		manager = new(std::nothrow) tester_manager;
-	if (!strcmp(argv[1], "inject"))
+	if (!strcmp(command, "inject"))
 		manager = new(std::nothrow) injector_manager;
-	if (!strcmp(argv[1], "info"))
+	if (!strcmp(command, "info"))
 		manager = new(std::nothrow) info_manager;
-	if (!strcmp(argv[1], "loopback"))
+	if (!strcmp(command, "loopback"))
 		manager = new(std::nothrow) loopback_manager;
 
 	if (!manager) {
-		_E("failed to allocate memory for manager");
+		_E("failed to allocate memory for manager\n");
 		return NULL;
 	}
 
 	return manager;
 }
 
+static void destroy_manager(sensor_manager *manager)
+{
+	if (!manager)
+		return;
+
+	delete manager;
+	manager = NULL;
+}
+
+static void signal_handler(int signo)
+{
+	_E("\nReceived SIGNAL(%d)\n", signo);
+
+	manager->stop();
+}
+
 int main(int argc, char *argv[])
 {
-	atexit(good_bye);
-
 	signal(SIGINT,  signal_handler);
 	signal(SIGHUP,  signal_handler);
 	signal(SIGTERM, signal_handler);
 	signal(SIGQUIT, signal_handler);
 	signal(SIGABRT, signal_handler);
+	signal(SIGTSTP, signal_handler);
 
 	if (argc < 2) {
 		usage();
-		return 0;
+		return EXIT_SUCCESS;
 	}
 
-	sensor_manager *manager = create_manager(argc, argv);
+	manager = create_manager(argv[1]);
 	if (!manager) {
 		usage();
-		return 0;
+		return EXIT_SUCCESS;
 	}
 
-	manager->process(argc, argv);
+	manager->run(argc, argv);
 
-	return 0;
+	destroy_manager(manager);
+
+	return EXIT_SUCCESS;
 }

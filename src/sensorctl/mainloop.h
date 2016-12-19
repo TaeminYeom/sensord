@@ -17,17 +17,24 @@
  *
  */
 
-#pragma once // _LOOPBACK_MANAGER_H_
+#pragma once /* __MAINLOOP_H__ */
 
-#include <sensor_internal.h>
-#include "sensor_manager.h"
+#include <glib.h>
+#include <gio/gio.h>
 
-class loopback_manager : public sensor_manager {
+class mainloop {
 public:
-	loopback_manager() {}
-	virtual ~loopback_manager() {}
+	static void run(void);
+	static void stop(void);
+	static bool is_running(void);
 
-	bool process(int argc, char *argv[]);
 private:
-	void usage(void);
+	static mainloop& instance();
+
+	void start_loop(void);
+	void stop_loop(void);
+	bool is_loop_running(void);
+
+	GMainLoop *m_mainloop;
+	bool m_running;
 };
