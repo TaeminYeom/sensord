@@ -26,6 +26,21 @@ class pedometer_sensor : public physical_sensor {
 public:
 	pedometer_sensor();
 	virtual ~pedometer_sensor();
+
+	bool on_event(const sensor_data_t *data, int data_len, int remains);
+
+private:
+	unsigned long long m_steps;
+	unsigned long long m_walk_steps;
+	unsigned long long m_run_steps;
+	unsigned long long m_walk_up_steps;
+	unsigned long long m_walk_down_steps;
+	unsigned long long m_run_up_steps;
+	unsigned long long m_run_down_steps;
+	double m_distance;
+	double m_calories;
+
+	void accumulate(sensor_pedometer_data_t *data);
 };
 
 #endif /* _PEDOMETER_SENSOR_H_ */
