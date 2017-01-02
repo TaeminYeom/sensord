@@ -20,6 +20,8 @@ BuildRequires:  pkgconfig(cynara-client)
 BuildRequires:  pkgconfig(cynara-session)
 Requires:   libsensord = %{version}-%{release}
 
+%define BUILD_PROFILE %{?profile}%{!?profile:%{?tizen_profile_name}}
+
 %description
 Sensor daemon
 
@@ -56,9 +58,8 @@ Sensor functional testing
 %prep
 %setup -q
 MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
-
 cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix} -DLIBDIR=%{_libdir} \
-        -DMAJORVER=${MAJORVER} -DFULLVER=%{version}
+        -DMAJORVER=${MAJORVER} -DFULLVER=%{version} -DPROFILE=%{BUILD_PROFILE}
 
 %build
 make %{?jobs:-j%jobs}
@@ -69,6 +70,7 @@ rm -rf %{buildroot}
 
 mkdir -p %{buildroot}%{_unitdir}
 
+%if "%{?BUILD_PROFILE}" != "tv"
 install -m 0644 %SOURCE1 %{buildroot}%{_unitdir}
 install -m 0644 %SOURCE2 %{buildroot}%{_unitdir}
 install -m 0644 %SOURCE3 %{buildroot}%{_unitdir}
@@ -76,6 +78,7 @@ install -m 0644 %SOURCE3 %{buildroot}%{_unitdir}
 %install_service multi-user.target.wants sensord.service
 %install_service sockets.target.wants sensord_event.socket
 %install_service sockets.target.wants sensord_command.socket
+%endif
 
 %post
 systemctl daemon-reload
@@ -93,13 +96,16 @@ ln -sf %{_libdir}/libsensor.so.%{version} %{_libdir}/libsensor.so.1
 %files
 %manifest packaging/sensord.manifest
 %{_bindir}/sensord
+%license LICENSE.APLv2
+
+%if "%{?BUILD_PROFILE}" != "tv"
 %{_unitdir}/sensord.service
 %{_unitdir}/sensord_command.socket
 %{_unitdir}/sensord_event.socket
 %{_unitdir}/multi-user.target.wants/sensord.service
 %{_unitdir}/sockets.target.wants/sensord_command.socket
 %{_unitdir}/sockets.target.wants/sensord_event.socket
-%license LICENSE.APLv2
+%endif
 
 %files -n libsensord
 %defattr(-,root,root,-)
