@@ -45,7 +45,7 @@ private:
 	static sensor_raw_data_map m_sensor_raw_data_map;
 
 	static void init_cmd_handlers(void);
-	static int create_sensor_raw_list(int client_perms, std::vector<raw_data_t *> &raw_list);
+	static size_t create_sensor_raw_list(int client_perms, std::vector<raw_data_t *> &raw_list);
 	static void get_sensor_list(int permissions, cpacket &sensor_list);
 
 	static bool working(void *ctx);

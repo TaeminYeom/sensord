@@ -91,7 +91,7 @@ void command_worker::init_cmd_handlers(void)
 	m_cmd_handlers[CMD_FLUSH]				= &command_worker::cmd_flush;
 }
 
-int command_worker::create_sensor_raw_list(int client_perms, std::vector<raw_data_t *> &raw_list)
+size_t command_worker::create_sensor_raw_list(int client_perms, std::vector<raw_data_t *> &raw_list)
 {
 	size_t total_raw_data_size = 0;
 	vector<sensor_base *> sensors;
