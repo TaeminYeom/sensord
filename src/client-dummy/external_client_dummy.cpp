@@ -20,8 +20,8 @@
 #include <errno.h>
 #include <sensor_common.h>
 
-#include "sensor_internal.h"
-#include "sensor_internal_deprecated.h"
+#include <sensor_internal.h>
+#include <sensor_internal_deprecated.h>
 
 API int sensord_external_connect(const char *key, sensor_external_command_cb_t cb, void *user_data)
 {

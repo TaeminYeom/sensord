@@ -20,7 +20,7 @@
 #ifndef _SENSOR_TYPES_H_
 #define _SENSOR_TYPES_H_
 
-#include "enum_factory.h"
+#include <enum_factory.h>
 
 #ifdef __cplusplus
 extern "C"

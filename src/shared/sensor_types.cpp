@@ -17,6 +17,6 @@
  *
  */
 
-#include "sensor_types.h"
+#include <sensor_types.h>
 
 DECLARE_SENSOR_ENUM_UTIL(sensor_type_t, SENSOR_TYPE)

@@ -20,8 +20,8 @@
 #include <errno.h>
 #include <sensor_common.h>
 
-#include "sensor_internal.h"
-#include "sensor_internal_deprecated.h"
+#include <sensor_internal.h>
+#include <sensor_internal_deprecated.h>
 
 API int sensord_get_sensors(sensor_type_t type, sensor_t **list, int *sensor_count)
 {
