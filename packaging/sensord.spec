@@ -21,7 +21,6 @@ BuildRequires:  pkgconfig(cynara-session)
 
 Provides:   %{name}-profile_tv = %{version}-%{release}
 # For backward compatibility
-Provides:   libsensord = %{version}-%{release}
 
 %description
 Sensor daemon
@@ -62,7 +61,15 @@ Group:      System/Testing
 %description -n sensor-test
 Sensor functional testing
 
-# This dummy package will be removed later.
+# These dummy packages will be removed later.
+%package -n libsensord
+Summary:    Dummy package for backward compatibility
+Requires:   sensord
+
+%description -n libsensord
+Without this dummy package, obs may reports several 'unresolvable' issues.
+This is a temporal solution to handle such cases.
+
 %package -n libsensord-devel
 Summary:    Dummy package for backward compatibility
 Requires:   sensord-devel
@@ -139,6 +146,9 @@ echo "You need to reinstall %{name}, if you need to keep using the APIs after ui
 
 %files -n sensor-test
 %{_bindir}/sensorctl
+
+%files -n libsensord
+%license LICENSE.APLv2
 
 %files -n libsensord-devel
 %license LICENSE.APLv2
