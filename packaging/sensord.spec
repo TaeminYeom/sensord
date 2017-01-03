@@ -1,7 +1,7 @@
 Name:       sensord
 Summary:    Sensor daemon
-Version:    2.0.8
-Release:    0
+Version:    2.0.10
+Release:    1
 Group:      System/Sensor Framework
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
@@ -18,26 +18,35 @@ BuildRequires:  pkgconfig(libsystemd-daemon)
 BuildRequires:  pkgconfig(cynara-creds-socket)
 BuildRequires:  pkgconfig(cynara-client)
 BuildRequires:  pkgconfig(cynara-session)
-Requires:   libsensord = %{version}-%{release}
+
+Provides:   %{name}-profile_tv = %{version}-%{release}
+# For backward compatibility
+Provides:   libsensord = %{version}-%{release}
 
 %description
 Sensor daemon
 
-%package -n libsensord
-Summary:    Sensord library
-Group:      System/Libraries
+%package    genuine
+Summary:    Genuine Sensor Framework service daemon and shared library
+Requires:   %{name} = %{version}-%{release}
+Provides:   %{name}-profile_mobile = %{version}-%{release}
+Provides:   %{name}-profile_wearable = %{version}-%{release}
+Provides:   %{name}-profile_ivi = %{version}-%{release}
+Provides:   %{name}-profile_common = %{version}-%{release}
+
+%description genuine
+Binary replacement for sensord.
+This genuine sensord package contains actually working shared library
+of the sensor internal APIs and the sensor service daemon.
+If you want to keep using %{name} after uninstalling this, you need to reinstall %{name}.
+
+%package    devel
+Summary:    Internal Sensor API (Development)
+Group:      System/Development
 Requires:   %{name} = %{version}-%{release}
 
-%description -n libsensord
-Sensord library
-
-%package -n libsensord-devel
-Summary:    Sensord shared library
-Group:      System/Development
-Requires:   libsensord = %{version}-%{release}
-
-%description -n libsensord-devel
-Sensord shared library
+%description devel
+Internal Sensor API (Development)
 
 %package -n sensor-hal-devel
 Summary:    Sensord HAL interface
@@ -53,10 +62,18 @@ Group:      System/Testing
 %description -n sensor-test
 Sensor functional testing
 
+# This dummy package will be removed later.
+%package -n libsensord-devel
+Summary:    Dummy package for backward compatibility
+Requires:   sensord-devel
+
+%description -n libsensord-devel
+Some packages require libsensord-devel directly, and it causes local gbs build failures
+with the old build snapshots. This is a temporal solution to handle such cases.
+
 %prep
 %setup -q
 MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
-
 cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix} -DLIBDIR=%{_libdir} \
         -DMAJORVER=${MAJORVER} -DFULLVER=%{version}
 
@@ -77,21 +94,30 @@ install -m 0644 %SOURCE3 %{buildroot}%{_unitdir}
 %install_service sockets.target.wants sensord_event.socket
 %install_service sockets.target.wants sensord_command.socket
 
+ln -s libsensor.so.2 %{buildroot}%{_libdir}/libsensor.so.1
+
 %post
-systemctl daemon-reload
-
-%postun
-systemctl daemon-reload
-
-%post -n libsensord
-ln -sf %{_libdir}/libsensor.so.%{version} %{_libdir}/libsensor.so.1
-/sbin/ldconfig
-
-%postun -n libsensord
 /sbin/ldconfig
 
 %files
 %manifest packaging/sensord.manifest
+%{_libdir}/libsensor.so.*
+%license LICENSE.APLv2
+
+%post   genuine
+pushd %{_libdir}
+ln -sf libsensor-genuine.so.%{version} libsensor.so.%{version}
+chsmack -a "_" libsensor.so.%{version}
+popd
+/sbin/ldconfig
+
+%preun  genuine
+echo "You need to reinstall %{name}, if you need to keep using the APIs after uinstalling this."
+
+%files  genuine
+%manifest packaging/sensord.manifest
+%{_libdir}/libsensord-shared.so
+%{_libdir}/libsensor-genuine.so.*
 %{_bindir}/sensord
 %{_unitdir}/sensord.service
 %{_unitdir}/sensord_command.socket
@@ -99,29 +125,20 @@ ln -sf %{_libdir}/libsensor.so.%{version} %{_libdir}/libsensor.so.1
 %{_unitdir}/multi-user.target.wants/sensord.service
 %{_unitdir}/sockets.target.wants/sensord_command.socket
 %{_unitdir}/sockets.target.wants/sensord_event.socket
-%license LICENSE.APLv2
 
-%files -n libsensord
-%defattr(-,root,root,-)
-%manifest packaging/libsensord.manifest
-%{_libdir}/libsensor.so.*
-%{_libdir}/libsensord-shared.so
-%license LICENSE.APLv2
-
-%files -n libsensord-devel
-%defattr(-,root,root,-)
+%files  devel
+%manifest packaging/sensord.manifest
+%exclude %{_includedir}/sensor/sensor_hal.h
 %{_includedir}/sensor/*.h
 %{_libdir}/libsensor.so
 %{_libdir}/pkgconfig/sensor.pc
-%license LICENSE.APLv2
 
 %files -n sensor-hal-devel
-%defattr(-,root,root,-)
-%{_includedir}/sensor/sensor_hal.h
-%{_includedir}/sensor/sensor_hal_types.h
-%license LICENSE.APLv2
+%manifest packaging/sensord.manifest
+%{_includedir}/sensor/sensor_hal*.h
 
 %files -n sensor-test
-%defattr(-,root,root,-)
 %{_bindir}/sensorctl
+
+%files -n libsensord-devel
 %license LICENSE.APLv2

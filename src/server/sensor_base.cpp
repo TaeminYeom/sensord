@@ -121,6 +121,9 @@ bool sensor_base::start(void)
 {
 	AUTOLOCK(m_client_mutex);
 
+	if (!pre_start())
+		return false;
+
 	++m_client;
 
 	if (m_client == 1) {
@@ -344,6 +347,11 @@ bool sensor_base::set_interval(unsigned long interval)
 }
 
 bool sensor_base::set_batch_latency(unsigned long latency)
+{
+	return true;
+}
+
+bool sensor_base::pre_start(void)
 {
 	return true;
 }

@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2016 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2013 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,23 @@
  *
  */
 
-#include <sensor_types.h>
+#include <errno.h>
+#include <sensor_common.h>
 
-DECLARE_SENSOR_ENUM_UTIL(sensor_type_t, SENSOR_TYPE)
+#include <sensor_internal.h>
+#include <sensor_internal_deprecated.h>
+
+API int sensord_external_connect(const char *key, sensor_external_command_cb_t cb, void *user_data)
+{
+	return OP_ERROR;
+}
+
+API bool sensord_external_disconnect(int handle)
+{
+	return false;
+}
+
+API bool sensord_external_post(int handle, unsigned long long timestamp, const float* data, int data_cnt)
+{
+	return false;
+}
