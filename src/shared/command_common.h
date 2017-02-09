@@ -20,7 +20,6 @@
 #ifndef _COMMAND_COMMON_H_
 #define _COMMAND_COMMON_H_
 
-#include <cpacket.h>
 #include <sensor_common.h>
 #include <string>
 #include <vector>

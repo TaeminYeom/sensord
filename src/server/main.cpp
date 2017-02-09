@@ -17,96 +17,10 @@
  *
  */
 
-#include <signal.h>
-#include <sensor_log.h>
-#include <server.h>
-#include <dbus_util.h>
-#include <sensor_loader.h>
-#include <string>
-
+/* TODO: create conf file for calibration paths */
 #define CAL_NODE_PATH "/sys/class/sensors/ssp_sensor/set_cal_data"
-#define SET_CAL 1
-
-#define TIMEOUT 10
-
-static void sig_term_handler(int signo, siginfo_t *info, void *data)
-{
-	char proc_name[NAME_MAX];
-
-	get_proc_name(info->si_pid, proc_name);
-
-	_E("Received SIGTERM(%d) from %s(%d)\n", signo, proc_name, info->si_pid);
-
-	server::get_instance().stop();
-}
-
-static void signal_init(void)
-{
-	struct sigaction sig_act;
-	memset(&sig_act, 0, sizeof(struct sigaction));
-
-	sig_act.sa_handler = SIG_IGN;
-	sigaction(SIGCHLD, &sig_act, NULL);
-	sigaction(SIGPIPE, &sig_act, NULL);
-
-	sig_act.sa_handler = NULL;
-	sig_act.sa_sigaction = sig_term_handler;
-	sig_act.sa_flags = SA_SIGINFO;
-	sigaction(SIGTERM, &sig_act, NULL);
-	sigaction(SIGABRT, &sig_act, NULL);
-	sigaction(SIGINT, &sig_act, NULL);
-}
-
-static void set_cal_data(void)
-{
-	FILE *fp = fopen(CAL_NODE_PATH, "w");
-
-	if (!fp) {
-		_I("Not support calibration_node");
-		return;
-	}
-
-	fprintf(fp, "%d", SET_CAL);
-
-	if (fp)
-		fclose(fp);
-
-	_I("Succeeded to set calibration data");
-
-	return;
-}
-
-static gboolean terminate(gpointer data)
-{
-	std::vector<sensor_base *> sensors = sensor_loader::get_instance().get_sensors(ALL_SENSOR);
-
-	if (sensors.size() == 0) {
-		_I("Terminating sensord..");
-		server::get_instance().stop();
-	}
-
-	return FALSE;
-}
 
 int main(int argc, char *argv[])
 {
-	_I("Sensord started");
-
-	signal_init();
-
-	init_dbus();
-
-	set_cal_data();
-
-	/* TODO: loading sequence has to be moved to server */
-	sensor_loader::get_instance().load();
-	g_timeout_add_seconds(TIMEOUT, terminate, NULL);
-
-	server::get_instance().run();
-	server::get_instance().stop();
-
-	fini_dbus();
-
-	_I("Sensord terminated");
 	return 0;
 }

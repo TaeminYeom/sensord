@@ -20,51 +20,12 @@
 #ifndef _SERVER_H_
 #define _SERVER_H_
 
-#include <glib.h>
-#include <csocket.h>
-#include <vector>
-#include <thread>
-
 class server {
 public:
-	static server& get_instance(void);
-
-public:
-	void run(void);
-	void stop(void);
-
-private:
-	GMainLoop *m_mainloop;
-	csocket m_command_channel_accept_socket;
-	csocket m_event_channel_accept_socket;
-
-	std::vector<csocket> client_command_sockets;
-	std::vector<csocket> client_event_sockets;
-
-	bool m_running;
-
-private:
 	server();
 	virtual ~server();
 
-	void initialize(void);
-	void terminate(void);
-
-	void poll_event(void);
-
-	bool listen_command_channel(void);
-	bool listen_event_channel(void);
-
-	void accept_command_channel(void);
-	void accept_event_channel(void);
-
-	void dispatch_worker(csocket socket);
-	void dispatch_event_channel_creator(csocket socket);
-
-	void close_socket(void);
-
-	/* TODO: move to socket class */
-	int get_systemd_socket(const char *name);
+	static server& get_instance(void);
 };
 
 #endif /* _SERVER_H_ */
