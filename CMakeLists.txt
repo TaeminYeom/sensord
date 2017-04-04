@@ -7,12 +7,12 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 # Common Options
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2 -omit-frame-pointer -std=gnu++0x")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -ffunction-sections")
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-section -Wl,--print-gc-section")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections -Wl,--print-gc-sections")
 MESSAGE("FLAGS: ${CMAKE_CXX_FLAGS}")
 MESSAGE("FLAGS: ${CMAKE_EXE_LINKER_FLAGS}")
 
 # Internal Debugging Options
-#add_definitions(-Wall -g -D_DEBUG)
+#ADD_DEFINITIONS(-Wall -g -D_DEBUG)
 
 # Sub-directory
 ADD_SUBDIRECTORY(src/shared)
