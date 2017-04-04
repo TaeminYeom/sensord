@@ -50,6 +50,7 @@ bool info_manager::run(int argc, char *argv[])
 
 void info_manager::show_info(sensor_t *sensors, int count)
 {
+	sensor_type_t type;
 	sensor_t sensor;
 	char *vendor;
 	char *name;
@@ -63,6 +64,7 @@ void info_manager::show_info(sensor_t *sensors, int count)
 	for (int i = 0; i < count; ++i) {
 		sensor = sensors[i];
 
+		sensord_get_type(sensor, &type);
 		name = const_cast<char *>(sensord_get_name(sensor));
 		vendor = const_cast<char *>(sensord_get_vendor(sensor));
 		sensord_get_max_range(sensor, &max_range);
@@ -73,6 +75,7 @@ void info_manager::show_info(sensor_t *sensors, int count)
 		sensord_get_max_batch_count(sensor, &max_batch_count);
 
 		_N("-------sensor[%d] information-------\n", i);
+		_N("type            : %#x\n", type);
 		_N("vendor          : %s\n", vendor);
 		_N("name            : %s\n", name);
 		_N("min_range       : %f\n", min_range);

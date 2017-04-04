@@ -163,10 +163,7 @@ void test_bench::show_failures(void)
 
 	for (unsigned int i = 0; i < results.size(); ++i) {
 		_E("[  FAILED  ] ");
-		_N("%s(%ld) -> %s\n",
-				results[i].function.c_str(),
-				results[i].line,
-				results[i].msg.c_str());
+		_N("%s\n", results[i].msg.c_str());
 	}
 }
 

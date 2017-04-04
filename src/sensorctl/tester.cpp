@@ -167,7 +167,8 @@ TESTCASE(skip_manual, sensor_test)
 
 	if (sensor_adapter::get_count(type) > 1) {
 		_N("There are more than 2 sensors. please enter the index : ");
-		scanf("%d", &index);
+		if (scanf("%d", &index) != 1)
+			return false;
 	}
 
 	sensor_info info(type, index, interval, latency, powersave, test_cb, NULL);

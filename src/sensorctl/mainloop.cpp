@@ -46,7 +46,7 @@ void mainloop::start_loop(void)
 		return;
 
 	m_mainloop = g_main_loop_new(NULL, false);
-	m_running = true;
+	m_running.store(true);
 
 	g_main_loop_run(m_mainloop);
 }
@@ -59,11 +59,11 @@ void mainloop::stop_loop(void)
 	g_main_loop_quit(m_mainloop);
 	g_main_loop_unref(m_mainloop);
 	m_mainloop = NULL;
-	m_running = false;
+	m_running.store(false);
 }
 
 bool mainloop::is_loop_running(void)
 {
-	return m_running;
+	return m_running.load();
 }
 

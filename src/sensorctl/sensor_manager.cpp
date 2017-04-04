@@ -61,7 +61,7 @@ static struct sensor_info sensor_infos[] = {
 	{HUMAN_PEDOMETER_SENSOR,		"pedo"},
 	{HUMAN_SLEEP_MONITOR_SENSOR,	"sleep_monitor"},
 
-	{AUTO_ROTATION_SENSOR,			"auto_rotation"},
+	{AUTO_ROTATION_SENSOR,			"rotation"},
 	//{AUTO_BRIGHTENESS_SENSOR,		"auto_brighteness"},
 	{MOTION_SENSOR,					"motion"},
 	{CONTEXT_SENSOR,				"context"},

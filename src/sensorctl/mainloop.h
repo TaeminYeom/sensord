@@ -21,6 +21,7 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+#include <atomic>
 
 class mainloop {
 public:
@@ -36,5 +37,5 @@ private:
 	bool is_loop_running(void);
 
 	GMainLoop *m_mainloop;
-	bool m_running;
+	std::atomic<bool> m_running;
 };

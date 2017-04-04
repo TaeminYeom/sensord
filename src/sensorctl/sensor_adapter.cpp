@@ -92,10 +92,10 @@ bool sensor_adapter::stop(sensor_info info, int handle)
 {
 	bool ret;
 
-	ret = sensord_unregister_event(handle, SENSOR_EVENT(info.type));
+	ret = sensord_stop(handle);
 	EXPECT_TRUE(ret);
 
-	ret = sensord_stop(handle);
+	ret = sensord_unregister_event(handle, SENSOR_EVENT(info.type));
 	EXPECT_TRUE(ret);
 
 	ret = sensord_disconnect(handle);
