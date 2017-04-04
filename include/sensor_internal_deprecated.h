@@ -25,11 +25,9 @@
 #endif
 
 #include <stdbool.h>
-
 #include <sys/types.h>
 
 /*header for common sensor type*/
-#include <sensor_common.h>
 #include <sensor_types.h>
 #include <sensor_deprecated.h>
 
@@ -39,7 +37,7 @@ extern "C"
 #endif
 
 typedef struct {
-	condition_op_t cond_op;
+	int cond_op; /* TODO: change it from int to condition_op_t */
 	float cond_value1;
 } event_condition_t;
 

@@ -20,10 +20,45 @@
 #ifndef __SENSOR_TYPES_H__
 #define __SENSOR_TYPES_H__
 
+/* TODO: It is for compatibility with capi-system-sensor */
+#define __SENSOR_COMMON_H__
+
+#include <stddef.h>
+#include <stdint.h>
+#include <sensor_hal_types.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+#ifndef OP_SUCCESS
+#define OP_SUCCESS 0
+#endif
+#ifndef OP_ERROR
+#define OP_ERROR   -1
+#endif
+#ifndef OP_DEFAULT
+#define OP_DEFAULT 1
+#endif
+#ifndef OP_CONTINUE
+#define OP_CONTINUE 2
+#endif
+#ifndef NAME_MAX
+#define NAME_MAX 256
+#endif
+
+#define SENSOR_TYPE_SHIFT 32
+#define SENSOR_EVENT_SHIFT 16
+#define SENSOR_INDEX_MASK 0xFFFFFFFF
+
+#define CONVERT_ID_TYPE(id) ((id) >> SENSOR_TYPE_SHIFT)
+#define CONVERT_TYPE_EVENT(type) ((type) << SENSOR_EVENT_SHIFT | 0x1)
+
+#define MICROSECONDS(tv)        ((tv.tv_sec * 1000000ll) + tv.tv_usec)
+
+typedef int64_t sensor_id_t;
+typedef void *sensor_t;
 
 typedef enum sensor_type_t {
 	UNKNOWN_SENSOR = -2,
@@ -123,6 +158,77 @@ typedef enum sensor_type_t {
 
 	CUSTOM_SENSOR = 0X9000,
 } sensor_type_t;
+
+
+typedef enum sensor_permission_t {
+	SENSOR_PERMISSION_NONE = 0,
+	SENSOR_PERMISSION_STANDARD = 1,
+	SENSOR_PERMISSION_HEALTH_INFO = 2,
+} sensor_permission_t;
+
+typedef enum sensor_privilege_t {
+	SENSOR_PRIVILEGE_PUBLIC = 1,
+} sensor_privilege_t;
+
+typedef struct sensor_event_t {
+	unsigned int event_type;
+	sensor_id_t sensor_id;
+	unsigned int data_length;
+	sensor_data_t *data;
+} sensor_event_t;
+
+/*
+ *	To prevent naming confliction as using same enums as sensor CAPI use
+ */
+#ifndef __SENSOR_H__
+enum sensor_option_t {
+	SENSOR_OPTION_DEFAULT = 0,
+	SENSOR_OPTION_ON_IN_SCREEN_OFF = 1,
+	SENSOR_OPTION_ON_IN_POWERSAVE_MODE = 2,
+	SENSOR_OPTION_ALWAYS_ON = SENSOR_OPTION_ON_IN_SCREEN_OFF | SENSOR_OPTION_ON_IN_POWERSAVE_MODE,
+	SENSOR_OPTION_END
+};
+
+typedef enum sensor_option_t sensor_option_e;
+#endif
+
+enum sensord_attribute_e {
+	SENSORD_ATTRIBUTE_AXIS_ORIENTATION = 1,
+	SENSORD_ATTRIBUTE_PAUSE_POLICY,
+	SENSORD_ATTRIBUTE_INTERVAL = 0x10,
+	SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY,
+	SENSORD_ATTRIBUTE_PASSIVE_MODE,
+	SENSORD_ATTRIBUTE_FLUSH,
+};
+
+enum sensord_axis_e {
+	SENSORD_AXIS_DEVICE_ORIENTED = 1,
+	SENSORD_AXIS_DISPLAY_ORIENTED,
+};
+
+enum sensord_pause_e {
+	SENSORD_PAUSE_NONE = 0,
+	SENSORD_PAUSE_ON_DISPLAY_OFF = 1,
+	SENSORD_PAUSE_ON_POWERSAVE_MODE = 2,
+	SENSORD_PAUSE_ALL = 3,
+	SENSORD_PAUSE_END,
+};
+
+enum poll_interval_t {
+	POLL_100HZ_MS	= 10,
+	POLL_50HZ_MS	= 20,
+	POLL_25HZ_MS	= 40,
+	POLL_20HZ_MS	= 50,
+	POLL_10HZ_MS	= 100,
+	POLL_5HZ_MS		= 200,
+	POLL_1HZ_MS		= 1000,
+	POLL_MAX_HZ_MS  = 255000,
+};
+
+enum sensor_interval_t {
+	SENSOR_INTERVAL_FASTEST = POLL_100HZ_MS,
+	SENSOR_INTERVAL_NORMAL = POLL_5HZ_MS,
+};
 
 enum proxi_change_state {
 	PROXIMITY_STATE_NEAR = 0,
