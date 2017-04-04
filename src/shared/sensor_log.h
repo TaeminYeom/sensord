@@ -17,36 +17,29 @@
  *
  */
 
-#ifndef _SENSOR_LOG_H_
-#define _SENSOR_LOG_H_
+#ifndef __SENSOR_LOG_H__
+#define __SENSOR_LOG_H__
 
 #include <dlog/dlog.h>
 #include <sys/types.h>
-
-#define MICROSECONDS(tv)        ((tv.tv_sec * 1000000ll) + tv.tv_usec)
 
 #ifdef LOG_TAG
 	#undef LOG_TAG
 #endif
 #define LOG_TAG	"SENSOR"
 
-#define LOG_DUMP(fp, fmt, arg...) do { if (fp) fprintf(fp, fmt, ##arg); else _E(fmt, ##arg); } while (0)
+/* Logging and Error Handling */
+#define _I SLOGI
+#define _D SLOGD
+#define _W SLOGW
+#define _E SLOGE
+#define _SI SECURE_SLOGI
+#define _SD SECURE_SLOGD
+#define _SW SECURE_SLOGW
+#define _SE SECURE_SLOGE
 
-#ifdef _DEBUG
-#define DBG SLOGD
-#else
-#define DBG(...) do {} while (0)
-#endif
-
-#define ERR SLOGE
-#define WARN SLOGW
-#define INFO SLOGI
-#define _E ERR
-#define _W WARN
-#define _I INFO
-#define _D DBG
-
-#define _ERRNO(errno, tag, fmt, arg...) do { \
+#define _ERRNO(errno, tag, fmt, arg...) \
+	do { \
 		char buf[1024]; \
 		char *error = strerror_r(errno, buf, 1024); \
 		if (!error) { \
@@ -56,80 +49,22 @@
 		tag(fmt" (%s[%d])", ##arg, error, errno); \
 	} while (0)
 
-#if defined(_DEBUG)
-#  define warn_if(expr, fmt, arg...) do { \
-		if (expr) { \
-			_D("(%s) -> " fmt, #expr, ##arg); \
-		} \
-	} while (0)
-#  define ret_if(expr) do { \
-		if (expr) { \
-			_D("(%s) -> %s() return", #expr, __FUNCTION__); \
-			return; \
-		} \
-	} while (0)
-#  define retv_if(expr, val) do { \
-		if (expr) { \
-			_D("(%s) -> %s() return", #expr, __FUNCTION__); \
-			return (val); \
-		} \
-	} while (0)
-#  define retm_if(expr, fmt, arg...) do { \
-		if (expr) { \
-			_E(fmt, ##arg); \
-			_D("(%s) -> %s() return", #expr, __FUNCTION__); \
-			return; \
-		} \
-	} while (0)
-#  define retvm_if(expr, val, fmt, arg...) do { \
-		if (expr) { \
-			_E(fmt, ##arg); \
-			_D("(%s) -> %s() return", #expr, __FUNCTION__); \
-			return (val); \
-		} \
-	} while (0)
+#define warn_if(expr, fmt, arg...) \
+	do { if (expr) { _E(fmt, ##arg); } } while (0)
 
-#else
-#  define warn_if(expr, fmt, arg...) do { \
-		if (expr) { \
-			_E(fmt, ##arg); \
-		} \
-	} while (0)
-#  define ret_if(expr) do { \
-		if (expr) { \
-			return; \
-		} \
-	} while (0)
-#  define retv_if(expr, val) do { \
-		if (expr) { \
-			return (val); \
-		} \
-	} while (0)
-#  define retm_if(expr, fmt, arg...) do { \
-		if (expr) { \
-			_E(fmt, ##arg); \
-			return; \
-		} \
-	} while (0)
-#  define retvm_if(expr, val, fmt, arg...) do { \
-		if (expr) { \
-			_E(fmt, ##arg); \
-			return (val); \
-		} \
-	} while (0)
+#define ret_if(expr) \
+	do { if (expr) { return; } } while (0)
 
-#endif
+#define retv_if(expr, val) \
+	do { if (expr) { return (val); } } while (0)
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#define retm_if(expr, fmt, arg...) \
+	do { if (expr) { _E(fmt, ##arg); return; } } while (0)
 
-const char* get_client_name(void);
-bool get_proc_name(pid_t pid, char *process_name);
+#define retvm_if(expr, val, fmt, arg...) \
+	do { if (expr) { _E(fmt, ##arg); return (val); } } while (0)
 
-#ifdef __cplusplus
-}
-#endif
+#define LOG_DUMP(fp, fmt, arg...) \
+	do { if (fp) fprintf(fp, fmt, ##arg); else _E(fmt, ##arg); } while (0)
 
-#endif /* _SENSOR_LOG_H_ */
+#endif /* __SENSOR_LOG_H__ */

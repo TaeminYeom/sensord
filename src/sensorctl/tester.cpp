@@ -33,9 +33,9 @@
 #define TESTER_ARGC 3 /* e.g. {sensorctl, test, accelerometer} */
 
 #define MAX_COUNT 999999
-#define DEFAULT_INTERVAL 100
-#define DEFAULT_LATENCY 0
-#define DEFAULT_POWERSAVE_OPTION SENSOR_OPTION_ALWAYS_ON
+#define TEST_DEFAULT_INTERVAL 100
+#define TEST_DEFAULT_LATENCY 0
+#define TEST_DEFAULT_POWERSAVE_OPTION SENSOR_OPTION_ALWAYS_ON
 
 static sensor_type_t type;
 static int interval;
@@ -94,9 +94,9 @@ bool tester_manager::setup_manual(int argc, char *argv[])
 	type = get_sensor_type(argv[2]);
 	RETVM_IF(type == UNKNOWN_SENSOR, false, "Invalid argument\n");
 
-	interval = DEFAULT_INTERVAL;
-	latency = DEFAULT_LATENCY;
-	powersave = DEFAULT_POWERSAVE_OPTION;
+	interval = TEST_DEFAULT_INTERVAL;
+	latency = TEST_DEFAULT_LATENCY;
+	powersave = TEST_DEFAULT_POWERSAVE_OPTION;
 	event_count = 0;
 
 	if (argc >= TESTER_ARGC + 1)

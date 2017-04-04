@@ -225,6 +225,8 @@ enum poll_interval_t {
 	POLL_MAX_HZ_MS  = 255000,
 };
 
+#define DEFAULT_INTERVAL POLL_10HZ_MS
+
 enum sensor_interval_t {
 	SENSOR_INTERVAL_FASTEST = POLL_100HZ_MS,
 	SENSOR_INTERVAL_NORMAL = POLL_5HZ_MS,
