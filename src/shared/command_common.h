@@ -24,8 +24,7 @@
 #include <string>
 #include <vector>
 
-#define COMMAND_CHANNEL_PATH		"/tmp/sensord_command_socket\0"
-#define EVENT_CHANNEL_PATH			"/tmp/sensord_event_socket\0"
+#define SENSOR_CHANNEL_PATH		"/run/.sensord.socket"
 
 #define MAX_HANDLE			256
 #define MAX_HANDLE_REACHED	-2

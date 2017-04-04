@@ -6,8 +6,7 @@ Group:      System/Sensor Framework
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
 Source1:    sensord.service
-Source2:    sensord_command.socket
-Source3:    sensord_event.socket
+Source2:    sensord.socket
 
 BuildRequires:  cmake
 BuildRequires:  libattr-devel
@@ -80,30 +79,30 @@ with the old build snapshots. This is a temporal solution to handle such cases.
 
 %prep
 %setup -q
-MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
-cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix} -DLIBDIR=%{_libdir} \
-        -DMAJORVER=${MAJORVER} -DFULLVER=%{version}
 
 %build
-make %{?jobs:-j%jobs}
+MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
+
+%cmake . -DMAJORVER=${MAJORVER} -DFULLVER=%{version}
+make %{?_smp_mflags}
 
 %install
-rm -rf %{buildroot}
 %make_install
 
 mkdir -p %{buildroot}%{_unitdir}
 
 install -m 0644 %SOURCE1 %{buildroot}%{_unitdir}
 install -m 0644 %SOURCE2 %{buildroot}%{_unitdir}
-install -m 0644 %SOURCE3 %{buildroot}%{_unitdir}
 
 %install_service multi-user.target.wants sensord.service
-%install_service sockets.target.wants sensord_event.socket
-%install_service sockets.target.wants sensord_command.socket
+%install_service sockets.target.wants sensord.socket
 
 ln -s libsensor.so.2 %{buildroot}%{_libdir}/libsensor.so.1
 
 %post
+/sbin/ldconfig
+
+%postun
 /sbin/ldconfig
 
 %files
@@ -127,11 +126,9 @@ echo "You need to reinstall %{name}, if you need to keep using the APIs after ui
 %{_libdir}/libsensor-genuine.so.*
 %{_bindir}/sensord
 %{_unitdir}/sensord.service
-%{_unitdir}/sensord_command.socket
-%{_unitdir}/sensord_event.socket
+%{_unitdir}/sensord.socket
 %{_unitdir}/multi-user.target.wants/sensord.service
-%{_unitdir}/sockets.target.wants/sensord_command.socket
-%{_unitdir}/sockets.target.wants/sensord_event.socket
+%{_unitdir}/sockets.target.wants/sensord.socket
 
 %files  devel
 %manifest packaging/sensord.manifest

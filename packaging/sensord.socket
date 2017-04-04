@@ -1,10 +1,10 @@
 [Unit]
-Description=Sensor command socket
+Description=Sensor socket
 
 [Socket]
 SocketUser=sensor
 SocketGroup=input
-ListenStream=/tmp/sensord_command_socket
+ListenStream=/run/.sensord.socket
 SocketMode=0777
 PassCredentials=yes
 Accept=false
