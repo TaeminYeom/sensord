@@ -230,6 +230,8 @@ bool event_loop::run(int timeout)
 
 	_I("Started");
 	g_main_loop_run(m_mainloop);
+
+	return true;
 }
 
 void event_loop::stop(void)
@@ -237,8 +239,11 @@ void event_loop::stop(void)
 	ret_if(!is_running() || m_terminating.load());
 
 	uint64_t term = 1;
+	ssize_t size;
 	m_terminating.store(true);
-	write(m_term_fd, &term, sizeof(uint64_t));
+	size = write(m_term_fd, &term, sizeof(uint64_t));
+
+	retm_if(size != sizeof(ssize_t), "Failed to write[%d]", m_term_fd);
 }
 
 void event_loop::terminate(void)
