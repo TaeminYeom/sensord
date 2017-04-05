@@ -17,10 +17,58 @@
  *
  */
 
-/* TODO: create conf file for calibration paths */
-#define CAL_NODE_PATH "/sys/class/sensors/ssp_sensor/set_cal_data"
+#include <unistd.h>
+#include <sensor_log.h>
+#include <dbus_util.h>
+#include <new>
+#include <csignal>
+
+#include "server.h"
+
+#define NEW_FAIL_LIMIT 3
+
+using namespace sensor;
+
+static void on_signal(int signum)
+{
+	_W("Received SIGNAL(%d : %s)", signum, strsignal(signum));
+	server::stop();
+}
+
+static void on_new_failed(void)
+{
+	static unsigned fail_count = 0;
+	_E("Failed to allocate memory");
+
+	fail_count += 1;
+	if (fail_count >= NEW_FAIL_LIMIT) {
+		raise(SIGTERM);
+		return;
+	}
+
+	usleep(100000);
+}
 
 int main(int argc, char *argv[])
 {
+	_I("Started");
+	std::signal(SIGINT, on_signal);
+	std::signal(SIGHUP, on_signal);
+	std::signal(SIGTERM, on_signal);
+	std::signal(SIGQUIT, on_signal);
+	std::signal(SIGABRT, on_signal);
+	std::signal(SIGCHLD, SIG_IGN);
+	std::signal(SIGPIPE, SIG_IGN);
+
+	std::set_new_handler(on_new_failed);
+
+	init_dbus();
+
+	server::run();
+
+	fini_dbus();
+
+	_I("Stopped");
+
 	return 0;
 }
