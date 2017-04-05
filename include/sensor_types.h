@@ -60,6 +60,8 @@ extern "C"
 #define SENSOR_UNKNOWN_TYPE "http://tizen.org/sensor/unknown"
 #define SENSOR_UNKNOWN_NAME "Unknown"
 
+#define SENSOR_URI_PERMISSION_DENIED "http://tizen.org/sensor/EACCES"
+
 typedef int64_t sensor_id_t;
 typedef void *sensor_t;
 
