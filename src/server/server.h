@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,44 @@
  *
  */
 
-#ifndef _SERVER_H_
-#define _SERVER_H_
+#ifndef __SERVER_H__
+#define __SERVER_H__
+
+#include <event_loop.h>
+#include <ipc_server.h>
+#include <sensor_manager.h>
+#include <server_channel_handler.h>
+#include <physical_sensor.h>
+#include <atomic>
+
+namespace sensor {
 
 class server {
 public:
-	server();
-	virtual ~server();
+	static void run(void);
+	static void stop(void);
 
-	static server& get_instance(void);
+private:
+	static server &instance(void);
+
+	static ipc::event_loop m_loop;
+	static std::atomic<bool> is_running;
+
+	server();
+	~server();
+
+	bool init(void);
+	void deinit(void);
+
+	void init_calibration(void);
+	void init_server(void);
+	void init_termination(void);
+
+	ipc::ipc_server *m_server;
+	sensor_manager *m_manager;
+	server_channel_handler *m_handler;
 };
 
-#endif /* _SERVER_H_ */
+}
+
+#endif /* __SERVER_H__ */

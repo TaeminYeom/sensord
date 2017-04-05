@@ -17,13 +17,32 @@
  *
  */
 
-#ifndef __SENSOR_LOADER_H__
-#define __SENSOR_LOADER_H__
+#ifndef __SENSOR_MANAGER_H__
+#define __SENSOR_MANAGER_H__
 
-class sensor_loader {
+#include <string>
+#include <vector>
+#include <unordered_map>
+
+#include "event_loop.h"
+
+#include "sensor_loader.h"
+
+namespace sensor {
+
+class sensor_manager {
 public:
-	sensor_loader();
-	virtual ~sensor_loader();
+	sensor_manager(ipc::event_loop *loop);
+	~sensor_manager();
+
+	bool init(void);
+	bool deinit(void);
+
+private:
+	ipc::event_loop *m_loop;
+	sensor_loader m_loader;
 };
 
-#endif	/* __SENSOR_LOADER_H__ */
+}
+
+#endif /* __SENSOR_MANAGER_H__ */
