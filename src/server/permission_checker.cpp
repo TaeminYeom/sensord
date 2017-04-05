@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,113 @@
  *
  */
 
-#include <permission_checker.h>
+#include "permission_checker.h"
+
 #include <cynara-client.h>
 #include <cynara-creds-socket.h>
 #include <cynara-session.h>
+#include <sensor_log.h>
+#include <unordered_map>
 
 #define CACHE_SIZE 16
 
-static bool check_privilege_by_sockfd(int sock_fd, const char *priv, const char *access)
-{
-	return true;
-}
+using namespace sensor;
+
+static cynara *cynara_env = NULL;
+static std::unordered_map<int, std::string> permissions;
 
 permission_checker::permission_checker()
 {
+	init_cynara();
 }
 
 permission_checker::~permission_checker()
 {
+	deinit_cynara();
+}
+
+void permission_checker::init(void)
+{
+	/* if needed, add privilege to permissions */
+	permissions[SENSOR_PERMISSION_HEALTH_INFO] = "http://tizen.org/privilege/healthinfo";
+}
+
+void permission_checker::init_cynara(void)
+{
+	int err;
+	cynara_configuration *conf;
+
+	err = cynara_configuration_create(&conf);
+	retm_if(err != CYNARA_API_SUCCESS, "Failed to create cynara configuration");
+
+	err = cynara_configuration_set_cache_size(conf, CACHE_SIZE);
+	if (err != CYNARA_API_SUCCESS) {
+		_E("Failed to set cynara cache");
+		cynara_configuration_destroy(conf);
+		return;
+	}
+
+	err = cynara_initialize(&cynara_env, conf);
+	cynara_configuration_destroy(conf);
+
+	if (err != CYNARA_API_SUCCESS) {
+		_E("Failed to initialize cynara");
+		cynara_env = NULL;
+		return;
+	}
+
+	_I("Initialized");
+}
+
+void permission_checker::deinit_cynara(void)
+{
+	if (cynara_env) {
+		cynara_finish(cynara_env);
+		cynara_env = NULL;
+	}
+
+	_I("Deinitialized");
+}
+
+bool permission_checker::has_permission_cynara(int sock_fd, std::string &perm)
+{
+	retvm_if(cynara_env == NULL, false, "Cynara not initialized");
+
+	int pid = -1;
+	char *client = NULL;
+	char *session = NULL;
+	char *user = NULL;
+
+	retvm_if(cynara_creds_socket_get_pid(sock_fd, &pid) != CYNARA_API_SUCCESS,
+			false, "Failed to get pid");
+
+	if (cynara_creds_socket_get_client(sock_fd,
+				CLIENT_METHOD_DEFAULT, &client) != CYNARA_API_SUCCESS ||
+			cynara_creds_socket_get_user(sock_fd,
+				USER_METHOD_DEFAULT, &user) != CYNARA_API_SUCCESS ||
+			(session = cynara_session_from_pid(pid)) == NULL) {
+		_E("Failed to get client information");
+		free(client);
+		free(user);
+		free(session);
+		return false;
+	}
+
+	return true;
+}
+
+bool permission_checker::has_permission(int sock_fd, std::string &perm)
+{
+	retv_if(perm.empty(), true);
+
+	return has_permission_cynara(sock_fd, perm);
+}
+
+/* TODO: remove sensor_permission_t and this function */
+bool permission_checker::has_permission(int sock_fd, sensor_permission_t perm)
+{
+	auto it = permissions.find(perm);
+	retv_if(it == permissions.end(), true);
+
+	return has_permission(sock_fd, permissions[perm]);
 }

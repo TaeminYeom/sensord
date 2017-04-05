@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,29 @@
  *
  */
 
-#ifndef _PERMISSION_CHECKER_H_
-#define _PERMISSION_CHECKER_H_
+#ifndef __PERMISSION_CHECKER_H__
+#define __PERMISSION_CHECKER_H__
 
+#include <sensor_types.h>
 #include <string>
-#include <vector>
-#include <memory>
+
+namespace sensor {
 
 class permission_checker {
+public:
 	permission_checker();
 	~permission_checker();
+
+	void init(void);
+
+	void init_cynara(void);
+	void deinit_cynara(void);
+	bool has_permission_cynara(int sock_fd, std::string &perm);
+
+	bool has_permission(int sock_fd, std::string &perm);
+	bool has_permission(int sock_fd, sensor_permission_t perm);
 };
 
-#endif /* _PERMISSION_CHECKER_H_ */
+}
+
+#endif /* __PERMISSION_CHECKER_H__ */
