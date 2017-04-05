@@ -57,6 +57,9 @@ extern "C"
 
 #define MICROSECONDS(tv)        ((tv.tv_sec * 1000000ll) + tv.tv_usec)
 
+#define SENSOR_UNKNOWN_TYPE "http://tizen.org/sensor/unknown"
+#define SENSOR_UNKNOWN_NAME "Unknown"
+
 typedef int64_t sensor_id_t;
 typedef void *sensor_t;
 

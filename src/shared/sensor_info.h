@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2013 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,68 +17,76 @@
  *
  */
 
-#ifndef _SENSOR_INFO_H_
-#define _SENSOR_INFO_H_
+#ifndef __SENSOR_INFO_H__
+#define __SENSOR_INFO_H__
 
 #include <stdint.h>
-#include <sensor_types.h>
 #include <string>
 #include <vector>
+#include <sensor_hal.h>
+#include <sensor_types.h>
+
+namespace sensor {
 
 typedef std::vector<char> raw_data_t;
 typedef raw_data_t::iterator raw_data_iterator;
 
+/* TODO: builder */
 class sensor_info {
 public:
+	sensor_info();
+	sensor_info(const sensor_info &info);
+	sensor_info(const sensor_info_t &info);
+
+	/* TODO: it would be better to get_type() returns type(URI) */
 	sensor_type_t get_type(void);
-	sensor_id_t get_id(void);
-	sensor_privilege_t get_privilege(void);
-	const char* get_name(void);
-	const char* get_vendor(void);
+	std::string &get_type_uri(void);
+	std::string &get_uri(void);
+	std::string &get_model(void);
+	std::string & get_vendor(void);
 	float get_min_range(void);
 	float get_max_range(void);
 	float get_resolution(void);
 	int get_min_interval(void);
-	int get_fifo_count(void);
 	int get_max_batch_count(void);
-	unsigned int get_supported_event(void);
-	bool is_supported_event(unsigned int event);
 	bool is_wakeup_supported(void);
+	sensor_permission_t get_permission(void);
 
+	/* TODO: it would be better to get_type() returns type(URI) */
 	void set_type(sensor_type_t type);
-	void set_id(sensor_id_t id);
-	void set_privilege(sensor_privilege_t privilege);
-	void set_name(const char *name);
+	void set_type_uri(const char *type_uri);
+	void set_uri(const char *name);
+	void set_model(const char *name);
 	void set_vendor(const char *vendor);
 	void set_min_range(float min_range);
 	void set_max_range(float max_range);
 	void set_resolution(float resolution);
 	void set_min_interval(int min_interval);
-	void set_fifo_count(int fifo_count);
 	void set_max_batch_count(int max_batch_count);
-	void set_supported_event(unsigned int event);
 	void set_wakeup_supported(bool supported);
+	void set_permission(sensor_permission_t permission);
 
 	void clear(void);
 
-	void get_raw_data(raw_data_t &data);
-	void set_raw_data(const char *data, int data_len);
+	void serialize(raw_data_t &data);
+	void deserialize(const char *data, int data_len);
 	void show(void);
+
 private:
 	sensor_type_t m_type;
-	sensor_id_t m_id;
-	sensor_privilege_t m_privilege;
-	std::string m_name;
+	std::string m_type_uri;
+	std::string m_uri;
+	std::string m_model;
 	std::string m_vendor;
 	float m_min_range;
 	float m_max_range;
 	float m_resolution;
 	int m_min_interval;
-	int m_fifo_count;
 	int m_max_batch_count;
-	unsigned int m_supported_event;
 	bool m_wakeup_supported;
+	sensor_permission_t m_permission;
 
+	/* TODO: use template */
 	void put(raw_data_t &data, int value);
 	void put(raw_data_t &data, unsigned int value);
 	void put(raw_data_t &data, int64_t value);
@@ -86,6 +94,7 @@ private:
 	void put(raw_data_t &data, std::string &value);
 	void put(raw_data_t &data, bool value);
 
+	/* TODO: use template */
 	raw_data_iterator get(raw_data_iterator it, int &value);
 	raw_data_iterator get(raw_data_iterator it, unsigned int &value);
 	raw_data_iterator get(raw_data_iterator it, int64_t &value);
@@ -94,4 +103,6 @@ private:
 	raw_data_iterator get(raw_data_iterator it, bool &value);
 };
 
-#endif /* _SENSOR_INFO_H_ */
+}
+
+#endif /* __SENSOR_INFO_H__ */

@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2013 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,38 +17,93 @@
  *
  */
 
-#include <sensor_info.h>
+#include "sensor_info.h"
+
+#include <sensor_types.h>
 #include <sensor_log.h>
 #include <algorithm>
-#include <vector>
 #include <string>
 
-using std::vector;
-using std::string;
+#include "sensor_utils.h"
+
+using namespace sensor;
+
+sensor_info::sensor_info()
+: m_type(UNKNOWN_SENSOR)
+, m_type_uri(SENSOR_UNKNOWN_TYPE)
+, m_uri(SENSOR_UNKNOWN_NAME)
+, m_model(SENSOR_UNKNOWN_NAME)
+, m_vendor(SENSOR_UNKNOWN_NAME)
+, m_min_range(0)
+, m_max_range(0)
+, m_resolution(0)
+, m_min_interval(0)
+, m_max_batch_count(0)
+, m_wakeup_supported(false)
+, m_permission(SENSOR_PERMISSION_STANDARD) /* TODO: change it to string */
+{
+}
+
+sensor_info::sensor_info(const sensor_info &info)
+: m_type(info.m_type)
+, m_type_uri(info.m_type_uri)
+, m_uri(info.m_uri)
+, m_model(info.m_model)
+, m_vendor(info.m_vendor)
+, m_min_range(info.m_min_range)
+, m_max_range(info.m_max_range)
+, m_resolution(info.m_resolution)
+, m_min_interval(info.m_min_interval)
+, m_max_batch_count(info.m_max_batch_count)
+, m_wakeup_supported(info.m_wakeup_supported)
+, m_permission(SENSOR_PERMISSION_STANDARD)
+{
+}
+
+sensor_info::sensor_info(const sensor_info_t &info)
+{
+	/* TODO: HAL should change name from single name to URI */
+	const char *type_uri = sensor::utils::get_uri((sensor_type_t)info.type);
+	std::string name(type_uri);
+	name.append("/").append(info.name);
+
+	set_type((sensor_type_t)info.type);
+	set_type_uri(type_uri);
+	set_uri(name.c_str());
+	set_model(info.model_name);
+	set_vendor(info.vendor);
+	set_min_range(info.min_range);
+	set_max_range(info.max_range);
+	set_resolution(info.resolution);
+	set_min_interval(info.min_interval);
+	set_max_batch_count(info.max_batch_count);
+	set_wakeup_supported(info.wakeup_supported);
+	set_permission(SENSOR_PERMISSION_STANDARD);
+}
 
 sensor_type_t sensor_info::get_type(void)
 {
 	return m_type;
 }
 
-sensor_id_t sensor_info::get_id(void)
+std::string &sensor_info::get_type_uri(void)
 {
-	return m_id;
+	return m_type_uri;
 }
 
-sensor_privilege_t sensor_info::get_privilege(void)
+std::string &sensor_info::get_uri(void)
 {
-	return m_privilege;
+	return m_uri;
 }
 
-const char* sensor_info::get_name(void)
+std::string &sensor_info::get_model(void)
 {
-	return m_name.c_str();
+	return m_model;
 }
 
-const char* sensor_info::get_vendor(void)
+std::string &sensor_info::get_vendor(void)
 {
-	return m_vendor.c_str();
+	return m_vendor;
 }
 
 float sensor_info::get_min_range(void)
@@ -71,27 +126,9 @@ int sensor_info::get_min_interval(void)
 	return m_min_interval;
 }
 
-int sensor_info::get_fifo_count(void)
-{
-	return m_fifo_count;
-}
-
 int sensor_info::get_max_batch_count(void)
 {
 	return m_max_batch_count;
-}
-
-unsigned int sensor_info::get_supported_event(void)
-{
-	return m_supported_event;
-}
-
-bool sensor_info::is_supported_event(unsigned int event)
-{
-	if (event != m_supported_event)
-		return false;
-
-	return true;
 }
 
 bool sensor_info::is_wakeup_supported(void)
@@ -99,24 +136,29 @@ bool sensor_info::is_wakeup_supported(void)
 	return m_wakeup_supported;
 }
 
+sensor_permission_t sensor_info::get_permission(void)
+{
+	return m_permission;
+}
+
 void sensor_info::set_type(sensor_type_t type)
 {
 	m_type = type;
 }
 
-void sensor_info::set_id(sensor_id_t id)
+void sensor_info::set_type_uri(const char *type_uri)
 {
-	m_id = id;
+	m_type_uri = type_uri;
 }
 
-void sensor_info::set_privilege(sensor_privilege_t privilege)
+void sensor_info::set_uri(const char *name)
 {
-	m_privilege = privilege;
+	m_uri = name;
 }
 
-void sensor_info::set_name(const char *name)
+void sensor_info::set_model(const char *model)
 {
-	m_name = name;
+	m_model = model;
 }
 
 void sensor_info::set_vendor(const char *vendor)
@@ -144,19 +186,9 @@ void sensor_info::set_min_interval(int min_interval)
 	m_min_interval = min_interval;
 }
 
-void sensor_info::set_fifo_count(int fifo_count)
-{
-	m_fifo_count = fifo_count;
-}
-
 void sensor_info::set_max_batch_count(int max_batch_count)
 {
 	m_max_batch_count = max_batch_count;
-}
-
-void sensor_info::set_supported_event(unsigned int event)
-{
-	m_supported_event = event;
 }
 
 void sensor_info::set_wakeup_supported(bool supported)
@@ -164,89 +196,88 @@ void sensor_info::set_wakeup_supported(bool supported)
 	m_wakeup_supported = supported;
 }
 
-void sensor_info::get_raw_data(raw_data_t &data)
+void sensor_info::set_permission(sensor_permission_t permission)
 {
-	put(data, (int) m_type);
-	put(data, m_id);
-	put(data, (int) m_privilege);
-	put(data, m_name);
+	m_permission = permission;
+}
+
+void sensor_info::serialize(raw_data_t &data)
+{
+	put(data, m_type);
+	put(data, m_type_uri);
+	put(data, m_uri);
+	put(data, m_model);
 	put(data, m_vendor);
 	put(data, m_min_range);
 	put(data, m_max_range);
 	put(data, m_resolution);
 	put(data, m_min_interval);
-	put(data, m_fifo_count);
 	put(data, m_max_batch_count);
-	put(data, m_supported_event);
 	put(data, m_wakeup_supported);
+	put(data, (int)m_permission);
 }
 
-void sensor_info::set_raw_data(const char *data, int data_len)
+void sensor_info::deserialize(const char *data, int data_len)
 {
+	int permission;
+	int type;
+
 	raw_data_t raw_data(&data[0], &data[data_len]);
+	auto it = raw_data.begin();
+	it = get(it, type);
+	m_type = (sensor_type_t)type;
 
-	auto it_r_data = raw_data.begin();
+	it = get(it, m_type_uri);
+	it = get(it, m_uri);
+	it = get(it, m_model);
+	it = get(it, m_vendor);
+	it = get(it, m_min_range);
+	it = get(it, m_max_range);
+	it = get(it, m_resolution);
+	it = get(it, m_min_interval);
+	it = get(it, m_max_batch_count);
+	it = get(it, m_wakeup_supported);
 
-	int type, privilege;
-	int64_t id;
-
-	it_r_data = get(it_r_data, type);
-	m_type = (sensor_type_t) type;
-	it_r_data = get(it_r_data, id);
-	m_id = (sensor_id_t) id;
-	it_r_data = get(it_r_data, privilege);
-	m_privilege = (sensor_privilege_t) privilege;
-	it_r_data = get(it_r_data, m_name);
-	it_r_data = get(it_r_data, m_vendor);
-	it_r_data = get(it_r_data, m_min_range);
-	it_r_data = get(it_r_data, m_max_range);
-	it_r_data = get(it_r_data, m_resolution);
-	it_r_data = get(it_r_data, m_min_interval);
-	it_r_data = get(it_r_data, m_fifo_count);
-	it_r_data = get(it_r_data, m_max_batch_count);
-	it_r_data = get(it_r_data, m_supported_event);
-	it_r_data = get(it_r_data, m_wakeup_supported);
+	it = get(it, permission);
+	m_permission = (sensor_permission_t)permission;
 }
 
 void sensor_info::show(void)
 {
-	_I("Type = %d", m_type);
-	_I("ID = %#llx", (int64_t)m_id);
-	_I("Privilege = %d", (int)m_privilege);
-	_I("Name = %s", m_name.c_str());
+	_I("Type = %s", m_type_uri.c_str());
+	_I("Name = %s", m_uri.c_str());
+	_I("Model = %s", m_model.c_str());
 	_I("Vendor = %s", m_vendor.c_str());
 	_I("Min_range = %f", m_min_range);
 	_I("Max_range = %f", m_max_range);
 	_I("Resolution = %f", m_resolution);
 	_I("Min_interval = %d", m_min_interval);
-	_I("Fifo_count = %d", m_fifo_count);
 	_I("Max_batch_count = %d", m_max_batch_count);
-	_I("Supported_event = %#x", m_supported_event);
 	_I("Wakeup_supported = %d", m_wakeup_supported);
+	_I("Privilege = %d", (int)m_permission);
 }
 
 void sensor_info::clear(void)
 {
 	m_type = UNKNOWN_SENSOR;
-	m_id = -1;
-	m_privilege = SENSOR_PRIVILEGE_PUBLIC;
-	m_name.clear();
+	m_type_uri.clear();
+	m_uri.clear();
+	m_model.clear();
 	m_vendor.clear();
 	m_min_range = 0.0f;
 	m_max_range = 0.0f;
 	m_resolution = 0.0f;
 	m_min_interval = 0;
-	m_fifo_count = 0;
 	m_max_batch_count = 0;
-	m_supported_event = 0;
 	m_wakeup_supported = false;
+	m_permission = SENSOR_PERMISSION_STANDARD;
 }
 
 void sensor_info::put(raw_data_t &data, int value)
 {
 	char buffer[sizeof(value)];
 
-	int *temp = (int *)buffer;
+	int *temp = reinterpret_cast<int *>(buffer);
 	*temp = value;
 
 	copy(&buffer[0], &buffer[sizeof(buffer)], back_inserter(data));
@@ -256,7 +287,7 @@ void sensor_info::put(raw_data_t &data, unsigned int value)
 {
 	char buffer[sizeof(value)];
 
-	unsigned int *temp = (unsigned int *)buffer;
+	unsigned int *temp = reinterpret_cast<unsigned int *>(buffer);
 	*temp = value;
 
 	copy(&buffer[0], &buffer[sizeof(buffer)], back_inserter(data));
@@ -266,7 +297,7 @@ void sensor_info::put(raw_data_t &data, int64_t value)
 {
 	char buffer[sizeof(value)];
 
-	int64_t *temp = (int64_t *) buffer;
+	int64_t *temp = reinterpret_cast<int64_t *>(buffer);
 	*temp = value;
 
 	copy(&buffer[0], &buffer[sizeof(buffer)], back_inserter(data));
@@ -276,13 +307,13 @@ void sensor_info::put(raw_data_t &data, float value)
 {
 	char buffer[sizeof(value)];
 
-	float *temp = (float *) buffer;
+	float *temp = reinterpret_cast<float *>(buffer);
 	*temp = value;
 
 	copy(&buffer[0], &buffer[sizeof(buffer)], back_inserter(data));
 }
 
-void sensor_info::put(raw_data_t &data, string &value)
+void sensor_info::put(raw_data_t &data, std::string &value)
 {
 	put(data, (int) value.size());
 
@@ -327,7 +358,7 @@ raw_data_iterator sensor_info::get(raw_data_iterator it, float &value)
 	return it + sizeof(value);
 }
 
-raw_data_iterator sensor_info::get(raw_data_iterator it, string &value)
+raw_data_iterator sensor_info::get(raw_data_iterator it, std::string &value)
 {
 	int len;
 
