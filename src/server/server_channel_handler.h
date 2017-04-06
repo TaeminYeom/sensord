@@ -26,10 +26,11 @@
 #include <functional>
 
 #include "sensor_manager.h"
+#include "sensor_listener_proxy.h"
+#include "application_sensor_handler.h"
 
 namespace sensor {
 
-/* TODO: this class seems to be able to split */
 class server_channel_handler : public ipc::channel_handler
 {
 public:
@@ -57,7 +58,16 @@ private:
 	int provider_disconnect(ipc::channel *ch, ipc::message &msg);
 	int provider_post(ipc::channel *ch, ipc::message &msg);
 
+	int send_reply(ipc::channel *ch, int error);
+
 	sensor_manager *m_manager;
+
+	/* {fd, listener} */
+	std::unordered_map<ipc::channel *, sensor_listener_proxy *> m_listeners;
+
+	/* {name, application_sensor_handler} */
+	/* TODO: move it to sensor_manager */
+	std::unordered_map<std::string, application_sensor_handler *> m_sensors;
 };
 
 }
