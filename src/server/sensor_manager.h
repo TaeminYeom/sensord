@@ -26,7 +26,13 @@
 
 #include "event_loop.h"
 
+#include "sensor_handler.h"
+#include "sensor_observer.h"
 #include "sensor_loader.h"
+
+#include "physical_sensor_handler.h"
+#include "fusion_sensor_handler.h"
+#include "external_sensor_handler.h"
 
 namespace sensor {
 
@@ -38,9 +44,34 @@ public:
 	bool init(void);
 	bool deinit(void);
 
+	bool is_supported(const std::string uri);
+
+	bool register_sensor(sensor_handler *sensor);
+	void deregister_sensor(const std::string uri);
+
+	sensor_handler *get_sensor_by_type(const std::string uri);
+	sensor_handler *get_sensor(const std::string uri);
+	std::vector<sensor_handler *> get_sensors(void);
+
+	size_t serialize(int sock_fd, char **bytes);
+
 private:
+	typedef std::map<std::string, sensor_handler *> sensor_map_t;
+
+	void create_physical_sensors(
+			device_sensor_registry_t &devices,
+			physical_sensor_registry_t &psensors);
+	void create_fusion_sensors(fusion_sensor_registry_t &vsensors);
+	void create_external_sensors(external_sensor_registry_t &vsensors);
+
+	void init_sensors(void);
+	void register_handler(physical_sensor_handler *sensor);
+
+	void show(void);
+
 	ipc::event_loop *m_loop;
 	sensor_loader m_loader;
+	sensor_map_t m_sensors;
 };
 
 }
