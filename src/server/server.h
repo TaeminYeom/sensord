@@ -24,7 +24,6 @@
 #include <ipc_server.h>
 #include <sensor_manager.h>
 #include <server_channel_handler.h>
-#include <physical_sensor.h>
 #include <atomic>
 
 namespace sensor {

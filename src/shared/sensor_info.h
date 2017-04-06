@@ -37,6 +37,7 @@ public:
 	sensor_info();
 	sensor_info(const sensor_info &info);
 	sensor_info(const sensor_info_t &info);
+	sensor_info(const sensor_info2_t &info);
 
 	/* TODO: it would be better to get_type() returns type(URI) */
 	sensor_type_t get_type(void);

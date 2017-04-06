@@ -81,6 +81,31 @@ sensor_info::sensor_info(const sensor_info_t &info)
 	set_permission(SENSOR_PERMISSION_STANDARD);
 }
 
+sensor_info::sensor_info(const sensor_info2_t &info)
+{
+	std::string uri(info.uri);
+	std::size_t found = uri.find_last_of("/\\");
+
+	set_type(info.type);
+	set_type_uri(uri.substr(0, found).c_str());
+	set_uri(uri.c_str());
+	set_model(uri.substr(found + 1, uri.length()).c_str());
+	set_vendor(info.vendor);
+	set_min_range(info.min_range);
+	set_max_range(info.max_range);
+	set_resolution(info.resolution);
+	set_min_interval(info.min_interval);
+	set_max_batch_count(info.max_batch_count);
+	set_wakeup_supported(info.wakeup_supported);
+
+	/* TODO : store string just itself */
+	std::string privilege = info.privilege;
+	if (privilege == "http://tizen.org/privilege/healthinfo")
+		set_permission(SENSOR_PERMISSION_HEALTH_INFO);
+	else
+		set_permission(SENSOR_PERMISSION_STANDARD);
+}
+
 sensor_type_t sensor_info::get_type(void)
 {
 	return m_type;
@@ -245,7 +270,7 @@ void sensor_info::deserialize(const char *data, int data_len)
 void sensor_info::show(void)
 {
 	_I("Type = %s", m_type_uri.c_str());
-	_I("Name = %s", m_uri.c_str());
+	_I("URI = %s", m_uri.c_str());
 	_I("Model = %s", m_model.c_str());
 	_I("Vendor = %s", m_vendor.c_str());
 	_I("Min_range = %f", m_min_range);

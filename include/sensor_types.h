@@ -164,6 +164,20 @@ typedef enum sensor_type_t {
 	CUSTOM_SENSOR = 0X9000,
 } sensor_type_t;
 
+typedef struct sensor_info2_t {
+	uint32_t id;
+	sensor_type_t type;
+	const char *uri;
+	const char *vendor;
+	float min_range;
+	float max_range;
+	float resolution;
+	int min_interval;
+	int max_batch_count;
+	bool wakeup_supported;
+	const char *privilege;
+	void *reserved[8];
+} sensor_info2_t;
 
 typedef enum sensor_permission_t {
 	SENSOR_PERMISSION_NONE = 0,
