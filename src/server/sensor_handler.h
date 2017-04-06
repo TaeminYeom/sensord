@@ -48,8 +48,8 @@ public:
 	virtual int set_batch_latency(sensor_observer *ob, int32_t latency) = 0;
 	virtual int set_attribute(sensor_observer *ob, int32_t attr, int32_t value) = 0;
 	virtual int set_attribute(sensor_observer *ob, int32_t attr, const char *value, int len) = 0;
+	virtual int flush(sensor_observer *ob) = 0;
 	virtual int get_data(sensor_data_t **data, int *len) = 0;
-	virtual int flush(void) = 0;
 
 private:
 	std::list<sensor_observer *> m_observers;
