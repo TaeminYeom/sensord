@@ -254,10 +254,8 @@ bool socket::close(void)
 {
 	retv_if(m_sock_fd < 0, false);
 
-	if (::close(m_sock_fd) < 0) {
-		_ERRNO(errno, _E, "Failed to close socket[%d]", m_sock_fd);
+	if (::close(m_sock_fd) < 0)
 		return false;
-	}
 
 	_D("Closed[%d]", m_sock_fd);
 
