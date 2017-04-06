@@ -40,7 +40,6 @@ private:
 	static std::atomic<bool> is_running;
 
 	server();
-	~server();
 
 	bool init(void);
 	void deinit(void);

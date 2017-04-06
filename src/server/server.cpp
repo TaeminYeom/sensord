@@ -28,7 +28,13 @@
 #include "sensor_manager.h"
 #include "server_channel_handler.h"
 
+#define MAX_CONFIG_PATH 255
+#define CAL_CONFIG_PATH "/etc/sensor_cal.conf"
+#define SET_CAL 1
+//#define CAL_NODE_PATH "/sys/class/sensors/ssp_sensor/set_cal_data"
+
 #define TIMEOUT_TERM 10
+#define MAX_CONNECTION 1000
 
 using namespace sensor;
 
@@ -39,10 +45,6 @@ server::server()
 : m_server(NULL)
 , m_manager(NULL)
 , m_handler(NULL)
-{
-}
-
-server::~server()
 {
 }
 
@@ -83,6 +85,7 @@ bool server::init(void)
 	m_handler = new(std::nothrow) server_channel_handler(m_manager);
 	retvm_if(!m_handler, false, "Failed to allocate memory");
 
+	init_calibration();
 	init_server();
 	init_termination();
 
@@ -109,19 +112,52 @@ void server::deinit(void)
 	is_running.store(false);
 }
 
+static void set_cal_data(const char *path)
+{
+	FILE *fp = fopen(path, "w");
+	retm_if(!fp, "There is no calibration file[%s]", path);
+
+	fprintf(fp, "%d", SET_CAL);
+	fclose(fp);
+
+	_I("Succeeded to set calibration data");
+}
+
+void server::init_calibration(void)
+{
+	char path[MAX_CONFIG_PATH];
+
+	FILE *fp = fopen(CAL_CONFIG_PATH, "r");
+	retm_if(!fp, "There is no config file[%s]", CAL_CONFIG_PATH);
+
+	while (!feof(fp)) {
+		if (fgets(path, sizeof(path), fp) == NULL)
+			break;
+		set_cal_data(path);
+	}
+
+	fclose(fp);
+}
+
 void server::init_server(void)
 {
 	m_manager->init();
 
 	/* TODO: setting socket option */
-	m_server->set_option("max_connection", 1000);
+	m_server->set_option("max_connection", MAX_CONNECTION);
 	m_server->set_option(SO_TYPE, SOCK_STREAM);
 	m_server->bind(m_handler, &m_loop);
 }
 
 static gboolean terminate(gpointer data)
 {
-	/* TODO: if there is no sensor, sensord will be terminated */
+	sensor_manager *mgr = reinterpret_cast<sensor_manager *>(data);
+	std::vector<sensor_handler *> sensors = mgr->get_sensors();
+
+	if (sensors.size() <= 0) {
+		_I("Terminating.. because there is no sensors");
+		server::stop();
+	}
 
 	return FALSE;
 }
