@@ -44,14 +44,14 @@ public:
 	std::string &get_type_uri(void);
 	std::string &get_uri(void);
 	std::string &get_model(void);
-	std::string & get_vendor(void);
+	std::string &get_vendor(void);
 	float get_min_range(void);
 	float get_max_range(void);
 	float get_resolution(void);
 	int get_min_interval(void);
 	int get_max_batch_count(void);
 	bool is_wakeup_supported(void);
-	sensor_permission_t get_permission(void);
+	std::string &get_privilege(void);
 
 	/* TODO: it would be better to get_type() returns type(URI) */
 	void set_type(sensor_type_t type);
@@ -65,7 +65,7 @@ public:
 	void set_min_interval(int min_interval);
 	void set_max_batch_count(int max_batch_count);
 	void set_wakeup_supported(bool supported);
-	void set_permission(sensor_permission_t permission);
+	void set_privilege(const char *privilege);
 
 	void clear(void);
 
@@ -85,7 +85,7 @@ private:
 	int m_min_interval;
 	int m_max_batch_count;
 	bool m_wakeup_supported;
-	sensor_permission_t m_permission;
+	std::string m_privilege;
 
 	/* TODO: use template */
 	void put(raw_data_t &data, int value);

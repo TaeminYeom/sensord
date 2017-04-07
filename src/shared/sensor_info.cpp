@@ -40,7 +40,7 @@ sensor_info::sensor_info()
 , m_min_interval(0)
 , m_max_batch_count(0)
 , m_wakeup_supported(false)
-, m_permission(SENSOR_PERMISSION_STANDARD) /* TODO: change it to string */
+, m_privilege("")
 {
 }
 
@@ -56,7 +56,7 @@ sensor_info::sensor_info(const sensor_info &info)
 , m_min_interval(info.m_min_interval)
 , m_max_batch_count(info.m_max_batch_count)
 , m_wakeup_supported(info.m_wakeup_supported)
-, m_permission(SENSOR_PERMISSION_STANDARD)
+, m_privilege(info.m_privilege)
 {
 }
 
@@ -78,7 +78,8 @@ sensor_info::sensor_info(const sensor_info_t &info)
 	set_min_interval(info.min_interval);
 	set_max_batch_count(info.max_batch_count);
 	set_wakeup_supported(info.wakeup_supported);
-	set_permission(SENSOR_PERMISSION_STANDARD);
+	/* TODO: sensor_info_t should have privilege string */
+	set_privilege("");
 }
 
 sensor_info::sensor_info(const sensor_info2_t &info)
@@ -97,13 +98,7 @@ sensor_info::sensor_info(const sensor_info2_t &info)
 	set_min_interval(info.min_interval);
 	set_max_batch_count(info.max_batch_count);
 	set_wakeup_supported(info.wakeup_supported);
-
-	/* TODO : store string just itself */
-	std::string privilege = info.privilege;
-	if (privilege == "http://tizen.org/privilege/healthinfo")
-		set_permission(SENSOR_PERMISSION_HEALTH_INFO);
-	else
-		set_permission(SENSOR_PERMISSION_STANDARD);
+	set_privilege(info.privilege);
 }
 
 sensor_type_t sensor_info::get_type(void)
@@ -161,9 +156,9 @@ bool sensor_info::is_wakeup_supported(void)
 	return m_wakeup_supported;
 }
 
-sensor_permission_t sensor_info::get_permission(void)
+std::string &sensor_info::get_privilege(void)
 {
-	return m_permission;
+	return m_privilege;
 }
 
 void sensor_info::set_type(sensor_type_t type)
@@ -221,9 +216,9 @@ void sensor_info::set_wakeup_supported(bool supported)
 	m_wakeup_supported = supported;
 }
 
-void sensor_info::set_permission(sensor_permission_t permission)
+void sensor_info::set_privilege(const char *privilege)
 {
-	m_permission = permission;
+	m_privilege = privilege;
 }
 
 void sensor_info::serialize(raw_data_t &data)
@@ -239,12 +234,11 @@ void sensor_info::serialize(raw_data_t &data)
 	put(data, m_min_interval);
 	put(data, m_max_batch_count);
 	put(data, m_wakeup_supported);
-	put(data, (int)m_permission);
+	put(data, m_privilege);
 }
 
 void sensor_info::deserialize(const char *data, int data_len)
 {
-	int permission;
 	int type;
 
 	raw_data_t raw_data(&data[0], &data[data_len]);
@@ -262,9 +256,7 @@ void sensor_info::deserialize(const char *data, int data_len)
 	it = get(it, m_min_interval);
 	it = get(it, m_max_batch_count);
 	it = get(it, m_wakeup_supported);
-
-	it = get(it, permission);
-	m_permission = (sensor_permission_t)permission;
+	it = get(it, m_privilege);
 }
 
 void sensor_info::show(void)
@@ -279,7 +271,7 @@ void sensor_info::show(void)
 	_I("Min_interval = %d", m_min_interval);
 	_I("Max_batch_count = %d", m_max_batch_count);
 	_I("Wakeup_supported = %d", m_wakeup_supported);
-	_I("Privilege = %d", (int)m_permission);
+	_I("Privilege = %s", m_privilege.c_str());
 }
 
 void sensor_info::clear(void)
@@ -295,7 +287,7 @@ void sensor_info::clear(void)
 	m_min_interval = 0;
 	m_max_batch_count = 0;
 	m_wakeup_supported = false;
-	m_permission = SENSOR_PERMISSION_STANDARD;
+	m_privilege.clear();
 }
 
 void sensor_info::put(raw_data_t &data, int value)
