@@ -89,9 +89,6 @@ int sensor_manager::get_sensor(const char *uri, sensor_t *sensor)
 		return -ENODATA;
 	}
 
-	if (info->get_uri() == SENSOR_URI_PERMISSION_DENIED)
-		return -EACCES;
-
 	*sensor = (sensor_t)info;
 	return OP_SUCCESS;
 }
@@ -108,9 +105,6 @@ int sensor_manager::get_sensors(const char *uri, sensor_t **list, int *count)
 		*count = 0;
 		return -ENODATA;
 	}
-
-	if (infos[0]->get_uri() == SENSOR_URI_PERMISSION_DENIED)
-		return -EACCES;
 
 	*list = (sensor_t *)malloc(sizeof(sensor_info *) * size);
 	retvm_if(!*list, -ENOMEM, "Failed to allocate memory");

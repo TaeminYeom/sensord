@@ -267,9 +267,6 @@ size_t sensor_manager::serialize(int sock_fd, char **bytes)
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
 		info = it->second->get_sensor_info();
 
-		if (!checker.has_permission(sock_fd, info.get_permission()))
-			info.set_uri(SENSOR_URI_PERMISSION_DENIED);
-
 		raw_data_t *raw = new(std::nothrow) raw_data_t();
 		retvm_if(!raw, -ENOMEM, "Failed to allocated memory");
 
