@@ -35,6 +35,7 @@
 
 using namespace sensor;
 
+#define DEVICE_HAL_DIR_PATH_LEGACY LIBDIR "/sensor"
 #define DEVICE_HAL_DIR_PATH LIBDIR "/sensor/hal"
 #define PHYSICAL_SENSOR_DIR_PATH LIBDIR "/sensor/physical"
 #define VIRTUAL_SENSOR_DIR_PATH LIBDIR "/sensor/fusion"
@@ -56,6 +57,7 @@ sensor_manager::~sensor_manager()
 
 bool sensor_manager::init(void)
 {
+	m_loader.load_hal(DEVICE_HAL_DIR_PATH_LEGACY, devices);
 	m_loader.load_hal(DEVICE_HAL_DIR_PATH, devices);
 	m_loader.load_physical_sensor(PHYSICAL_SENSOR_DIR_PATH, physical_sensors);
 	m_loader.load_fusion_sensor(VIRTUAL_SENSOR_DIR_PATH, fusion_sensors);

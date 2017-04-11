@@ -19,6 +19,9 @@
 
 #include "sensor_loader.h"
 
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <dlfcn.h>
 #include <dirent.h>
 #include <sensor_log.h>
@@ -112,6 +115,7 @@ bool sensor_loader::get_module_paths(const std::string &dir_path, std::vector<st
 	DIR *dir = NULL;
 	struct dirent entry;
 	struct dirent *result;
+	struct stat buf;
 	std::string filename;
 
 	dir = opendir(dir_path.c_str());
@@ -130,7 +134,15 @@ bool sensor_loader::get_module_paths(const std::string &dir_path, std::vector<st
 		if (filename == "." || filename == "..")
 			continue;
 
-		paths.push_back(dir_path + "/" + filename);
+		std::string full_path = dir_path + "/" + filename;
+
+		if (lstat(full_path.c_str(), &buf) != 0)
+			break;
+
+		if (S_ISDIR(buf.st_mode))
+			continue;
+
+		paths.push_back(full_path);
 	}
 	closedir(dir);
 
