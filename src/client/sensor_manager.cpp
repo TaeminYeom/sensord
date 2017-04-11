@@ -272,8 +272,12 @@ sensor_info *sensor_manager::get_info(const char *uri)
 		return &m_infos[0];
 
 	for (auto it = m_infos.begin(); it != m_infos.end(); ++it) {
-		if ((*it).get_uri() == uri)
-			return &*it;
+		std::size_t found = (*it).get_uri().rfind(uri);
+
+		if (found == std::string::npos)
+			continue;
+
+		return &*it;
 	}
 
 	return NULL;
@@ -288,8 +292,12 @@ std::vector<sensor_info *> sensor_manager::get_infos(const char *uri)
 		all = true;
 
 	for (auto it = m_infos.begin(); it != m_infos.end(); ++it) {
-		if (all || (*it).get_type_uri() == uri)
-			infos.push_back(&*it);
+		std::size_t found = (*it).get_uri().rfind(uri);
+
+		if (!all && found == std::string::npos)
+			continue;
+
+		infos.push_back(&*it);
 	}
 
 	return infos;
