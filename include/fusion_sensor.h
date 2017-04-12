@@ -49,6 +49,11 @@ typedef int (*create_fusion_t)(fusion_sensor_t **sensors);
 
 typedef void *observer_h;
 
+typedef struct required_sensor_s {
+	uint32_t id;
+	const char *uri;
+} required_sensor_s;
+
 /*
  * Sensor interface
  */
@@ -58,11 +63,11 @@ public:
 
 	inline uint32_t get_version(void) { return FUSION_SENSOR_VERSION(1, 0); }
 
-	virtual int get_sensors(const sensor_info2_t **sensors) = 0;
-	virtual void get_required_sensors(std::vector<std::string> &sensors) = 0;
+	virtual int get_sensor_info(const sensor_info2_t **info) = 0;
+	virtual int get_required_sensors(const required_sensor_s **info) = 0;
 
 	/* if update() returns positive value, then get_data() is called */
-	virtual int update(const char *uri, sensor_data_t *data, int len) = 0;
+	virtual int update(uint32_t id, sensor_data_t *data, int len) = 0;
 	virtual int get_data(sensor_data_t **data, int *len) = 0;
 
 	virtual int start(observer_h ob)

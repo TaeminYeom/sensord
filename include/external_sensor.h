@@ -68,8 +68,8 @@ public:
 
 	inline uint32_t get_version(void) { return EXTERNAL_SENSOR_VERSION(1, 0); }
 
-	virtual int get_sensors(const sensor_info2_t **sensors) = 0;
-	virtual void set_notifier(sensor_notifier *notifier) = 0;
+	virtual int get_sensor_info(const sensor_info2_t **info) = 0;
+	virtual int set_notifier(sensor_notifier *notifier) = 0;
 	virtual int get_data(sensor_data_t **data, int *len) = 0;
 
 	virtual int start(observer_h ob)

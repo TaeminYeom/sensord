@@ -62,7 +62,7 @@ bool sensor_event_handler::handle(int fd, ipc::event_condition condition)
 		info = m_sensor->get_sensor_info();
 
 		//_I("[Data] allocate %p", data);
-		if (m_sensor->notify(info.get_type_uri().c_str(), data, length) < 0) {
+		if (m_sensor->notify(info.get_uri().c_str(), data, length) < 0) {
 			free(data);
 		}
 		info.clear();

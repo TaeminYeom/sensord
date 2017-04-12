@@ -34,18 +34,23 @@ fusion_sensor_handler::fusion_sensor_handler(const sensor_info &info,
 
 fusion_sensor_handler::~fusion_sensor_handler()
 {
+	m_required_sensors.clear();
 }
 
-void fusion_sensor_handler::add_required_sensor(sensor_handler *sensor)
+void fusion_sensor_handler::add_required_sensor(uint32_t id, sensor_handler *sensor)
 {
-	m_required_sensors.push_back(sensor);
+	sensor_info info = sensor->get_sensor_info();
+	m_required_sensors.emplace(info.get_uri(), required_sensor(id, sensor));
 }
 
 int fusion_sensor_handler::update(const char *uri, ipc::message *msg)
 {
 	retv_if(!m_sensor, -EINVAL);
 
-	if (m_sensor->update(uri, (sensor_data_t *)msg->body(), msg->size()) < 0)
+	auto it = m_required_sensors.find(uri);
+	retv_if(it == m_required_sensors.end(), OP_SUCCESS);
+
+	if (m_sensor->update(it->second.id, (sensor_data_t *)msg->body(), msg->size()) < 0)
 		return OP_SUCCESS;
 
 	sensor_data_t *data;
@@ -54,9 +59,7 @@ int fusion_sensor_handler::update(const char *uri, ipc::message *msg)
 	if (m_sensor->get_data(&data, &len) < 0)
 		return OP_ERROR;
 
-	std::string fsensor_uri = m_info.get_type_uri();
-
-	return notify(fsensor_uri.c_str(), data, len);
+	return notify(m_info.get_uri().c_str(), data, len);
 }
 
 const sensor_info &fusion_sensor_handler::get_sensor_info(void)
@@ -226,9 +229,9 @@ int fusion_sensor_handler::flush(sensor_observer *ob)
 
 int fusion_sensor_handler::start_internal(void)
 {
-	int size = m_required_sensors.size();
-	for (int i = 0; i < size; ++i) {
-		if (m_required_sensors[i]->start(this) < 0)
+	auto it = m_required_sensors.begin();
+	for (; it != m_required_sensors.end(); ++it) {
+		if (it->second.sensor->start(this) < 0)
 			return OP_ERROR;
 	}
 
@@ -237,9 +240,9 @@ int fusion_sensor_handler::start_internal(void)
 
 int fusion_sensor_handler::stop_internal(void)
 {
-	int size = m_required_sensors.size();
-	for (int i = 0; i < size; ++i) {
-		if (m_required_sensors[i]->stop(this) < 0)
+	auto it = m_required_sensors.begin();
+	for (; it != m_required_sensors.end(); ++it) {
+		if (it->second.sensor->stop(this) < 0)
 			return OP_ERROR;
 	}
 
@@ -248,9 +251,9 @@ int fusion_sensor_handler::stop_internal(void)
 
 int fusion_sensor_handler::set_interval_internal(int32_t interval)
 {
-	int size = m_required_sensors.size();
-	for (int i = 0; i < size; ++i) {
-		if (m_required_sensors[i]->set_interval(this, interval) < 0)
+	auto it = m_required_sensors.begin();
+	for (; it != m_required_sensors.end(); ++it) {
+		if (it->second.sensor->set_interval(this, interval) < 0)
 			return OP_ERROR;
 	}
 
@@ -259,9 +262,9 @@ int fusion_sensor_handler::set_interval_internal(int32_t interval)
 
 int fusion_sensor_handler::set_batch_latency_internal(int32_t latency)
 {
-	int size = m_required_sensors.size();
-	for (int i = 0; i < size; ++i) {
-		if (m_required_sensors[i]->set_batch_latency(this, latency) < 0)
+	auto it = m_required_sensors.begin();
+	for (; it != m_required_sensors.end(); ++it) {
+		if (it->second.sensor->set_batch_latency(this, latency) < 0)
 			return OP_ERROR;
 	}
 
@@ -270,9 +273,9 @@ int fusion_sensor_handler::set_batch_latency_internal(int32_t latency)
 
 int fusion_sensor_handler::set_attribute_internal(int32_t attr, int32_t value)
 {
-	int size = m_required_sensors.size();
-	for (int i = 0; i < size; ++i) {
-		if (m_required_sensors[i]->set_attribute(this, attr, value) < 0)
+	auto it = m_required_sensors.begin();
+	for (; it != m_required_sensors.end(); ++it) {
+		if (it->second.sensor->set_attribute(this, attr, value) < 0)
 			return OP_ERROR;
 	}
 
@@ -281,9 +284,9 @@ int fusion_sensor_handler::set_attribute_internal(int32_t attr, int32_t value)
 
 int fusion_sensor_handler::set_attribute_internal(int32_t attr, const char *value, int len)
 {
-	int size = m_required_sensors.size();
-	for (int i = 0; i < size; ++i) {
-		if (m_required_sensors[i]->set_attribute(this, attr, value, len) < 0)
+	auto it = m_required_sensors.begin();
+	for (; it != m_required_sensors.end(); ++it) {
+		if (it->second.sensor->set_attribute(this, attr, value, len) < 0)
 			return OP_ERROR;
 	}
 

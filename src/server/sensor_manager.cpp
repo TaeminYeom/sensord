@@ -187,41 +187,37 @@ void sensor_manager::create_physical_sensors(device_sensor_registry_t &devices,
 void sensor_manager::create_fusion_sensors(fusion_sensor_registry_t &fsensors)
 {
 	const sensor_info2_t *info;
+	const required_sensor_s *required_sensors;
 	fusion_sensor_handler *fsensor;
-	std::vector<std::string> req_names;
+	sensor_handler *sensor = NULL;
 
 	for (auto it = fsensors.begin(); it != fsensors.end(); ++it) {
-		int count = (*it)->get_sensors(&info);
+		bool support = true;
 
+		(*it)->get_sensor_info(&info);
+
+		fsensor = new(std::nothrow) fusion_sensor_handler(info[0], it->get());
+		retm_if(!fsensor, "Failed to allocate memory");
+
+		int count = (*it)->get_required_sensors(&required_sensors);
 		for (int i = 0; i < count; ++i) {
-			bool support = true;
-			req_names.clear();
+			sensor = get_sensor_by_type(required_sensors[i].uri);
 
-			fsensor = new(std::nothrow) fusion_sensor_handler(info[i], it->get());
-			retm_if(!fsensor, "Failed to allocate memory");
-
-			(*it)->get_required_sensors(req_names);
-			for (unsigned int j = 0; j < req_names.size(); ++j) {
-				sensor_handler *sensor;
-				sensor = get_sensor_by_type(req_names[j]);
-
-				if (sensor == NULL) {
-					support = false;
-					break;
-				}
-
-				fsensor->add_required_sensor(sensor);
+			if (sensor == NULL) {
+				support = false;
+				break;
 			}
 
-			if (!support) {
-				delete fsensor;
-				/* TODO: remove plugin */
-				continue;
-			}
-
-			sensor_info sinfo = fsensor->get_sensor_info();
-			m_sensors[sinfo.get_uri()] = fsensor;
+			fsensor->add_required_sensor(required_sensors[i].id, sensor);
 		}
+
+		if (!support) {
+			delete fsensor;
+			continue;
+		}
+
+		sensor_info sinfo = fsensor->get_sensor_info();
+		m_sensors[sinfo.get_uri()] = fsensor;
 	}
 }
 
@@ -231,15 +227,13 @@ void sensor_manager::create_external_sensors(external_sensor_registry_t &esensor
 	external_sensor_handler *esensor;
 
 	for (auto it = esensors.begin(); it != esensors.end(); ++it) {
-		int count = (*it)->get_sensors(&info);
+		(*it)->get_sensor_info(&info);
 
-		for (int i = 0; i < count; ++i) {
-			esensor = new(std::nothrow) external_sensor_handler(info[i], it->get());
-			retm_if(!esensor, "Failed to allocate memory");
+		esensor = new(std::nothrow) external_sensor_handler(info[0], it->get());
+		retm_if(!esensor, "Failed to allocate memory");
 
-			sensor_info sinfo = esensor->get_sensor_info();
-			m_sensors[sinfo.get_uri()] = esensor;
-		}
+		sensor_info sinfo = esensor->get_sensor_info();
+		m_sensors[sinfo.get_uri()] = esensor;
 	}
 }
 

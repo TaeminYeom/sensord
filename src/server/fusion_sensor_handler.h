@@ -30,13 +30,24 @@
 
 namespace sensor {
 
+class required_sensor {
+public:
+	required_sensor(uint32_t _id, sensor_handler *_sensor)
+	: id(_id)
+	, sensor(_sensor)
+	{}
+
+	uint32_t id;
+	sensor_handler *sensor;
+};
+
 class fusion_sensor_handler : public sensor_handler, public sensor_observer {
 public:
 	fusion_sensor_handler(const sensor_info &info,
 			fusion_sensor *sensor);
 	~fusion_sensor_handler();
 
-	void add_required_sensor(sensor_handler *sensor);
+	void add_required_sensor(uint32_t id, sensor_handler *sensor);
 
 	/* subscriber */
 	int update(const char *uri, ipc::message *msg);
@@ -67,7 +78,7 @@ private:
 
 	sensor_info m_info;
 	fusion_sensor *m_sensor;
-	std::vector<sensor_handler *> m_required_sensors;
+	std::unordered_map<std::string, required_sensor> m_required_sensors;
 
 	std::unordered_map<sensor_observer *, int> m_interval_map;
 	std::unordered_map<sensor_observer *, int> m_batch_latency_map;

@@ -52,9 +52,8 @@ int external_sensor_notifier::notify(void)
 
 	/* TODO: pointer would be better */
 	sensor_info info = m_sensor->get_sensor_info();
-	std::string uri = info.get_type_uri();
 
-	return m_sensor->notify(uri.c_str(), data, len);
+	return m_sensor->notify(info.get_uri().c_str(), data, len);
 }
 
 external_sensor_handler::external_sensor_handler(const sensor_info &info,
