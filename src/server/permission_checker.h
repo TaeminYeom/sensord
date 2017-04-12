@@ -30,10 +30,7 @@ public:
 	permission_checker();
 	~permission_checker();
 
-	void init(void);
-
 	bool has_permission(int sock_fd, std::string &perm);
-	bool has_permission(int sock_fd, sensor_permission_t perm);
 
 private:
 	void init_cynara(void);

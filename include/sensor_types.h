@@ -60,8 +60,6 @@ extern "C"
 #define SENSOR_UNKNOWN_TYPE "http://tizen.org/sensor/unknown"
 #define SENSOR_UNKNOWN_NAME "Unknown"
 
-#define SENSOR_URI_PERMISSION_DENIED "http://tizen.org/sensor/EACCES"
-
 typedef int64_t sensor_id_t;
 typedef void *sensor_t;
 
@@ -179,14 +177,8 @@ typedef struct sensor_info2_t {
 	void *reserved[8];
 } sensor_info2_t;
 
-typedef enum sensor_permission_t {
-	SENSOR_PERMISSION_NONE = 0,
-	SENSOR_PERMISSION_STANDARD = 1,
-	SENSOR_PERMISSION_HEALTH_INFO = 2,
-} sensor_permission_t;
-
 typedef enum sensor_privilege_t {
-	SENSOR_PRIVILEGE_PUBLIC = 1,
+	SENSOR_PRIVILEGE_PUBLIC = 0,
 } sensor_privilege_t;
 
 typedef struct sensor_event_t {

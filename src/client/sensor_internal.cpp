@@ -156,22 +156,6 @@ API const char* sensord_get_vendor(sensor_t sensor)
 	return static_cast<sensor_info *>(sensor)->get_vendor().c_str();
 }
 
-API bool sensord_get_privilege(sensor_t sensor, sensor_privilege_t *privilege)
-{
-	retvm_if(!manager.connect(), false, "Failed to connect");
-	retvm_if(!privilege, false, "Invalid parameter[%#x]", privilege);
-	retvm_if(!manager.is_supported(sensor), false,
-			"Invalid sensor[%#x]", sensor);
-
-	/* TODO:
-	 * sensor_permission_t perm = static_cast<sensor_info *>(sensor)->get_permission();
-	 * *privilege = static_cast<sensor_privilege_t>(perm);
-	 */
-	*privilege = SENSOR_PRIVILEGE_PUBLIC;
-
-	return true;
-}
-
 API bool sensord_get_min_range(sensor_t sensor, float *min_range)
 {
 	retvm_if(!manager.connect(), false, "Failed to connect");
@@ -648,5 +632,13 @@ API bool sensord_send_sensorhub_data(int handle, const char *data, int data_len)
 API bool sensord_send_command(int handle, const char *command, int command_len)
 {
 	return (sensord_set_attribute_str(handle, 0, command, command_len) == OP_SUCCESS);
+}
+
+/* deprecated */
+API bool sensord_get_privilege(sensor_t sensor, sensor_privilege_t *privilege)
+{
+	*privilege = SENSOR_PRIVILEGE_PUBLIC;
+
+	return true;
 }
 

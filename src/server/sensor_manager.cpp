@@ -27,7 +27,6 @@
 #include <algorithm>
 
 #include "sensor_event_handler.h"
-#include "permission_checker.h"
 #include "sensor_loader.h"
 #include "physical_sensor_handler.h"
 #include "fusion_sensor_handler.h"
@@ -257,8 +256,6 @@ static void put_int_to_vec(std::vector<char> &data, int value)
  */
 size_t sensor_manager::serialize(int sock_fd, char **bytes)
 {
-	static permission_checker checker;
-
 	sensor_info info;
 	std::vector<char> raw_list;
 

@@ -42,12 +42,6 @@ permission_checker::~permission_checker()
 	deinit_cynara();
 }
 
-void permission_checker::init(void)
-{
-	/* if needed, add privilege to permissions */
-	permissions[SENSOR_PERMISSION_HEALTH_INFO] = "http://tizen.org/privilege/healthinfo";
-}
-
 void permission_checker::init_cynara(void)
 {
 	int err;
@@ -124,13 +118,4 @@ bool permission_checker::has_permission(int sock_fd, std::string &perm)
 	retv_if(perm.empty(), true);
 
 	return has_permission_cynara(sock_fd, perm);
-}
-
-/* TODO: remove sensor_permission_t and this function */
-bool permission_checker::has_permission(int sock_fd, sensor_permission_t perm)
-{
-	auto it = permissions.find(perm);
-	retv_if(it == permissions.end(), true);
-
-	return has_permission(sock_fd, permissions[perm]);
 }
