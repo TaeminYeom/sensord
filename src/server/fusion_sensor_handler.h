@@ -71,7 +71,6 @@ private:
 
 	std::unordered_map<sensor_observer *, int> m_interval_map;
 	std::unordered_map<sensor_observer *, int> m_batch_latency_map;
-	int m_policy;
 };
 
 }

@@ -51,6 +51,7 @@ void test_option::set_options(int argc, char *argv[])
 test_case::test_case(const std::string &group, const std::string &name)
 : m_group(group)
 , m_name(name)
+, m_func(NULL)
 {
 	test_bench::register_testcase(group, this);
 }

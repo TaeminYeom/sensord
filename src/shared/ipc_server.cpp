@@ -30,6 +30,9 @@ using namespace ipc;
 #define MAX_CONNECTIONS 1000
 
 ipc_server::ipc_server(const std::string &path)
+: m_event_loop(NULL)
+, m_handler(NULL)
+, m_accept_handler(NULL)
 {
 	m_accept_sock.create(path);
 }

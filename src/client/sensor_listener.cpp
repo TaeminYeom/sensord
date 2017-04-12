@@ -47,9 +47,11 @@ public:
 		case CMD_LISTENER_EVENT:
 			if (m_listener->get_event_handler())
 				m_listener->get_event_handler()->read(ch, msg);
+			break;
 		case CMD_LISTENER_ACC_EVENT:
 			if (m_listener->get_accuracy_handler())
 				m_listener->get_accuracy_handler()->read(ch, msg);
+			break;
 		}
 	}
 

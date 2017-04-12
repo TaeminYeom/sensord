@@ -29,7 +29,6 @@ fusion_sensor_handler::fusion_sensor_handler(const sensor_info &info,
 		fusion_sensor *sensor)
 : m_info(info)
 , m_sensor(sensor)
-, m_policy(OP_DEFAULT)
 {
 }
 
@@ -187,7 +186,7 @@ int fusion_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, int3
 	policy = m_sensor->set_attribute(ob, attr, value);
 	retv_if(policy <= OP_ERROR, policy);
 
-	if (m_policy == OP_DEFAULT) {
+	if (policy == OP_DEFAULT) {
 		/* default logic */
 	}
 
@@ -203,7 +202,7 @@ int fusion_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, cons
 	policy = m_sensor->set_attribute(ob, attr, value, len);
 	retv_if(policy <= OP_ERROR, policy);
 
-	if (m_policy == OP_DEFAULT) {
+	if (policy == OP_DEFAULT) {
 		/* default logic */
 	}
 

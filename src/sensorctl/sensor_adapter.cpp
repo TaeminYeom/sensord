@@ -73,6 +73,8 @@ bool sensor_adapter::start(sensor_info info, int &handle)
 
 	err = sensord_get_sensors(info.type, &sensors, &count);
 	ASSERT_EQ(err, 0);
+	ASSERT_LT(info.index, count);
+	ASSERT_GE(info.index, 0);
 
 	handle = sensord_connect(sensors[info.index]);
 	ASSERT_GE(handle, 0);

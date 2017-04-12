@@ -375,12 +375,11 @@ bool socket::set_recv_timeout(int sec)
 bool socket::set_sock_type(int type)
 {
 	socklen_t opt_len;
-	int sock_type;
-	opt_len = sizeof(sock_type);
+	opt_len = sizeof(type);
 
 	retvm_if(m_sock_fd < 0, false, "Invalid socket[%d]", m_sock_fd);
 
-	if (setsockopt(m_sock_fd, SOL_SOCKET, SO_TYPE, &sock_type, opt_len) < 0) {
+	if (setsockopt(m_sock_fd, SOL_SOCKET, SO_TYPE, &type, opt_len) < 0) {
 	   _ERRNO(errno, _E, "Failed to setsockopt[%d]", m_sock_fd);
 	   return false;
 	}

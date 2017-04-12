@@ -60,8 +60,8 @@ int external_sensor_notifier::notify(void)
 external_sensor_handler::external_sensor_handler(const sensor_info &info,
 		external_sensor *sensor)
 : m_info(info)
-, m_sensor(sensor)
 , m_notifier(NULL)
+, m_policy(OP_DEFAULT)
 {
 	init();
 }
