@@ -17,20 +17,21 @@
  *
  */
 
-#ifndef _AUTO_ROTATION_ALG_EMUL_H_
-#define _AUTO_ROTATION_ALG_EMUL_H_
+#ifndef __AUTO_ROTATION_ALG_EMUL_H__
+#define __AUTO_ROTATION_ALG_EMUL_H__
 
-#include <auto_rotation_alg.h>
+#include "auto_rotation_alg.h"
 
 class auto_rotation_alg_emul : public auto_rotation_alg {
 public:
 	auto_rotation_alg_emul();
 	virtual ~auto_rotation_alg_emul();
 
-	virtual bool get_rotation(float acc[3], unsigned long long timestamp, int prev_rotation, int &cur_rotation);
+	bool get_rotation(float acc[3], unsigned long long timestamp,
+			int prev_rotation, int &cur_rotation);
 
 private:
 	int convert_rotation(int prev_rotation, float acc_pitch, float acc_theta);
 };
 
-#endif /* _AUTO_ROTATION_ALG_EMUL_H_ */
+#endif /* __AUTO_ROTATION_ALG_EMUL_H__ */

@@ -120,6 +120,7 @@ echo "You need to reinstall %{name}-dummy to keep using the APIs after uninstall
 %manifest packaging/sensord.manifest
 %{_libdir}/libsensor-genuine.so.*
 %{_libdir}/libsensord-shared.so
+%{_libdir}/sensor/fusion/libsensor-fusion.so
 %{_bindir}/sensord
 %{_unitdir}/sensord.service
 %{_unitdir}/sensord.socket

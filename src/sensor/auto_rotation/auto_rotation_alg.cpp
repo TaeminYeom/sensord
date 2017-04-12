@@ -17,8 +17,7 @@
  *
  */
 
-#include <sensor_log.h>
-#include <auto_rotation_alg.h>
+#include "auto_rotation_alg.h"
 
 auto_rotation_alg::auto_rotation_alg()
 {

@@ -20,6 +20,7 @@ ADD_SUBDIRECTORY(src/server)
 ADD_SUBDIRECTORY(src/client)
 ADD_SUBDIRECTORY(src/client-dummy)
 ADD_SUBDIRECTORY(src/sensorctl)
+ADD_SUBDIRECTORY(src/sensor)
 
 INSTALL(
 	DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/

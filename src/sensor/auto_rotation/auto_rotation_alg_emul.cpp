@@ -17,12 +17,11 @@
  *
  */
 
-#include <sensor_common.h>
-#include <sensor_log.h>
-#include <sensor_types.h>
-#include <auto_rotation_alg_emul.h>
-#include <stdlib.h>
+#include "auto_rotation_alg_emul.h"
+
 #include <math.h>
+#include <stdlib.h>
+#include <sensor_types.h>
 
 #define ROTATION_RULE_CNT 4
 
