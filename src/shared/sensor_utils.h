@@ -22,6 +22,8 @@
 
 #include <time.h>
 #include <sensor_types.h>
+#include <string>
+#include <vector>
 
 namespace sensor {
 
@@ -33,6 +35,8 @@ namespace utils {
 
 	const char* get_client_name(void);
 	bool get_proc_name(pid_t pid, char *process_name);
+
+	std::vector<std::string> tokenize(const std::string &in, const char *delim);
 }
 
 }

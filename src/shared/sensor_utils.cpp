@@ -19,6 +19,7 @@
 
 #include "sensor_utils.h"
 
+#include <glib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -29,7 +30,9 @@
 
 #include <sensor_types.h>
 
+#ifndef PATH_MAX
 #define PATH_MAX 256
+#endif
 
 /* TODO: move and define string type to sensor_type.h */
 static std::map<sensor_type_t, const char *> types = {
@@ -198,4 +201,21 @@ const char* sensor::utils::get_client_name(void)
 	}
 
 	return client_name;
+}
+
+std::vector<std::string> sensor::utils::tokenize(const std::string &in, const char *delim)
+{
+	std::vector<std::string> tokens;
+	char *input = g_strdup(in.c_str());
+
+	char *save = NULL;
+	char *token = strtok_r(input, delim, &save);
+
+	while (token != NULL) {
+		tokens.push_back(token);
+		token = strtok_r(NULL, delim, &save);
+	}
+
+	g_free(input);
+	return tokens;
 }
