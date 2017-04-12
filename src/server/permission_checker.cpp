@@ -89,6 +89,7 @@ bool permission_checker::has_permission_cynara(int sock_fd, std::string &perm)
 {
 	retvm_if(cynara_env == NULL, false, "Cynara not initialized");
 
+	int ret;
 	int pid = -1;
 	char *client = NULL;
 	char *session = NULL;
@@ -109,7 +110,13 @@ bool permission_checker::has_permission_cynara(int sock_fd, std::string &perm)
 		return false;
 	}
 
-	return true;
+	ret = cynara_check(cynara_env, client, session, user, perm.c_str());
+
+	free(client);
+	free(session);
+	free(user);
+
+	return (ret == CYNARA_API_ACCESS_ALLOWED);
 }
 
 bool permission_checker::has_permission(int sock_fd, std::string &perm)
