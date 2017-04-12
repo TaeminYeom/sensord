@@ -127,3 +127,9 @@ int sensor_listener_proxy::get_data(sensor_data_t **data, int *len)
 	/* TODO : caching the last data & retry logic if there is no data */
 	return m_sensor->get_data(data, len);
 }
+
+std::string sensor_listener_proxy::get_required_privileges(void)
+{
+	sensor_info info = m_sensor->get_sensor_info();
+	return info.get_privilege();
+}

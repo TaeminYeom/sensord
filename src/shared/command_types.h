@@ -51,6 +51,8 @@ enum cmd_type_e {
 	CMD_PROVIDER_DISCONNECT,
 	CMD_PROVIDER_POST,
 
+	CMD_HAS_PRIVILEGE,
+
 	CMD_CNT,
 };
 
@@ -112,5 +114,9 @@ typedef struct {
 	char sensor[NAME_MAX];
 	sensorhub_data_t base_data;
 } cmd_provider_post_t;
+
+typedef struct {
+	char sensor[NAME_MAX];
+} cmd_has_privilege_t ;
 
 #endif /* __COMMAND_TYPES_H__ */

@@ -22,7 +22,12 @@
 #include <sensor_log.h>
 #include <sensor_info.h>
 #include <sensor_handler.h>
+#include <sensor_utils.h>
 #include <command_types.h>
+
+#include "permission_checker.h"
+
+#define PRIV_DELIMINATOR ";"
 
 using namespace sensor;
 using namespace ipc;
@@ -78,6 +83,8 @@ void server_channel_handler::read(channel *ch, message &msg)
 		err = provider_disconnect(ch, msg); break;
 	case CMD_PROVIDER_POST:
 		err = provider_post(ch, msg); break;
+	case CMD_HAS_PRIVILEGE:
+		err = has_privileges(ch, msg); break;
 	default: break;
 	}
 
@@ -118,6 +125,8 @@ int server_channel_handler::listener_connect(channel *ch, message &msg)
 	sensor_listener_proxy *listener =
 		new(std::nothrow) sensor_listener_proxy(listener_id, sensor, ch);
 	retvm_if(!listener, OP_ERROR, "Failed to allocate memory");
+	retvm_if(!has_privileges(ch->get_fd(), listener->get_required_privileges()),
+			-EACCES, "Permission denied");
 
 	buf.listener_id = listener_id;
 
@@ -142,6 +151,9 @@ int server_channel_handler::listener_disconnect(channel *ch, message &msg)
 
 	uint32_t id = m_listeners[ch]->get_id();
 
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
+			-EACCES, "Permission denied");
+
 	delete m_listeners[ch];
 	m_listeners.erase(ch);
 
@@ -154,6 +166,8 @@ int server_channel_handler::listener_start(channel *ch, message &msg)
 {
 	auto it = m_listeners.find(ch);
 	retv_if(it == m_listeners.end(), -EINVAL);
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
+			-EACCES, "Permission denied");
 
 	int ret = m_listeners[ch]->start();
 	retv_if(ret < 0, ret);
@@ -165,6 +179,8 @@ int server_channel_handler::listener_stop(channel *ch, message &msg)
 {
 	auto it = m_listeners.find(ch);
 	retv_if(it == m_listeners.end(), -EINVAL);
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
+			-EACCES, "Permission denied");
 
 	int ret = m_listeners[ch]->stop();
 	retv_if(ret < 0, ret);
@@ -178,6 +194,8 @@ int server_channel_handler::listener_attr_int(channel *ch, message &msg)
 
 	auto it = m_listeners.find(ch);
 	retv_if(it == m_listeners.end(), -EINVAL);
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
+			-EACCES, "Permission denied");
 
 	cmd_listener_attr_int_t buf;
 	msg.disclose((char *)&buf);
@@ -203,6 +221,8 @@ int server_channel_handler::listener_attr_str(channel *ch, message &msg)
 {
 	auto it = m_listeners.find(ch);
 	retv_if(it == m_listeners.end(), -EINVAL);
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
+			-EACCES, "Permission denied");
 
 	cmd_listener_attr_str_t buf;
 	msg.disclose((char *)&buf);
@@ -215,6 +235,11 @@ int server_channel_handler::listener_attr_str(channel *ch, message &msg)
 
 int server_channel_handler::listener_get_data(channel *ch, message &msg)
 {
+	auto it = m_listeners.find(ch);
+	retv_if(it == m_listeners.end(), -EINVAL);
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
+			-EACCES, "Permission denied");
+
 	return send_reply(ch, OP_ERROR);
 }
 
@@ -233,9 +258,45 @@ int server_channel_handler::provider_post(channel *ch, message &msg)
 	return send_reply(ch, OP_ERROR);
 }
 
+int server_channel_handler::has_privileges(channel *ch, message &msg)
+{
+	sensor_handler *sensor;
+	cmd_has_privilege_t buf;
+	msg.disclose((char *)&buf);
+
+	sensor = m_manager->get_sensor(buf.sensor);
+	retv_if(!sensor, OP_ERROR);
+
+	sensor_info info = sensor->get_sensor_info();
+
+	if (!has_privileges(ch->get_fd(), info.get_privilege()))
+		return OP_ERROR;
+
+	return send_reply(ch, OP_SUCCESS);
+}
+
 int server_channel_handler::send_reply(channel *ch, int error)
 {
 	message reply(error);
 	retvm_if(!ch->send_sync(&reply), OP_ERROR, "Failed to send reply");
 	return OP_SUCCESS;
+}
+
+bool server_channel_handler::has_privilege(int fd, std::string &priv)
+{
+	static permission_checker checker;
+	return checker.has_permission(fd, priv);
+}
+
+bool server_channel_handler::has_privileges(int fd, std::string priv)
+{
+	std::vector<std::string> privileges;
+	privileges = utils::tokenize(priv, PRIV_DELIMINATOR);
+
+	for (auto it = privileges.begin(); it != privileges.end(); ++it) {
+		if (!has_privilege(fd, *it))
+			return false;
+	}
+
+	return true;
 }

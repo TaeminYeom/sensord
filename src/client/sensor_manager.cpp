@@ -27,6 +27,8 @@
 #include <message.h>
 #include <channel.h>
 
+#define SIZE_STR_SENSOR_ALL 27
+
 using namespace sensor;
 
 class manager_handler : public ipc::channel_handler
@@ -81,13 +83,13 @@ int sensor_manager::get_sensors(sensor_type_t type, sensor_t **list, int *count)
 
 int sensor_manager::get_sensor(const char *uri, sensor_t *sensor)
 {
-	sensor_info *info;
-
-	info = get_info(uri);
-	if (!info) {
+	if (!is_supported(uri)) {
 		*sensor = NULL;
 		return -ENODATA;
 	}
+
+	sensor_info *info = get_info(uri);
+	retv_if(!info, -EACCES);
 
 	*sensor = (sensor_t)info;
 	return OP_SUCCESS;
@@ -95,6 +97,8 @@ int sensor_manager::get_sensor(const char *uri, sensor_t *sensor)
 
 int sensor_manager::get_sensors(const char *uri, sensor_t **list, int *count)
 {
+	retv_if(!is_supported(uri), -ENODATA);
+
 	std::vector<sensor_info *> infos;
 	int size;
 
@@ -130,8 +134,13 @@ bool sensor_manager::is_supported(sensor_t sensor)
 
 bool sensor_manager::is_supported(const char *uri)
 {
+	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
+		return true;
+
 	for (auto it = m_infos.begin(); it != m_infos.end(); ++it) {
-		if ((*it).get_uri() == uri)
+		std::size_t found = (*it).get_uri().rfind(uri);
+
+		if (found != std::string::npos)
 			return true;
 	}
 
@@ -260,9 +269,34 @@ bool sensor_manager::get_sensors_internal(void)
 	return true;
 }
 
+bool sensor_manager::has_privilege(std::string &uri)
+{
+	retvm_if(!is_connected(), false, "Failed to get sensors");
+
+	bool ret;
+	ipc::message msg;
+	ipc::message reply;
+	cmd_has_privilege_t buf = {0, };
+
+	msg.set_type(CMD_HAS_PRIVILEGE);
+	memcpy(buf.sensor, uri.c_str(), uri.size());
+	msg.enclose((const char *)&buf, sizeof(buf));
+
+	ret = m_channel->send_sync(&msg);
+	retvm_if(!ret, false, "Failed to send message");
+
+	ret = m_channel->read_sync(reply);
+	retvm_if(!ret, false, "Failed to receive message");
+
+	if (reply.header()->err == OP_SUCCESS)
+		return true;
+
+	return false;
+}
+
 sensor_info *sensor_manager::get_info(const char *uri)
 {
-	if (strncmp(uri, utils::get_uri(ALL_SENSOR), 27) == 0)
+	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
 		return &m_infos[0];
 
 	for (auto it = m_infos.begin(); it != m_infos.end(); ++it) {
@@ -271,7 +305,11 @@ sensor_info *sensor_manager::get_info(const char *uri)
 		if (found == std::string::npos)
 			continue;
 
-		return &*it;
+		if ((*it).get_privilege().empty())
+			return &*it;
+
+		if (has_privilege((*it).get_uri()))
+			return &*it;
 	}
 
 	return NULL;
@@ -282,16 +320,22 @@ std::vector<sensor_info *> sensor_manager::get_infos(const char *uri)
 	std::vector<sensor_info *> infos;
 	bool all = false;
 
-	if (strncmp(uri, utils::get_uri(ALL_SENSOR), 27) == 0)
+	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
 		all = true;
 
-	for (auto it = m_infos.begin(); it != m_infos.end(); ++it) {
+for (auto it = m_infos.begin(); it != m_infos.end(); ++it) {
 		std::size_t found = (*it).get_uri().rfind(uri);
 
 		if (!all && found == std::string::npos)
 			continue;
 
-		infos.push_back(&*it);
+		if ((*it).get_privilege().empty()) {
+			infos.push_back(&*it);
+			continue;
+		}
+
+		if (has_privilege((*it).get_uri()))
+			infos.push_back(&*it);
 	}
 
 	return infos;

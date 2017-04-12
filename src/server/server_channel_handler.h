@@ -58,6 +58,11 @@ private:
 	int provider_disconnect(ipc::channel *ch, ipc::message &msg);
 	int provider_post(ipc::channel *ch, ipc::message &msg);
 
+	int has_privileges(ipc::channel *ch, ipc::message &msg);
+
+	bool has_privilege(int fd, std::string &priv);
+	bool has_privileges(int fd, std::string priv);
+
 	int send_reply(ipc::channel *ch, int error);
 
 	sensor_manager *m_manager;

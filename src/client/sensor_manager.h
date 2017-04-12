@@ -65,6 +65,7 @@ private:
 	void decode_sensors(const char *buf, std::vector<sensor_info> &infos);
 	bool get_sensors_internal(void);
 
+	bool has_privilege(std::string &uri);
 	sensor_info *get_info(const char *uri);
 	std::vector<sensor_info *> get_infos(const char *uri);
 

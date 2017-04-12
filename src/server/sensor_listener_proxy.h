@@ -48,6 +48,7 @@ public:
 	int set_attribute(int attribute, const char *value, int len);
 	int flush(void);
 	int get_data(sensor_data_t **data, int *len);
+	std::string get_required_privileges(void);
 
 private:
 	uint32_t m_id;
