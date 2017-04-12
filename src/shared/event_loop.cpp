@@ -127,7 +127,7 @@ uint64_t event_loop::add_event(const int fd, const event_condition cond, event_h
 	g_source_set_callback(src, (GSourceFunc) g_io_handler, info, NULL);
 	g_source_attach(src, g_main_loop_get_context(m_mainloop));
 
-	m_infos[id] = info;
+	m_handlers[id] = info;
 
 	/* _D("Added[%llu](fd:%d)", id, fd); */
 	return id;
@@ -151,14 +151,14 @@ uint64_t event_loop::add_idle_event(unsigned int priority, idle_handler *handler
 
 bool event_loop::remove_event(uint64_t id, bool close_channel)
 {
-	auto it = m_infos.find(id);
-	retv_if(it == m_infos.end(), false);
+	auto it = m_handlers.find(id);
+	retv_if(it == m_handlers.end(), false);
 
 	if (close_channel)
 		g_io_channel_shutdown(it->second->g_ch, TRUE, NULL);
 
 	release_info(it->second);
-	m_infos.erase(it);
+	m_handlers.erase(it);
 
 	/* _D("Removed[%llu]", id); */
 	return true;
@@ -166,10 +166,10 @@ bool event_loop::remove_event(uint64_t id, bool close_channel)
 
 void event_loop::remove_all_events(void)
 {
-	auto it = m_infos.begin();
-	while (it != m_infos.end()) {
+	auto it = m_handlers.begin();
+	while (it != m_handlers.end()) {
 		release_info(it->second);
-		it = m_infos.erase(it);
+		it = m_handlers.erase(it);
 	}
 }
 

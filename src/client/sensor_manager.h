@@ -54,7 +54,7 @@ public:
 	/* int unregister_sensor(const char *uri) */
 
 private:
-	typedef std::vector<sensor_info> sensor_infos_t;
+	typedef std::vector<sensor_info> sensor_list_t;
 
 	bool init(void);
 	void deinit(void);
@@ -75,7 +75,7 @@ private:
 	ipc::event_loop m_loop;
 	std::atomic<bool> m_connected;
 
-	sensor_infos_t m_infos;
+	sensor_list_t m_sensors;
 };
 
 }

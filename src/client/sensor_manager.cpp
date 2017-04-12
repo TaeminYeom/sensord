@@ -124,7 +124,7 @@ bool sensor_manager::is_supported(sensor_t sensor)
 {
 	retvm_if(!sensor, false, "Invalid parameter[%#x]", sensor);
 
-	for (auto it = m_infos.begin(); it != m_infos.end(); ++it) {
+	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
 		if (&*it == sensor)
 			return true;
 	}
@@ -137,7 +137,7 @@ bool sensor_manager::is_supported(const char *uri)
 	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
 		return true;
 
-	for (auto it = m_infos.begin(); it != m_infos.end(); ++it) {
+	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
 		std::size_t found = (*it).get_uri().rfind(uri);
 
 		if (found != std::string::npos)
@@ -264,7 +264,7 @@ bool sensor_manager::get_sensors_internal(void)
 
 	reply.disclose(buf);
 
-	decode_sensors(buf, m_infos);
+	decode_sensors(buf, m_sensors);
 
 	return true;
 }
@@ -297,9 +297,9 @@ bool sensor_manager::has_privilege(std::string &uri)
 sensor_info *sensor_manager::get_info(const char *uri)
 {
 	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
-		return &m_infos[0];
+		return &m_sensors[0];
 
-	for (auto it = m_infos.begin(); it != m_infos.end(); ++it) {
+	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
 		std::size_t found = (*it).get_uri().rfind(uri);
 
 		if (found == std::string::npos)
@@ -323,7 +323,7 @@ std::vector<sensor_info *> sensor_manager::get_infos(const char *uri)
 	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
 		all = true;
 
-for (auto it = m_infos.begin(); it != m_infos.end(); ++it) {
+	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
 		std::size_t found = (*it).get_uri().rfind(uri);
 
 		if (!all && found == std::string::npos)

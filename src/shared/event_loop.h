@@ -92,7 +92,7 @@ private:
 	std::atomic<bool> m_running;
 	std::atomic<bool> m_terminating;
 	std::atomic<uint64_t> m_sequence;
-	std::map<uint64_t, handler_info *> m_infos;
+	std::map<uint64_t, handler_info *> m_handlers;
 
 	int m_term_fd;
 };
