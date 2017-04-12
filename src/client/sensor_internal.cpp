@@ -117,7 +117,7 @@ API int sensord_get_default_sensor(sensor_type_t type, sensor_t *sensor)
 {
 	int ret = OP_ERROR;
 
-	retvm_if(!sensor, -EPERM, "Invalid parameter[%#x]", sensor);
+	retvm_if(!sensor, -EINVAL, "Invalid parameter[%#x]", sensor);
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 
 	ret = manager.get_sensor(type, sensor);
@@ -548,7 +548,7 @@ API int sensord_external_connect(const char *key, sensor_external_command_cb_t c
 	 * 3. first connection(client)
 	 * 4. cmd_connect for external sensor with key
 	 */
-	retvm_if(!key, -EPERM, "Invalid key");
+	retvm_if(!key, -EINVAL, "Invalid key");
 	return 0;
 }
 
