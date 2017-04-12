@@ -1,6 +1,6 @@
 Name:       sensord
 Summary:    Sensor daemon
-Version:    2.0.10
+Version:    2.0.11
 Release:    1
 Group:      System/Sensor Framework
 License:    Apache-2.0
@@ -18,33 +18,37 @@ BuildRequires:  pkgconfig(cynara-creds-socket)
 BuildRequires:  pkgconfig(cynara-client)
 BuildRequires:  pkgconfig(cynara-session)
 
-Provides:   %{name}-profile_tv = %{version}-%{release}
-# For backward compatibility
-
-%description
-Sensor daemon
-
-%package    genuine
-Summary:    Genuine Sensor Framework service daemon and shared library
-Requires:   %{name} = %{version}-%{release}
+Requires:   %{name}-dummy = %{version}-%{release}
 Provides:   %{name}-profile_mobile = %{version}-%{release}
 Provides:   %{name}-profile_wearable = %{version}-%{release}
 Provides:   %{name}-profile_ivi = %{version}-%{release}
 Provides:   %{name}-profile_common = %{version}-%{release}
+%global __provides_exclude ^.*-genuine\\.so.*$
 
-%description genuine
-Binary replacement for sensord.
-This genuine sensord package contains actually working shared library
-of the sensor internal APIs and the sensor service daemon.
-If you want to keep using %{name} after uninstalling this, you need to reinstall %{name}.
+%description
+This package provides the fully functional internal API library and the service daemon
+of the Sensor Framework. The library replaces the dummy library installed by %{name}-dummy.
+
+
+%package    dummy
+Summary:    Sensor Framework 'dummy' library
+Provides:   libsensord
+Provides:   %{name}-profile_tv = %{version}-%{release}
+
+%description dummy
+This package provides the dummy library of the sensor internal API.
+Installing %{name} replaces this dummy library with the actually functional library.
+
 
 %package    devel
 Summary:    Internal Sensor API (Development)
 Group:      System/Development
-Requires:   %{name} = %{version}-%{release}
+Requires:   %{name}-dummy = %{version}-%{release}
+Provides:   libsensord-devel
 
 %description devel
 Internal Sensor API (Development)
+
 
 %package -n sensor-hal-devel
 Summary:    Sensord HAL interface
@@ -53,6 +57,7 @@ Group:      System/Development
 %description -n sensor-hal-devel
 Sensord HAL interface
 
+
 %package -n sensor-test
 Summary:    Sensord library
 Group:      System/Testing
@@ -60,14 +65,15 @@ Group:      System/Testing
 %description -n sensor-test
 Sensor functional testing
 
+
 # These dummy packages will be removed later.
 %package -n libsensord
 Summary:    Dummy package for backward compatibility
 Requires:   sensord
 
 %description -n libsensord
-Without this dummy package, obs may reports several 'unresolvable' issues.
-This is a temporal solution to handle such cases.
+A yaml requires libsensord explicitly. This is a temporal solution to prevent image creation failures.
+
 
 %package -n libsensord-devel
 Summary:    Dummy package for backward compatibility
@@ -76,6 +82,7 @@ Requires:   sensord-devel
 %description -n libsensord-devel
 Some packages require libsensord-devel directly, and it causes local gbs build failures
 with the old build snapshots. This is a temporal solution to handle such cases.
+
 
 %prep
 %setup -q
@@ -100,35 +107,35 @@ install -m 0644 %SOURCE2 %{buildroot}%{_unitdir}
 ln -s libsensor.so.2 %{buildroot}%{_libdir}/libsensor.so.1
 
 %post
-/sbin/ldconfig
-
-%postun
-/sbin/ldconfig
-
-%files
-%manifest packaging/sensord.manifest
-%{_libdir}/libsensor.so.*
-%license LICENSE.APLv2
-
-%post   genuine
 pushd %{_libdir}
 ln -sf libsensor-genuine.so.%{version} libsensor.so.%{version}
 chsmack -a "_" libsensor.so.%{version}
 popd
 /sbin/ldconfig
 
-%preun  genuine
-echo "You need to reinstall %{name}, if you need to keep using the APIs after uinstalling this."
+%preun
+echo "You need to reinstall %{name}-dummy to keep using the APIs after uninstalling this."
 
-%files  genuine
+%files
 %manifest packaging/sensord.manifest
-%{_libdir}/libsensord-shared.so
 %{_libdir}/libsensor-genuine.so.*
+%{_libdir}/libsensord-shared.so
 %{_bindir}/sensord
 %{_unitdir}/sensord.service
 %{_unitdir}/sensord.socket
 %{_unitdir}/multi-user.target.wants/sensord.service
 %{_unitdir}/sockets.target.wants/sensord.socket
+%license LICENSE.APLv2
+
+
+%post   dummy
+/sbin/ldconfig
+
+%files  dummy
+%manifest packaging/sensord.manifest
+%{_libdir}/libsensor.so.*
+%license LICENSE.APLv2
+
 
 %files  devel
 %manifest packaging/sensord.manifest
@@ -137,15 +144,16 @@ echo "You need to reinstall %{name}, if you need to keep using the APIs after ui
 %{_libdir}/libsensor.so
 %{_libdir}/pkgconfig/sensor.pc
 
+
 %files -n sensor-hal-devel
 %manifest packaging/sensord.manifest
 %{_includedir}/sensor/sensor_hal*.h
 
+
 %files -n sensor-test
 %{_bindir}/sensorctl
 
+
 %files -n libsensord
-%license LICENSE.APLv2
 
 %files -n libsensord-devel
-%license LICENSE.APLv2
