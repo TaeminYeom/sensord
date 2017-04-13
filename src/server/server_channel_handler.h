@@ -67,8 +67,11 @@ private:
 
 	sensor_manager *m_manager;
 
-	/* {fd, listener} */
-	std::unordered_map<ipc::channel *, sensor_listener_proxy *> m_listeners;
+	/* {id, listener} */
+	std::unordered_map<uint32_t, sensor_listener_proxy *> m_listeners;
+
+	/* {channel, id} */
+	std::unordered_map<ipc::channel *, uint32_t> m_listener_ids;
 
 	/* {name, application_sensor_handler} */
 	/* TODO: move it to sensor_manager */

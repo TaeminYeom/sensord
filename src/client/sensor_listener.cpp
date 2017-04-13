@@ -66,7 +66,8 @@ sensor_listener::sensor_listener(sensor_t sensor)
 : m_id(0)
 , m_sensor(reinterpret_cast<sensor_info *>(sensor))
 , m_client(NULL)
-, m_channel(NULL)
+, m_cmd_channel(NULL)
+, m_evt_channel(NULL)
 , m_handler(NULL)
 , m_evt_handler(NULL)
 , m_acc_handler(NULL)
@@ -148,8 +149,11 @@ void sensor_listener::restore(void)
 
 bool sensor_listener::connect(void)
 {
-	m_channel = m_client->connect(m_handler, &m_loop);
-	retvm_if(!m_channel, false, "Failed to connect to server");
+	m_cmd_channel = m_client->connect(NULL);
+	retvm_if(!m_cmd_channel, false, "Failed to connect to server");
+
+	m_evt_channel = m_client->connect(m_handler, &m_loop);
+	retvm_if(!m_evt_channel, false, "Failed to connect to server");
 
 	ipc::message msg;
 	ipc::message reply;
@@ -158,9 +162,9 @@ bool sensor_listener::connect(void)
 	memcpy(buf.sensor, m_sensor->get_uri().c_str(), m_sensor->get_uri().size());
 	msg.set_type(CMD_LISTENER_CONNECT);
 	msg.enclose((const char *)&buf, sizeof(buf));
-	m_channel->send_sync(&msg);
+	m_evt_channel->send_sync(&msg);
 
-	m_channel->read_sync(reply);
+	m_evt_channel->read_sync(reply);
 	reply.disclose((char *)&buf);
 
 	m_id = buf.listener_id;
@@ -180,13 +184,17 @@ void sensor_listener::disconnect(void)
 	ipc::message reply;
 
 	msg.set_type(CMD_LISTENER_DISCONNECT);
-	m_channel->send_sync(&msg);
+	m_evt_channel->send_sync(&msg);
 
-	m_channel->read_sync(reply);
-	m_channel->disconnect();
+	m_evt_channel->read_sync(reply);
+	m_evt_channel->disconnect();
 
-	delete m_channel;
-	m_channel = NULL;
+	delete m_evt_channel;
+	m_evt_channel = NULL;
+
+	m_cmd_channel->disconnect();
+	delete m_cmd_channel;
+	m_cmd_channel = NULL;
 
 	_I("Disconnected[%d]", get_id());
 }
@@ -234,14 +242,14 @@ int sensor_listener::start(void)
 	ipc::message reply;
 	cmd_listener_start_t buf;
 
-	retvm_if(!m_channel, -EINVAL, "Failed to connect to server");
+	retvm_if(!m_cmd_channel, -EINVAL, "Failed to connect to server");
 
 	buf.listener_id = m_id;
 	msg.set_type(CMD_LISTENER_START);
 	msg.enclose((char *)&buf, sizeof(buf));
 
-	m_channel->send_sync(&msg);
-	m_channel->read_sync(reply);
+	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->read_sync(reply);
 
 	if (reply.header()->err < 0)
 		return reply.header()->err;
@@ -257,15 +265,15 @@ int sensor_listener::stop(void)
 	ipc::message reply;
 	cmd_listener_stop_t buf;
 
-	retvm_if(!m_channel, -EINVAL, "Failed to connect to server");
+	retvm_if(!m_cmd_channel, -EINVAL, "Failed to connect to server");
 	retvm_if(!m_started.load(), -EAGAIN, "Already stopped");
 
 	buf.listener_id = m_id;
 	msg.set_type(CMD_LISTENER_STOP);
 	msg.enclose((char *)&buf, sizeof(buf));
 
-	m_channel->send_sync(&msg);
-	m_channel->read_sync(reply);
+	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->read_sync(reply);
 
 	if (reply.header()->err < 0)
 		return reply.header()->err;
@@ -343,7 +351,7 @@ int sensor_listener::set_attribute(int attribute, int value)
 	ipc::message reply;
 	cmd_listener_attr_int_t buf;
 
-	retvm_if(!m_channel, false, "Failed to connect to server");
+	retvm_if(!m_cmd_channel, false, "Failed to connect to server");
 
 	buf.listener_id = m_id;
 	buf.attribute = attribute;
@@ -351,8 +359,8 @@ int sensor_listener::set_attribute(int attribute, int value)
 	msg.set_type(CMD_LISTENER_ATTR_INT);
 	msg.enclose((char *)&buf, sizeof(buf));
 
-	m_channel->send_sync(&msg);
-	m_channel->read_sync(reply);
+	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->read_sync(reply);
 
 	if (reply.header()->err < 0)
 		return reply.header()->err;
@@ -368,7 +376,7 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 	ipc::message reply;
 	cmd_listener_attr_str_t buf;
 
-	retvm_if(!m_channel, false, "Failed to connect to server");
+	retvm_if(!m_cmd_channel, false, "Failed to connect to server");
 
 	msg.set_type(CMD_LISTENER_ATTR_STR);
 	buf.listener_id = m_id;
@@ -378,8 +386,8 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 
 	msg.enclose((char *)&buf, sizeof(buf) + len);
 
-	m_channel->send_sync(&msg);
-	m_channel->read_sync(reply);
+	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->read_sync(reply);
 
 	return reply.header()->err;
 }
@@ -390,19 +398,26 @@ int sensor_listener::get_sensor_data(sensor_data_t *data)
 	ipc::message reply;
 	cmd_listener_get_data_t buf;
 
-	retvm_if(!m_channel, false, "Failed to connect to server");
+	retvm_if(!m_cmd_channel, false, "Failed to connect to server");
 
 	buf.listener_id = m_id;
 	msg.set_type(CMD_LISTENER_GET_DATA);
 	msg.enclose((char *)&buf, sizeof(buf));
-	m_channel->send_sync(&msg);
 
-	m_channel->read_sync(reply);
-	/* TODO */
-	/*
+	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->read_sync(reply);
+
 	reply.disclose((char *)&buf);
-	memcpy(data, buf.data, sizeof(buf.len));
-	*/
+	int size = sizeof(sensor_data_t);
+
+	if (buf.len > size || buf.len < 0) {
+		data->accuracy = -1;
+		data->value_count = 0;
+		/* TODO: it should return OP_ERROR */
+		return OP_SUCCESS;
+	}
+
+	memcpy(data, &buf.data, buf.len);
 
 	return OP_SUCCESS;
 }

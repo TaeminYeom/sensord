@@ -47,13 +47,14 @@ void server_channel_handler::connected(channel *ch)
 
 void server_channel_handler::disconnected(channel *ch)
 {
-	auto it = m_listeners.find(ch);
-	ret_if(it == m_listeners.end());
+	auto it = m_listener_ids.find(ch);
+	ret_if(it == m_listener_ids.end());
 
-	_I("Disconnected listener[%u]", it->second->get_id());
+	_I("Disconnected listener[%u]", it->second);
 
-	delete it->second;
-	m_listeners.erase(ch);
+	delete m_listeners[it->second];
+	m_listeners.erase(it->second);
+	m_listener_ids.erase(ch);
 }
 
 void server_channel_handler::read(channel *ch, message &msg)
@@ -104,6 +105,7 @@ int server_channel_handler::manager_get_sensor_list(channel *ch, message &msg)
 	retv_if(size < 0, size);
 
 	reply.enclose((const char *)bytes, size);
+	reply.header()->err = OP_SUCCESS;
 	ch->send_sync(&reply);
 
 	delete [] bytes;
@@ -138,24 +140,26 @@ int server_channel_handler::listener_connect(channel *ch, message &msg)
 		return OP_ERROR;
 
 	_I("Connected sensor_listener[fd(%d) -> id(%u)]", ch->get_fd(), listener_id);
+	m_listeners[listener_id] = listener;
+	m_listener_ids[ch] = listener_id;
 	listener_id++;
-	m_listeners[ch] = listener;
 
 	return OP_SUCCESS;
 }
 
 int server_channel_handler::listener_disconnect(channel *ch, message &msg)
 {
-	auto it = m_listeners.find(ch);
-	retv_if(it == m_listeners.end(), -EINVAL);
+	auto it = m_listener_ids.find(ch);
+	retv_if(it == m_listener_ids.end(), -EINVAL);
 
-	uint32_t id = m_listeners[ch]->get_id();
+	uint32_t id = it->second;
 
-	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
 			-EACCES, "Permission denied");
 
-	delete m_listeners[ch];
-	m_listeners.erase(ch);
+	delete m_listeners[id];
+	m_listeners.erase(id);
+	m_listener_ids.erase(ch);
 
 	_D("Disconnected sensor_listener[%u]", id);
 
@@ -164,12 +168,16 @@ int server_channel_handler::listener_disconnect(channel *ch, message &msg)
 
 int server_channel_handler::listener_start(channel *ch, message &msg)
 {
-	auto it = m_listeners.find(ch);
+	cmd_listener_start_t buf;
+	msg.disclose((char *)&buf);
+	uint32_t id = buf.listener_id;
+
+	auto it = m_listeners.find(id);
 	retv_if(it == m_listeners.end(), -EINVAL);
-	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
 			-EACCES, "Permission denied");
 
-	int ret = m_listeners[ch]->start();
+	int ret = m_listeners[id]->start();
 	retv_if(ret < 0, ret);
 
 	return send_reply(ch, OP_SUCCESS);
@@ -177,12 +185,16 @@ int server_channel_handler::listener_start(channel *ch, message &msg)
 
 int server_channel_handler::listener_stop(channel *ch, message &msg)
 {
-	auto it = m_listeners.find(ch);
+	cmd_listener_stop_t buf;
+	msg.disclose((char *)&buf);
+	uint32_t id = buf.listener_id;
+
+	auto it = m_listeners.find(id);
 	retv_if(it == m_listeners.end(), -EINVAL);
-	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
 			-EACCES, "Permission denied");
 
-	int ret = m_listeners[ch]->stop();
+	int ret = m_listeners[id]->stop();
 	retv_if(ret < 0, ret);
 
 	return send_reply(ch, OP_SUCCESS);
@@ -190,44 +202,48 @@ int server_channel_handler::listener_stop(channel *ch, message &msg)
 
 int server_channel_handler::listener_attr_int(channel *ch, message &msg)
 {
-	int ret = OP_SUCCESS;
-
-	auto it = m_listeners.find(ch);
-	retv_if(it == m_listeners.end(), -EINVAL);
-	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
-			-EACCES, "Permission denied");
-
 	cmd_listener_attr_int_t buf;
 	msg.disclose((char *)&buf);
+	uint32_t id = buf.listener_id;
+
+	int ret = OP_SUCCESS;
+
+	auto it = m_listeners.find(id);
+	retv_if(it == m_listeners.end(), -EINVAL);
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
+			-EACCES, "Permission denied");
 
 	switch (buf.attribute) {
 	case SENSORD_ATTRIBUTE_INTERVAL:
-		ret = m_listeners[ch]->set_interval(buf.value); break;
+		ret = m_listeners[id]->set_interval(buf.value); break;
 	case SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY:
-		ret = m_listeners[ch]->set_max_batch_latency(buf.value); break;
+		ret = m_listeners[id]->set_max_batch_latency(buf.value); break;
 	case SENSORD_ATTRIBUTE_PASSIVE_MODE:
-		ret = m_listeners[ch]->set_passive_mode(buf.value); break;
+		ret = m_listeners[id]->set_passive_mode(buf.value); break;
 	case SENSORD_ATTRIBUTE_PAUSE_POLICY:
 	case SENSORD_ATTRIBUTE_AXIS_ORIENTATION:
 	default:
-		ret = m_listeners[ch]->set_attribute(buf.attribute, buf.value);
+		ret = m_listeners[id]->set_attribute(buf.attribute, buf.value);
 	}
-	retv_if(ret < 0, ret);
+	/* TODO : check return value */
+	if (ret < 0)
+		_W("Return : %d", ret);
 
 	return send_reply(ch, OP_SUCCESS);
 }
 
 int server_channel_handler::listener_attr_str(channel *ch, message &msg)
 {
-	auto it = m_listeners.find(ch);
-	retv_if(it == m_listeners.end(), -EINVAL);
-	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
-			-EACCES, "Permission denied");
-
 	cmd_listener_attr_str_t buf;
 	msg.disclose((char *)&buf);
+	uint32_t id = buf.listener_id;
 
-	int ret = m_listeners[ch]->set_attribute(buf.attribute, buf.value, buf.len);
+	auto it = m_listeners.find(id);
+	retv_if(it == m_listeners.end(), -EINVAL);
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
+			-EACCES, "Permission denied");
+
+	int ret = m_listeners[id]->set_attribute(buf.attribute, buf.value, buf.len);
 	retv_if(ret < 0, ret);
 
 	return send_reply(ch, OP_SUCCESS);

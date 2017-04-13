@@ -80,7 +80,8 @@ private:
 	sensor_info *m_sensor;
 
 	ipc::ipc_client *m_client;
-	ipc::channel *m_channel;
+	ipc::channel *m_cmd_channel;
+	ipc::channel *m_evt_channel;
 	ipc::channel_handler *m_handler;
 	ipc::channel_handler *m_evt_handler;
 	ipc::channel_handler *m_acc_handler;
