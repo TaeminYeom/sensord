@@ -62,7 +62,8 @@ private:
 	sensor_info m_info;
 	sensor_device *m_device;
 	physical_sensor *m_sensor;
-	int m_hal_id;
+	uint32_t m_hal_id;
+	int32_t m_prev_interval;
 
 	std::unordered_map<sensor_observer *, int> m_interval_map;
 	std::unordered_map<sensor_observer *, int> m_batch_latency_map;

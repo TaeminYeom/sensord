@@ -33,6 +33,7 @@ physical_sensor_handler::physical_sensor_handler(const sensor_info &info,
 , m_device(device)
 , m_sensor(sensor)
 , m_hal_id(hal_id)
+, m_prev_interval(0)
 {
 	/* TODO: temporary walkaround */
 	switch (m_info.get_type()) {
@@ -166,22 +167,26 @@ int physical_sensor_handler::set_interval(sensor_observer *ob, int32_t interval)
 	retv_if(!m_device, -EINVAL);
 
 	bool ret = false;
-	int _interval = interval;
+	int32_t cur_interval = interval;
 	int policy = OP_DEFAULT;
 
 	if (m_sensor) {
-		policy = m_sensor->set_interval(ob, interval);
+		policy = m_sensor->set_interval(ob, cur_interval);
 		retv_if(policy <= OP_ERROR, policy);
 	}
 
-	m_interval_map[ob] = interval;
+	m_interval_map[ob] = cur_interval;
 
 	if (policy == OP_DEFAULT)
-		_interval = get_min_interval();
+		cur_interval = get_min_interval();
 
-	ret = m_device->set_interval(m_hal_id, _interval);
+	retv_if(m_prev_interval == cur_interval, OP_SUCCESS);
 
-	return (ret ? OP_SUCCESS : OP_SUCCESS);
+	ret = m_device->set_interval(m_hal_id, cur_interval);
+
+	m_prev_interval = cur_interval;
+
+	return (ret ? OP_SUCCESS : OP_ERROR);
 }
 
 int physical_sensor_handler::get_min_batch_latency(void)
@@ -221,7 +226,7 @@ int physical_sensor_handler::set_batch_latency(sensor_observer *ob, int32_t late
 
 	ret = m_device->set_batch_latency(m_hal_id, _latency);
 
-	return (ret ? OP_SUCCESS : OP_SUCCESS);
+	return (ret ? OP_SUCCESS : OP_ERROR);
 }
 
 int physical_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, int32_t value)
@@ -246,7 +251,7 @@ int physical_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, in
 
 	ret = m_device->set_attribute_int(m_hal_id, attr, value);
 
-	return (ret ? OP_SUCCESS : OP_SUCCESS);
+	return (ret ? OP_SUCCESS : OP_ERROR);
 }
 
 int physical_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, const char *value, int len)
@@ -271,7 +276,7 @@ int physical_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, co
 
 	ret = m_device->set_attribute_str(m_hal_id, attr, const_cast<char *>(value), len);
 
-	return (ret ? OP_SUCCESS : OP_SUCCESS);
+	return (ret ? OP_SUCCESS : OP_ERROR);
 }
 
 int physical_sensor_handler::flush(sensor_observer *ob)
