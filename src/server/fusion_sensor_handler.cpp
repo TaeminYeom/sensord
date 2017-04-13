@@ -214,8 +214,9 @@ int fusion_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, cons
 
 int fusion_sensor_handler::get_data(sensor_data_t **data, int *len)
 {
-	/* TODO */
-	return OP_SUCCESS;
+	retv_if(!m_sensor, -EINVAL);
+
+	return m_sensor->get_data(data, len);
 }
 
 int fusion_sensor_handler::flush(sensor_observer *ob)

@@ -94,7 +94,7 @@ typedef struct  {
 typedef struct {
 	int listener_id;
 	int len;
-	char data[0];
+	sensor_data_t data;
 } cmd_listener_get_data_t;
 
 typedef struct {

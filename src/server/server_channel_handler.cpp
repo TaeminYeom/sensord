@@ -251,12 +251,35 @@ int server_channel_handler::listener_attr_str(channel *ch, message &msg)
 
 int server_channel_handler::listener_get_data(channel *ch, message &msg)
 {
-	auto it = m_listeners.find(ch);
+	ipc::message reply;
+	cmd_listener_get_data_t buf;
+	sensor_data_t *data;
+	int len;
+	uint32_t id;
+
+	msg.disclose((char *)&buf);
+	id = buf.listener_id;
+
+	auto it = m_listeners.find(id);
 	retv_if(it == m_listeners.end(), -EINVAL);
-	retvm_if(!has_privileges(ch->get_fd(), m_listeners[ch]->get_required_privileges()),
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
 			-EACCES, "Permission denied");
 
-	return send_reply(ch, OP_ERROR);
+	int ret = m_listeners[id]->get_data(&data, &len);
+	retv_if(ret < 0, ret);
+
+	memcpy(&buf.data, data, sizeof(sensor_data_t));
+	buf.len = sizeof(sensor_data_t);
+
+	reply.enclose((const char *)&buf, sizeof(cmd_listener_get_data_t));
+	reply.header()->err = OP_SUCCESS;
+	reply.header()->type = CMD_LISTENER_GET_DATA;
+
+	ch->send_sync(&reply);
+
+	free(data);
+
+	return OP_SUCCESS;
 }
 
 int server_channel_handler::provider_connect(channel *ch, message &msg)
