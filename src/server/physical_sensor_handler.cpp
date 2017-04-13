@@ -34,6 +34,21 @@ physical_sensor_handler::physical_sensor_handler(const sensor_info &info,
 , m_sensor(sensor)
 , m_hal_id(hal_id)
 {
+	/* TODO: temporary walkaround */
+	switch (m_info.get_type()) {
+	case HRM_SENSOR:
+	case HRM_LED_GREEN_SENSOR:
+	case HRM_LED_IR_SENSOR:
+	case HRM_LED_RED_SENSOR:
+	case HUMAN_PEDOMETER_SENSOR:
+	case HUMAN_SLEEP_MONITOR_SENSOR:
+	case HUMAN_SLEEP_DETECTOR_SENSOR:
+	case HUMAN_STRESS_MONITOR_SENSOR:
+		m_info.set_privilege("http://tizen.org/privilege/healthinfo");
+		break;
+	default:
+		break;
+	};
 }
 
 physical_sensor_handler::~physical_sensor_handler()
