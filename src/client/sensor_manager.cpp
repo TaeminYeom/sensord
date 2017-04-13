@@ -104,11 +104,7 @@ int sensor_manager::get_sensors(const char *uri, sensor_t **list, int *count)
 
 	infos = get_infos(uri);
 	size = infos.size();
-
-	if (size == 0) {
-		*count = 0;
-		return -ENODATA;
-	}
+	retv_if(size == 0, -EACCES);
 
 	*list = (sensor_t *)malloc(sizeof(sensor_info *) * size);
 	retvm_if(!*list, -ENOMEM, "Failed to allocate memory");
