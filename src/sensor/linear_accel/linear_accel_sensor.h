@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,38 +17,24 @@
  *
  */
 
-#ifndef _LINEAR_ACCEL_SENSOR_H_
-#define _LINEAR_ACCEL_SENSOR_H_
+#ifndef __LINEAR_ACCEL_SENSOR_H__
+#define __LINEAR_ACCEL_SENSOR_H__
 
-#include <virtual_sensor.h>
+#include <fusion_sensor.h>
 #include <sensor_types.h>
 
-class linear_accel_sensor : public virtual_sensor {
+class linear_accel_sensor : public fusion_sensor {
 public:
 	linear_accel_sensor();
 	virtual ~linear_accel_sensor();
 
-	/* initialize sensor */
-	bool init(void);
+	int get_sensor_info(const sensor_info2_t **info);
+	int get_required_sensors(const required_sensor_s **sensors);
 
-	/* sensor info */
-	virtual sensor_type_t get_type(void);
-	virtual unsigned int get_event_type(void);
-	virtual const char* get_name(void);
+	int update(uint32_t id, sensor_data_t *data, int len);
+	int get_data(sensor_data_t **data, int *len);
 
-	virtual bool get_sensor_info(sensor_info &info);
-
-	/* synthesize event */
-	virtual void synthesize(const sensor_event_t& event);
-
-	bool add_interval(int client_id, unsigned int interval, bool is_processor);
-	bool delete_interval(int client_id, bool is_processor);
-	/* get data */
-	virtual int get_data(sensor_data_t **data, int *length);
 private:
-	sensor_base *m_accel_sensor;
-	sensor_base *m_gravity_sensor;
-
 	float m_x;
 	float m_y;
 	float m_z;
@@ -57,14 +43,6 @@ private:
 	float m_gz;
 	int m_accuracy;
 	unsigned long long m_time;
-	unsigned long m_interval;
-
-	virtual bool set_interval(unsigned long interval);
-	virtual bool set_batch_latency(unsigned long latency);
-	virtual bool set_wakeup(int wakeup);
-
-	virtual bool on_start(void);
-	virtual bool on_stop(void);
 };
 
-#endif
+#endif /* __LINEAR_ACCEL_SENSOR_H__ */
