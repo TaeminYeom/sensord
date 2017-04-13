@@ -17,53 +17,30 @@
  *
  */
 
-#ifndef _ORIENTATION_SENSOR_H_
-#define _ORIENTATION_SENSOR_H_
+#ifndef __ORIENTATION_SENSOR_H__
+#define __ORIENTATION_SENSOR_H__
 
-#include <virtual_sensor.h>
+#include <fusion_sensor.h>
 #include <sensor_types.h>
-#include <sensor_fusion.h>
 
-class orientation_sensor : public virtual_sensor {
+class orientation_sensor : public fusion_sensor {
 public:
 	orientation_sensor();
 	virtual ~orientation_sensor();
 
-	/* initialize sensor */
-	bool init(void);
+	int get_sensor_info(const sensor_info2_t **info);
+	int get_required_sensors(const required_sensor_s **sensors);
 
-	/* sensor info */
-	virtual sensor_type_t get_type(void);
-	virtual unsigned int get_event_type(void);
-	virtual const char* get_name(void);
+	int update(uint32_t id, sensor_data_t *data, int len);
+	int get_data(sensor_data_t **data, int *len);
 
-	virtual bool get_sensor_info(sensor_info &info);
-
-	/* synthesize event */
-	virtual void synthesize(const sensor_event_t& event);
-
-	bool add_interval(int client_id, unsigned int interval, bool is_processor);
-	bool delete_interval(int client_id, bool is_processor);
-
-	/* get data */
-	virtual int get_data(sensor_data_t **data, int *length);
 private:
-	sensor_base *m_rotation_vector_sensor;
-
 	float m_azimuth;
 	float m_pitch;
 	float m_roll;
 	int m_accuracy;
 	unsigned long long m_time;
 	unsigned long m_interval;
-
-	virtual bool set_interval(unsigned long interval);
-	virtual bool set_batch_latency(unsigned long latency);
-
-	virtual bool on_start(void);
-	virtual bool on_stop(void);
-
-	int rotation_to_orientation(const float *rotation, float &azimuth, float &pitch, float &roll);
 };
 
-#endif /* _ORIENTATION_SENSOR_H_ */
+#endif /* __ORIENTATION_SENSOR_H__ */

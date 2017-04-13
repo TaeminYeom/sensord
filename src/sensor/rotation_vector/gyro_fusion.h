@@ -20,7 +20,7 @@
 #ifndef __GYRO_FUSION_H__
 #define __GYRO_FUSION_H__
 
-#include <fusion_base.h>
+#include "fusion_base.h"
 
 class gyro_fusion : public fusion_base {
 public:

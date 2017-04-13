@@ -22,8 +22,6 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sensor_log.h>
-#include <sensor_loader.h>
-#include <sensor_base.h>
 #include <cmath>
 #include "fusion_base.h"
 
@@ -35,13 +33,16 @@ fusion_base::fusion_base()
 : m_enable_accel(false)
 , m_enable_gyro(false)
 , m_enable_magnetic(false)
+, m_x(0)
+, m_y(0)
+, m_z(0)
+, m_w(0)
+, m_timestamp(0)
 {
-	_I("fusion_base is created!");
 }
 
 fusion_base::~fusion_base()
 {
-	_I("fusion_sensor is destroyed!");
 }
 
 void fusion_base::clear(void)

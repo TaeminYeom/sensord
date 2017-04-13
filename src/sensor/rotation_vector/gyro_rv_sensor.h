@@ -20,36 +20,22 @@
 #ifndef __GYRO_RV_SENSOR_H__
 #define __GYRO_RV_SENSOR_H__
 
-#include <virtual_sensor.h>
+#include <fusion_sensor.h>
 #include <sensor_types.h>
-#include <gyro_fusion.h>
+#include "gyro_fusion.h"
 
-class gyro_rv_sensor : public virtual_sensor {
+class gyro_rv_sensor : public fusion_sensor {
 public:
 	gyro_rv_sensor();
 	virtual ~gyro_rv_sensor();
 
-	/* initialize sensor */
-	bool init(void);
+	int get_sensor_info(const sensor_info2_t **info);
+	int get_required_sensors(const required_sensor_s **sensors);
 
-	/* sensor info */
-	virtual sensor_type_t get_type(void);
-	virtual unsigned int get_event_type(void);
-	virtual const char* get_name(void);
+	int update(uint32_t id, sensor_data_t *data, int len);
+	int get_data(sensor_data_t **data, int *len);
 
-	virtual bool get_sensor_info(sensor_info &info);
-
-	/* synthesize event */
-	virtual void synthesize(const sensor_event_t& event);
-
-	bool add_interval(int client_id, unsigned int interval, bool is_processor);
-	bool delete_interval(int client_id, bool is_processor);
-
-	/* get data */
-	virtual int get_data(sensor_data_t **data, int *length);
 private:
-	sensor_base *m_accel_sensor;
-	sensor_base *m_gyro_sensor;
 	gyro_fusion m_fusion;
 
 	float m_x;
@@ -59,12 +45,6 @@ private:
 	unsigned long long m_time;
 	unsigned long m_interval;
 	int m_accuracy;
-
-	virtual bool set_interval(unsigned long interval);
-	virtual bool set_batch_latency(unsigned long latency);
-
-	virtual bool on_start(void);
-	virtual bool on_stop(void);
 };
 
 #endif /* __GYRO_SENSOR_H__ */

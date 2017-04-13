@@ -29,6 +29,14 @@
 #ifdef ENABLE_LINEAR_ACCEL
 #include "linear_accel/linear_accel_sensor.h"
 #endif
+#ifdef ENABLE_ROTATION_VECTOR
+#include "rotation_vector/rv_sensor.h"
+#include "rotation_vector/magnetic_rv_sensor.h"
+#include "rotation_vector/gyro_rv_sensor.h"
+#endif
+#ifdef ENABLE_ORIENTATION
+#include "orientation/orientation_sensor.h"
+#endif
 
 static std::vector<fusion_sensor_t> sensors;
 
@@ -62,6 +70,16 @@ extern "C" int create(fusion_sensor_t **fsensors)
 
 #ifdef ENABLE_LINEAR_ACCEL
 	create_sensor<linear_accel_sensor>("Linear Acceleration Sensor");
+#endif
+
+#ifdef ENABLE_ROTATION_VECTOR
+	create_sensor<rv_sensor>("Rotation Vector Sensor");
+	create_sensor<magnetic_rv_sensor>("Magnetic Rotation Vector Sensor");
+	create_sensor<gyro_rv_sensor>("Gyroscope Rotation Vector Sensor");
+#endif
+
+#ifdef ENABLE_ORIENTATION
+	create_sensor<orientation_sensor>("Orientation Sensor");
 #endif
 
 	*fsensors = &sensors[0];
