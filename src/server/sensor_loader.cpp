@@ -73,7 +73,6 @@ bool sensor_loader::load(const std::string &dir_path, std::vector<std::shared_pt
 	void *handle;
 	std::vector<std::string> module_paths;
 	void **results;
-	T *sensor;
 
 	ret = get_module_paths(dir_path, module_paths);
 	retv_if(!ret, false);
@@ -97,11 +96,8 @@ bool sensor_loader::load(const std::string &dir_path, std::vector<std::shared_pt
 			return false;
 		}
 
-		for (int i = 0; i < size; ++i) {
-			sensor = static_cast<T *>(results[i]);
-			std::shared_ptr<T> sensor_ptr(sensor);
-			sensors.push_back(sensor_ptr);
-		}
+		for (int i = 0; i < size; ++i)
+			sensors.emplace_back(static_cast<T *>(results[i]));
 
 		m_modules[path.c_str()] = handle;
 	}

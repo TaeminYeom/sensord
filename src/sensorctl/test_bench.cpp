@@ -133,9 +133,7 @@ void test_bench::add_testcase(const std::string &group, test_case *testcase)
 
 void test_bench::add_failure(const std::string &function, long line, const std::string &msg)
 {
-	test_result fail(function, line, msg);
-
-	results.push_back(fail);
+	results.emplace_back(function, line, msg);
 	m_failure_count++;
 }
 
