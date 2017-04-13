@@ -220,22 +220,22 @@ void sensor_manager::decode_sensors(const char *buf, std::vector<sensor_info> &i
 {
 	int count = 0;
 	sensor_info info;
-	const size_t *size;
+	const int32_t *size;
 	const char *data;
 	cmd_manager_sensor_list_t *raw;
 
 	raw = (cmd_manager_sensor_list_t *)buf;
 	count = raw->sensor_cnt;
-	size = (const size_t *)raw->data;
-	data = (const char *)raw->data + sizeof(size_t);
+	size = (const int32_t *)raw->data;
+	data = (const char *)raw->data + sizeof(int32_t);
 
 	for (int i = 0; i < count; ++i) {
 		info.clear();
 		info.deserialize(data, size[0]);
 		infos.push_back(info);
 
-		size = (const size_t *)((const char *)data + size[0]);
-		data = (const char *)size + sizeof(size_t);
+		size = (const int32_t *)((const char *)data + size[0]);
+		data = (const char *)size + sizeof(int32_t);
 	}
 
 	_D("Sensor count : %d", count);
