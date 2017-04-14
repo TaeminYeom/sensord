@@ -75,10 +75,11 @@ int physical_sensor_handler::get_poll_fd(void)
 
 int physical_sensor_handler::read_fd(std::vector<uint32_t> &ids)
 {
+	retv_if(observer_count() == 0, OP_ERROR);
+	retv_if(!m_device, -EINVAL);
+
 	int size;
 	uint32_t *_ids;
-
-	retv_if(!m_device, -EINVAL);
 
 	size = m_device->read_fd(&_ids);
 	retv_if(size == 0, -ENODATA);
