@@ -107,10 +107,8 @@ bool sensor_loader::load(const std::string &dir_path, std::vector<std::shared_pt
 
 bool sensor_loader::get_module_paths(const std::string &dir_path, std::vector<std::string> &paths)
 {
-	int ret;
 	DIR *dir = NULL;
-	struct dirent entry;
-	struct dirent *result;
+	struct dirent *entry;
 	struct stat buf;
 	std::string filename;
 
@@ -118,14 +116,10 @@ bool sensor_loader::get_module_paths(const std::string &dir_path, std::vector<st
 	retvm_if(!dir, false, "Failed to open directory[%s]", dir_path.c_str());
 
 	while (true) {
-		ret = readdir_r(dir, &entry, &result);
+		entry = readdir(dir);
+		if (!entry) break;
 
-		if (ret != 0)
-			continue;
-		if (!result)
-			break;
-
-		filename = std::string(entry.d_name);
+		filename = std::string(entry->d_name);
 
 		if (filename == "." || filename == "..")
 			continue;
