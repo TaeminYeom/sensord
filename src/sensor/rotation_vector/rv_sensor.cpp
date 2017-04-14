@@ -23,8 +23,8 @@
 #include <sensor_types.h>
 #include <fusion_util.h>
 
-#define NAME_SENSOR  "http://tizen.org/sensor/rotation_vector/rotation_vector"
-#define NAME_VENDOR  "Samsung"
+#define NAME_SENSOR  "http://tizen.org/sensor/rotation_vector/tizen_default"
+#define NAME_VENDOR  "tizen.org"
 
 #define SRC_ID_ACC   0x1
 #define SRC_STR_ACC  "http://tizen.org/sensor/accelerometer"

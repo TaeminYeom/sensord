@@ -24,8 +24,8 @@
 
 #include "auto_rotation_alg_emul.h"
 
-#define NAME_SENSOR "http://tizen.org/sensor/auto_rotation/AUTO_ROTATION"
-#define NAME_VENDOR "Samsung"
+#define NAME_SENSOR "http://tizen.org/sensor/auto_rotation/tizen_default"
+#define NAME_VENDOR "tizen.org"
 
 #define SRC_ID_ACC  0x1
 #define SRC_STR_ACC "http://tizen.org/sensor/accelerometer"
