@@ -25,6 +25,8 @@
 
 #include "sensor_log.h"
 
+#define SYSTEMD_SOCK_BUF_SIZE 40000
+
 using namespace ipc;
 
 class send_event_handler : public event_handler
@@ -146,7 +148,7 @@ bool channel::send(message *msg)
 
 	/* TODO: check buffer size(is there any linux api for this?) */
 	int cur_buffer_size = m_socket->get_current_buffer_size();
-	retvm_if(!cur_buffer_size > 40000, false, "Failed to send data");
+	retvm_if(cur_buffer_size > SYSTEMD_SOCK_BUF_SIZE, false, "Failed to send data");
 
 	send_event_handler *handler = new(std::nothrow) send_event_handler(this, msg);
 	retvm_if(!handler, false, "Failed to allocate memory");
