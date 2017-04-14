@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,54 +17,42 @@
  *
  */
 
-#ifndef _SERVER_H_
-#define _SERVER_H_
+#ifndef __SERVER_H__
+#define __SERVER_H__
 
-#include <glib.h>
-#include <csocket.h>
-#include <vector>
-#include <thread>
+#include <event_loop.h>
+#include <ipc_server.h>
+#include <sensor_manager.h>
+#include <server_channel_handler.h>
+#include <atomic>
+
+namespace sensor {
 
 class server {
 public:
-	static server& get_instance(void);
-
-public:
-	void run(void);
-	void stop(void);
+	static void run(void);
+	static void stop(void);
 
 private:
-	GMainLoop *m_mainloop;
-	csocket m_command_channel_accept_socket;
-	csocket m_event_channel_accept_socket;
+	static server &instance(void);
 
-	std::vector<csocket> client_command_sockets;
-	std::vector<csocket> client_event_sockets;
+	static ipc::event_loop m_loop;
+	static std::atomic<bool> is_running;
 
-	bool m_running;
-
-private:
 	server();
-	virtual ~server();
 
-	void initialize(void);
-	void terminate(void);
+	bool init(void);
+	void deinit(void);
 
-	void poll_event(void);
+	void init_calibration(void);
+	void init_server(void);
+	void init_termination(void);
 
-	bool listen_command_channel(void);
-	bool listen_event_channel(void);
-
-	void accept_command_channel(void);
-	void accept_event_channel(void);
-
-	void dispatch_worker(csocket socket);
-	void dispatch_event_channel_creator(csocket socket);
-
-	void close_socket(void);
-
-	/* TODO: move to socket class */
-	int get_systemd_socket(const char *name);
+	ipc::ipc_server *m_server;
+	sensor_manager *m_manager;
+	server_channel_handler *m_handler;
 };
 
-#endif /* _SERVER_H_ */
+}
+
+#endif /* __SERVER_H__ */

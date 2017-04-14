@@ -20,26 +20,33 @@
 #include <stdio.h>
 #include <glib.h>
 #include <gio/gio.h>
-#include <sensorctl_log.h>
+#include "log.h"
 #include "dbus_util.h"
-#include "injector_manager.h"
-#include "injector_context_orientation.h"
+#include "injector.h"
 
 #define CONTEXT_ORIENTATION_SIGNAL	"orientation"
 
-bool injector_context_orientation::inject(int option_count, char *options[])
+class injector_context_orientation : public injector {
+public:
+	injector_context_orientation(sensor_type_t sensor_type, const char *event_name);
+	virtual ~injector_context_orientation() {}
+
+	bool inject(int argc, char *argv[]);
+};
+
+injector_context_orientation::injector_context_orientation(sensor_type_t sensor_type, const char *event_name)
+: injector(sensor_type, event_name)
+{
+}
+
+bool injector_context_orientation::inject(int argc, char *argv[])
 {
 	GVariant *variant;
 
-	if (option_count == 0) {
-		_E("ERROR: invalid argument\n");
-		return false;
-	}
+	RETVM_IF(argc <= INJECTOR_ARGC, false, "Invalid argument\n");
 
-	variant = make_variant_int(option_count, options);
-
-	if (variant == NULL)
-		return false;
+	variant = make_variant_int(argc - INJECTOR_ARGC, &argv[INJECTOR_ARGC]);
+	RETVM_IF(!variant, false, "Cannot make variant\n");
 
 	dbus_emit_signal(NULL,
 			(gchar *)SENSORD_OBJ_PATH,
@@ -48,9 +55,9 @@ bool injector_context_orientation::inject(int option_count, char *options[])
 			variant,
 			NULL);
 
-	PRINT("set options to context: \n");
-	for (int i = 0; i < option_count; ++i)
-		PRINT("option %d: %s\n", i, options[i]);
+	_I("Set up options to wristup:");
+	for (int i = 0; i < argc - INJECTOR_ARGC; ++i)
+		_I("option %d: %s\n", i, argv[i]);
 
 	return true;
 }

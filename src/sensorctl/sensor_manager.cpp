@@ -1,7 +1,7 @@
 /*
  * sensorctl
  *
- * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,14 @@
  *
  */
 
-#include <string.h>
-#include <macro.h>
-#include <sensorctl_log.h>
 #include "sensor_manager.h"
 
-#define NAME_MAX_TEST 32
+#include <stdlib.h>
+#include <string.h>
+
+#include "log.h"
+#include "util.h"
+#include "macro.h"
 
 struct sensor_info {
 	sensor_type_t type;
@@ -30,86 +32,97 @@ struct sensor_info {
 };
 
 static struct sensor_info sensor_infos[] = {
-	{ALL_SENSOR,				"all"},
+	{ALL_SENSOR,					"all"},
 
 	// General Sensors
-	{ACCELEROMETER_SENSOR,		"accelerometer"},
-	{GEOMAGNETIC_SENSOR,		"magnetic"},
-	{LIGHT_SENSOR,				"light"},
-	{PROXIMITY_SENSOR,			"proximity"},
-	{GYROSCOPE_SENSOR,			"gyroscope"},
-	{PRESSURE_SENSOR,			"pressure"},
-	{BIO_SENSOR,				"bio"},
-	{BIO_HRM_SENSOR,			"hrm"},
-	{AUTO_ROTATION_SENSOR,		"auto_rotation"},
-	{GRAVITY_SENSOR,			"gravity"},
-	{LINEAR_ACCEL_SENSOR,		"linear_accel"},
-	{ROTATION_VECTOR_SENSOR,	"rotation_vector"},
-	{ORIENTATION_SENSOR,		"orientation"},
-	{TEMPERATURE_SENSOR,		"temperature"},
-	{HUMIDITY_SENSOR,			"humidity"},
-	{ULTRAVIOLET_SENSOR,		"ultraviolet"},
-	{BIO_LED_GREEN_SENSOR,		"hrm_led_green"},
-	{BIO_LED_IR_SENSOR,			"hrm_led_ir"},
-	{BIO_LED_RED_SENSOR,		"hrm_led_red"},
-	{GYROSCOPE_UNCAL_SENSOR,	"gyro_uncal"},
-	{GEOMAGNETIC_UNCAL_SENSOR,	"mag_uncal"},
-	{GYROSCOPE_RV_SENSOR,		"gyro_rv"},
-	{GEOMAGNETIC_RV_SENSOR,		"mag_rv"},
-	/* If WRIST_UP_SENSOR is created, it has to be changed to WRIST_UP_SENSOR */
-	{MOTION_SENSOR,				"motion"},
-	{CONTEXT_SENSOR,			"context"},
-	{EXERCISE_SENSOR,			"exercise"},
-	{GESTURE_WRIST_UP_SENSOR,	"wristup"},
+	{ACCELEROMETER_SENSOR,			"accelerometer"},
+	{GRAVITY_SENSOR,				"gravity"},
+	{LINEAR_ACCEL_SENSOR,			"linear_accel"},
+	{GEOMAGNETIC_SENSOR,			"magnetic"},
+	{ROTATION_VECTOR_SENSOR,		"rotation_vector"},
+	{ORIENTATION_SENSOR,			"orientation"},
+	{GYROSCOPE_SENSOR,				"gyroscope"},
+	{LIGHT_SENSOR,					"light"},
+	{PROXIMITY_SENSOR,				"proximity"},
+	{PRESSURE_SENSOR,				"pressure"},
+	{ULTRAVIOLET_SENSOR,			"uv"},
+	{TEMPERATURE_SENSOR,			"temperature"},
+	{HUMIDITY_SENSOR,				"humidity"},
+	{HRM_SENSOR,					"hrm"},
+	{HRM_RAW_SENSOR,				"hrm_raw"},
+	{HRM_LED_GREEN_SENSOR,			"hrm_led_green"},
+	{HRM_LED_IR_SENSOR,				"hrm_led_ir"},
+	{HRM_LED_RED_SENSOR,			"hrm_led_red"},
+	{GYROSCOPE_UNCAL_SENSOR,		"gyro_uncal"},
+	{GEOMAGNETIC_UNCAL_SENSOR,		"mag_uncal"},
+	{GYROSCOPE_RV_SENSOR,			"gyro_rv"},
+	{GEOMAGNETIC_RV_SENSOR,			"mag_rv"},
+
+	{HUMAN_PEDOMETER_SENSOR,		"pedo"},
+	{HUMAN_SLEEP_MONITOR_SENSOR,	"sleep_monitor"},
+
+	{AUTO_ROTATION_SENSOR,			"rotation"},
+	//{AUTO_BRIGHTENESS_SENSOR,		"auto_brighteness"},
+	{MOTION_SENSOR,					"motion"},
+	{CONTEXT_SENSOR,				"context"},
+
+	{GESTURE_MOVEMENT_SENSOR,		"movement"},
+	{GESTURE_WRIST_UP_SENSOR,		"wristup"},
+	{GESTURE_WRIST_DOWN_SENSOR,		"wristdown"},
+	{GESTURE_MOVEMENT_STATE_SENSOR,	"movement_state"},
+
+	{WEAR_STATUS_SENSOR,			"wear_status"},
+	{WEAR_ON_MONITOR_SENSOR,		"wear_on"},
+	{GPS_BATCH_SENSOR,				"gps"},
+	{ACTIVITY_TRACKER_SENSOR,		"activity"},
+	{SLEEP_DETECTOR_SENSOR,			"sleep_detector"},
 };
 
-bool sensor_manager::process(int argc, char *argv[])
+sensor_manager::~sensor_manager()
 {
-	return false;
 }
 
-void sensor_manager::usage_sensors(void)
+bool sensor_manager::run(int argc, char *argv[])
 {
-	PRINT("The sensor types are:\n");
-	int sensor_count = ARRAY_SIZE(sensor_infos);
-
-	for (int i = 0; i < sensor_count; ++i)
-		PRINT("  %d: %s(%d)\n", i, sensor_infos[i].name, sensor_infos[i].type);
-	PRINT("\n");
+	return true;
 }
 
-sensor_type_t sensor_manager::get_sensor_type(char *name)
+void sensor_manager::stop(void)
+{
+}
+
+sensor_type_t sensor_manager::get_sensor_type(const char *name)
 {
 	int index;
-	int sensor_count = ARRAY_SIZE(sensor_infos);
+	int count;
 
-	for (index = 0; index < sensor_count; ++index) {
+	if (util::is_hex(name))
+		return (sensor_type_t) (strtol(name, NULL, 16));
+
+	if (util::is_number(name))
+		return (sensor_type_t) (atoi(name));
+
+	count = ARRAY_SIZE(sensor_infos);
+
+	for (index = 0; index < count; ++index) {
 		if (!strcmp(sensor_infos[index].name, name))
 			break;
 	}
 
-	if (index == sensor_count) {
-		_E("ERROR: sensor name is wrong\n");
+	if (index == count) {
+		_E("Invaild sensor name\n");
 		usage_sensors();
 		return UNKNOWN_SENSOR;
 	}
 	return sensor_infos[index].type;
 }
 
-const char *sensor_manager::get_sensor_name(sensor_type_t type)
+void sensor_manager::usage_sensors(void)
 {
-	int index;
+	_N("The sensor types are:\n");
 	int sensor_count = ARRAY_SIZE(sensor_infos);
 
-	for (index = 0; index < sensor_count; ++index) {
-		if (sensor_infos[index].type == type)
-			break;
-	}
-
-	if (index == sensor_count) {
-		_E("ERROR: sensor name is wrong\n");
-		usage_sensors();
-		return "UNKNOWN SENSOR";
-	}
-	return sensor_infos[index].name;
+	for (int i = 0; i < sensor_count; ++i)
+		_N("%3d: %s(%#x)\n", i, sensor_infos[i].name, sensor_infos[i].type);
+	_N("\n");
 }

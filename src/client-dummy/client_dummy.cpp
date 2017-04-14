@@ -18,7 +18,7 @@
  */
 
 #include <errno.h>
-#include <sensor_common.h>
+#include <sensor_types.h>
 
 #include <sensor_internal.h>
 #include <sensor_internal_deprecated.h>

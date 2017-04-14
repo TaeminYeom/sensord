@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,151 +17,98 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <math.h>
-#include <time.h>
-#include <sys/types.h>
-#include <dlfcn.h>
+#include "auto_rotation_sensor.h"
 
 #include <sensor_log.h>
 #include <sensor_types.h>
 
-#include <sensor_common.h>
-#include <virtual_sensor.h>
-#include <auto_rotation_sensor.h>
-#include <sensor_loader.h>
-#include <auto_rotation_alg.h>
-#include <auto_rotation_alg_emul.h>
+#include "auto_rotation_alg_emul.h"
 
-#define SENSOR_NAME "SENSOR_AUTO_ROTATION"
+#define NAME_SENSOR "http://tizen.org/sensor/auto_rotation/tizen_default"
+#define NAME_VENDOR "tizen.org"
+
+#define SRC_ID_ACC  0x1
+#define SRC_STR_ACC "http://tizen.org/sensor/accelerometer"
+
+static sensor_info2_t sensor_info = {
+	id: 0x1,
+	type: AUTO_ROTATION_SENSOR,
+	uri: NAME_SENSOR,
+	vendor: NAME_VENDOR,
+	min_range: AUTO_ROTATION_DEGREE_UNKNOWN,
+	max_range: AUTO_ROTATION_DEGREE_270,
+	resolution: 1,
+	min_interval: 60,
+	max_batch_count: 0,
+	wakeup_supported: false,
+	privilege:"",
+};
+
+static required_sensor_s required_sensors[] = {
+	{SRC_ID_ACC, SRC_STR_ACC}
+};
 
 auto_rotation_sensor::auto_rotation_sensor()
-: m_accel_sensor(NULL)
-, m_alg(NULL)
-, m_rotation(0)
-, m_interval(100)
+: m_rotation(0)
 , m_rotation_time(0)
+, m_alg(NULL)
 {
+	if (!init())
+		throw OP_ERROR;
 }
 
 auto_rotation_sensor::~auto_rotation_sensor()
 {
-	delete m_alg;
-
-	_I("auto_rotation_sensor is destroyed!\n");
+	deinit();
 }
 
 bool auto_rotation_sensor::init(void)
 {
-	m_accel_sensor = sensor_loader::get_instance().get_sensor(ACCELEROMETER_SENSOR);
-
-	if (!m_accel_sensor) {
-		_W("cannot load accel sensor_hal from %s", get_name());
-		return false;
-	}
-
 	m_alg = get_alg();
-
-	if (!m_alg) {
-		_E("Not supported AUTO ROTATION sensor");
-		return false;
-	}
-
-	if (!m_alg->open())
-		return false;
-
-	_I("%s is created!\n", get_name());
-
+	retvm_if(!m_alg, false, "Not supported");
+	retvm_if(!m_alg->open(), false, "Cannot open auto rotation algorithm");
 	return true;
 }
 
-sensor_type_t auto_rotation_sensor::get_type(void)
+void auto_rotation_sensor::deinit(void)
 {
-	return AUTO_ROTATION_SENSOR;
+	delete m_alg;
 }
 
-unsigned int auto_rotation_sensor::get_event_type(void)
+int auto_rotation_sensor::get_sensor_info(const sensor_info2_t **info)
 {
-	return AUTO_ROTATION_EVENT_CHANGE_STATE;
+	*info = &sensor_info;
+	return OP_SUCCESS;
 }
 
-const char* auto_rotation_sensor::get_name(void)
+int auto_rotation_sensor::get_required_sensors(const required_sensor_s **sensors)
 {
-	return SENSOR_NAME;
+	*sensors = required_sensors;
+	return 1;
 }
 
-bool auto_rotation_sensor::get_sensor_info(sensor_info &info)
+int auto_rotation_sensor::update(uint32_t id, sensor_data_t *data, int len)
 {
-	info.set_type(get_type());
-	info.set_id(get_id());
-	info.set_privilege(SENSOR_PRIVILEGE_PUBLIC); // FIXME
-	info.set_name("Auto Rotation Sensor");
-	info.set_vendor("Samsung Electronics");
-	info.set_min_range(AUTO_ROTATION_DEGREE_UNKNOWN);
-	info.set_max_range(AUTO_ROTATION_DEGREE_270);
-	info.set_resolution(1);
-	info.set_min_interval(1);
-	info.set_fifo_count(0);
-	info.set_max_batch_count(0);
-	info.set_supported_event(get_event_type());
-	info.set_wakeup_supported(false);
-
-	return true;
-}
-
-void auto_rotation_sensor::synthesize(const sensor_event_t& event)
-{
-	if (event.event_type != ACCELEROMETER_EVENT_RAW_DATA_REPORT_ON_TIME)
-		return;
-
 	int rotation;
 	float acc[3];
-	acc[0] = event.data->values[0];
-	acc[1] = event.data->values[1];
-	acc[2] = event.data->values[2];
+	acc[0] = data->values[0];
+	acc[1] = data->values[1];
+	acc[2] = data->values[2];
 
-	if (!m_alg->get_rotation(acc, event.data->timestamp, m_rotation, rotation))
-		return;
+	if (!m_alg->get_rotation(acc, data->timestamp, m_rotation, rotation))
+		return OP_ERROR;
+
+	_D("Rotation: %d, ACC[0]: %f, ACC[1]: %f, ACC[2]: %f",
+		rotation, data->values[0], data->values[1], data->values[2]);
 
 	m_rotation = rotation;
-	m_rotation_time = event.data->timestamp;
+	m_rotation_time = data->timestamp;
 
-	sensor_event_t *rotation_event;
-	sensor_data_t *rotation_data;
-	int data_length;
-	int remains;
-
-	rotation_event = (sensor_event_t *)malloc(sizeof(sensor_event_t));
-	if (!rotation_event) {
-		_E("Failed to allocate memory");
-		return;
-	}
-
-	remains = get_data(&rotation_data, &data_length);
-
-	if (remains < 0) {
-		free(rotation_event);
-		return;
-	}
-
-	rotation_event->sensor_id = get_id();
-	rotation_event->event_type = AUTO_ROTATION_EVENT_CHANGE_STATE;
-	rotation_event->data_length = data_length;
-	rotation_event->data = rotation_data;
-
-	push(rotation_event);
-
-	_D("Rotation: %d, ACC[0]: %f, ACC[1]: %f, ACC[2]: %f", rotation, event.data->values[0], event.data->values[1], event.data->values[2]);
+	return OP_SUCCESS;
 }
 
 int auto_rotation_sensor::get_data(sensor_data_t **data, int *length)
 {
-	/* if It is batch sensor, remains can be 2+ */
-	int remains = 1;
-
 	sensor_data_t *sensor_data;
 	sensor_data = (sensor_data_t *)malloc(sizeof(sensor_data_t));
 
@@ -173,54 +120,36 @@ int auto_rotation_sensor::get_data(sensor_data_t **data, int *length)
 	*data = sensor_data;
 	*length = sizeof(sensor_data_t);
 
-	return --remains;
+	return 1;
 }
 
-bool auto_rotation_sensor::set_interval(unsigned long interval)
-{
-	m_accel_sensor->add_interval((intptr_t)this , interval, true);
-
-	m_interval = interval;
-	return false;
-}
-
-bool auto_rotation_sensor::set_batch_latency(unsigned long latency)
-{
-	return false;
-}
-
-bool auto_rotation_sensor::set_wakeup(int wakeup)
-{
-	return false;
-}
-
-bool auto_rotation_sensor::pre_start(void)
+int auto_rotation_sensor::start(observer_h ob)
 {
 	m_rotation = AUTO_ROTATION_DEGREE_UNKNOWN;
-	return true;
-}
 
-bool auto_rotation_sensor::on_start(void)
-{
-	int length;
-	m_rotation = AUTO_ROTATION_DEGREE_UNKNOWN;
-
-	get_data(&m_last_data, &length);
+	/* TODO: cache */
 
 	m_alg->start();
 
-	m_accel_sensor->add_interval((intptr_t)this , m_interval, true);
-	m_accel_sensor->start();
-
-	return activate();
+	/* if OP_DEFAULT is returned,
+	 * this function is not called anymore before stop() is called */
+	return OP_DEFAULT;
 }
 
-bool auto_rotation_sensor::on_stop(void)
+int auto_rotation_sensor::stop(observer_h ob)
 {
-	m_accel_sensor->delete_interval((intptr_t)this , true);
-	m_accel_sensor->stop();
+	m_alg->stop();
 
-	return deactivate();
+	/* if OP_DEFAULT is returned,
+	 * this function is not called anymore before start() is called */
+	return OP_DEFAULT;
+}
+
+int auto_rotation_sensor::set_interval(observer_h ob, int32_t &interval)
+{
+	/* Fix internal */
+	interval = 60;
+	return OP_SUCCESS;
 }
 
 auto_rotation_alg *auto_rotation_sensor::get_alg(void)

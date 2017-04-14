@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,347 +17,152 @@
  *
  */
 
-#include <sys/epoll.h>
-#include <sys/socket.h>
+#include "server.h"
 
+#include <unistd.h>
 #include <systemd/sd-daemon.h>
-#include <server.h>
-#include <sensor_loader.h>
-#include <command_common.h>
-#include <command_worker.h>
-#include <external_sensor_worker.h>
-#include <external_sensor_service.h>
-#include <thread>
-#include <sensor_event_poller.h>
-#include <client_info_manager.h>
+#include <sensor_log.h>
+#include <command_types.h>
+#include <ipc_server.h>
 
-#define SYSTEMD_SOCKET_MAX 2
+#include "sensor_manager.h"
+#include "server_channel_handler.h"
 
-using std::thread;
+#define MAX_CONFIG_PATH 255
+#define CAL_CONFIG_PATH "/etc/sensor_cal.conf"
+#define SET_CAL 1
+//#define CAL_NODE_PATH "/sys/class/sensors/ssp_sensor/set_cal_data"
+
+#define TIMEOUT_TERM 10
+#define MAX_CONNECTION 1000
+
+using namespace sensor;
+
+ipc::event_loop server::m_loop;
+std::atomic<bool> server::is_running(false);
 
 server::server()
-: m_mainloop(NULL)
-, m_running(false)
+: m_server(NULL)
+, m_manager(NULL)
+, m_handler(NULL)
 {
 }
 
-server::~server()
+server &server::instance(void)
 {
-}
-
-int server::get_systemd_socket(const char *name)
-{
-	int type = SOCK_STREAM;
-	int listening = 1;
-	size_t length = 0;
-	int fd = -1;
-	int fd_env = 1;
-	int fd_index;
-
-	if (!strcmp(name, EVENT_CHANNEL_PATH)) {
-		type = SOCK_SEQPACKET;
-		listening = -1;
-		fd_env = 0;
-	}
-
-	if (sd_listen_fds(fd_env) < 0) {
-		_E("Failed to listen fds from systemd");
-		return -1;
-	}
-
-	for (fd_index = 0; fd_index < SYSTEMD_SOCKET_MAX; ++fd_index) {
-		fd = SD_LISTEN_FDS_START + fd_index;
-
-		if (sd_is_socket_unix(fd, type, listening, name, length) > 0)
-			return fd;
-	}
-
-	return -1;
-}
-
-void server::accept_command_channel(void)
-{
-	_I("Command channel acceptor is started");
-
-	while (m_running) {
-		csocket client_command_socket;
-
-		if (!m_command_channel_accept_socket.is_valid()) {
-			_E("Failed to accept, event_channel_accept_socket is closed");
-			break;
-		}
-
-		if (!m_command_channel_accept_socket.accept(client_command_socket)) {
-			_E("Failed to accept command channel from a client");
-			continue;
-		}
-
-		if (!m_running) {
-			_E("server die");
-			break;
-		}
-
-		_D("New client (socket_fd : %d) connected", client_command_socket.get_socket_fd());
-
-		/* TODO: if socket is closed, it should be erased */
-		client_command_sockets.push_back(client_command_socket);
-
-		thread worker_dispatcher(&server::dispatch_worker, this, client_command_socket);
-		worker_dispatcher.detach();
-	}
-
-	_I("Command channel acceptor is terminated");
-}
-
-void server::accept_event_channel(void)
-{
-	_I("Event channel acceptor is started!");
-
-	while (m_running) {
-		csocket client_event_socket;
-
-		if (!m_event_channel_accept_socket.is_valid()) {
-			_E("Failed to accept, event_channel_accept_socket is closed");
-			break;
-		}
-
-		if (!m_event_channel_accept_socket.accept(client_event_socket)) {
-			_E("Failed to accept event channel from a client");
-			continue;
-		}
-
-		if (!m_running) {
-			_E("server die");
-			break;
-		}
-
-		/* TODO: if socket is closed, it should be erased */
-		client_event_sockets.push_back(client_event_socket);
-
-		_D("New client(socket_fd : %d) connected", client_event_socket.get_socket_fd());
-
-		thread event_channel_creator(&server::dispatch_event_channel_creator, this, client_event_socket);
-		event_channel_creator.detach();
-	}
-
-	_I("Event channel acceptor is terminated");
-}
-
-void server::dispatch_worker(csocket socket)
-{
-	int worker_type;
-
-	if (socket.recv(&worker_type, sizeof(worker_type)) <= 0) {
-		_E("Failed to get worker type");
-		socket.close();
-		return;
-	}
-
-	if (worker_type == CLIENT_TYPE_SENSOR_CLIENT) {
-		command_worker *worker;
-		worker = new(std::nothrow) command_worker(socket);
-
-		if (!worker) {
-			_E("Failed to allocate memory");
-			socket.close();
-			return;
-		}
-
-		if (!worker->start()) {
-			_E("Failed to start command worker");
-			delete worker;
-		}
-	} else if (worker_type == CLIENT_TYPE_EXTERNAL_SOURCE) {
-		external_sensor_worker *worker;
-		worker = new(std::nothrow) external_sensor_worker(socket);
-
-		if (!worker) {
-			_E("Failed to allocate memory");
-			socket.close();
-			return;
-		}
-
-		if (!worker->start()) {
-			_E("Failed to start external worker");
-			delete worker;
-		}
-	} else {
-		_E("Not supported worker type: %d", worker_type);
-		socket.close();
-	}
-}
-
-void server::dispatch_event_channel_creator(csocket socket)
-{
-	int client_type;
-
-	if (socket.recv(&client_type, sizeof(client_type)) <= 0) {
-		_E("Failed to get client type");
-		socket.close();
-		return;
-	}
-
-	if (client_type == CLIENT_TYPE_SENSOR_CLIENT) {
-		sensor_event_dispatcher::get_instance().accept_event_connections(socket);
-	} else if (client_type == CLIENT_TYPE_EXTERNAL_SOURCE) {
-		external_sensor_service::get_instance().accept_command_channel(socket);
-	} else {
-		_E("Not supported client type: %d", client_type);
-		socket.close();
-	}
-}
-
-void server::poll_event(void)
-{
-	_I("Event poller is started");
-
-	sensor_event_poller poller;
-
-	if (!poller.poll()) {
-		_E("Failed to poll event");
-		return;
-	}
-}
-
-bool server::listen_command_channel(void)
-{
-	int sock_fd = -1;
-	const int MAX_PENDING_CONNECTION = 10;
-
-	sock_fd = get_systemd_socket(COMMAND_CHANNEL_PATH);
-
-	if (sock_fd >= 0) {
-		_I("Succeeded to get systemd socket(%d)", sock_fd);
-		m_command_channel_accept_socket = csocket(sock_fd);
-		return true;
-	}
-
-	INFO("Failed to get systemd socket, create it by myself!");
-	if (!m_command_channel_accept_socket.create(SOCK_STREAM)) {
-		_E("Failed to create command channel");
-		return false;
-	}
-
-	if (!m_command_channel_accept_socket.bind(COMMAND_CHANNEL_PATH)) {
-		_E("Failed to bind command channel");
-		m_command_channel_accept_socket.close();
-		return false;
-	}
-
-	if (!m_command_channel_accept_socket.listen(MAX_PENDING_CONNECTION)) {
-		_E("Failed to listen command channel");
-		return false;
-	}
-
-	return true;
-}
-
-bool server::listen_event_channel(void)
-{
-	int sock_fd = -1;
-	const int MAX_PENDING_CONNECTION = 32;
-
-	sock_fd = get_systemd_socket(EVENT_CHANNEL_PATH);
-
-	if (sock_fd >= 0) {
-		_I("Succeeded to get systemd socket(%d)", sock_fd);
-		m_event_channel_accept_socket = csocket(sock_fd);
-		return true;
-	}
-
-	INFO("Failed to get systemd socket, create it by myself!");
-
-	if (!m_event_channel_accept_socket.create(SOCK_SEQPACKET)) {
-		_E("Failed to create event channel");
-		return false;
-	}
-
-	if (!m_event_channel_accept_socket.bind(EVENT_CHANNEL_PATH)) {
-		_E("Failed to bind event channel");
-		m_event_channel_accept_socket.close();
-		return false;
-	}
-
-	if (!m_event_channel_accept_socket.listen(MAX_PENDING_CONNECTION)) {
-		_E("Failed to listen event channel");
-		m_event_channel_accept_socket.close();
-		return false;
-	}
-
-	return true;
-}
-
-void server::close_socket(void)
-{
-	m_command_channel_accept_socket.close();
-	m_event_channel_accept_socket.close();
-
-	for (unsigned int i = 0; i < client_command_sockets.size(); ++i)
-		client_command_sockets[i].close();
-
-	for (unsigned int i = 0; i < client_event_sockets.size(); ++i)
-		client_event_sockets[i].close();
-
-	client_command_sockets.clear();
-	client_event_sockets.clear();
-}
-
-void server::initialize(void)
-{
-	m_running = true;
-	m_mainloop = g_main_loop_new(NULL, false);
-
-	sensor_event_dispatcher::get_instance().run();
-	external_sensor_service::get_instance().run();
-
-	listen_command_channel();
-	listen_event_channel();
-
-	std::thread event_channel_accepter(&server::accept_event_channel, this);
-	event_channel_accepter.detach();
-
-	std::thread command_channel_accepter(&server::accept_command_channel, this);
-	command_channel_accepter.detach();
-
-	std::thread event_poller(&server::poll_event, this);
-	event_poller.detach();
-
-	sd_notify(0, "READY=1");
-
-	g_main_loop_run(m_mainloop);
-}
-
-void server::terminate(void)
-{
-	sensor_event_dispatcher::get_instance().stop();
-
-	close_socket();
+	static server inst;
+	return inst;
 }
 
 void server::run(void)
 {
-	initialize();
-	terminate();
+	_I("Starting..");
+
+	retm_if(is_running.load(), "Server is running");
+	retm_if(!instance().init(), "Failed to initialize server");
+
+	m_loop.run();
 }
 
 void server::stop(void)
 {
-	if (!m_running)
-		return;
+	_I("Stopping..");
 
-	m_running = false;
+	retm_if(!is_running.load(), "Server is not running");
 
-	if (m_mainloop) {
-		g_main_loop_quit(m_mainloop);
-		g_main_loop_unref(m_mainloop);
-		m_mainloop = NULL;
-	}
-
-	_I("Sensord server stopped");
+	m_loop.stop();
+	instance().deinit();
 }
 
-server& server::get_instance(void)
+bool server::init(void)
 {
-	static server inst;
-	return inst;
+	m_server = new(std::nothrow) ipc::ipc_server(SENSOR_CHANNEL_PATH);
+	retvm_if(!m_server, false, "Failed to allocate memory");
+
+	m_manager = new(std::nothrow) sensor_manager(&m_loop);
+	retvm_if(!m_manager, false, "Failed to allocate memory");
+
+	m_handler = new(std::nothrow) server_channel_handler(m_manager);
+	retvm_if(!m_handler, false, "Failed to allocate memory");
+
+	init_calibration();
+	init_server();
+	init_termination();
+
+	is_running.store(true);
+	sd_notify(0, "READY=1");
+
+	return true;
+}
+
+void server::deinit(void)
+{
+	m_manager->deinit();
+	m_server->close();
+
+	delete m_server;
+	m_server = NULL;
+
+	delete m_manager;
+	m_manager = NULL;
+
+	delete m_handler;
+	m_handler = NULL;
+
+	is_running.store(false);
+}
+
+static void set_cal_data(const char *path)
+{
+	FILE *fp = fopen(path, "w");
+	retm_if(!fp, "There is no calibration file[%s]", path);
+
+	fprintf(fp, "%d", SET_CAL);
+	fclose(fp);
+
+	_I("Succeeded to set calibration data");
+}
+
+void server::init_calibration(void)
+{
+	char path[MAX_CONFIG_PATH];
+
+	FILE *fp = fopen(CAL_CONFIG_PATH, "r");
+	retm_if(!fp, "There is no config file[%s]", CAL_CONFIG_PATH);
+
+	while (!feof(fp)) {
+		if (fgets(path, sizeof(path), fp) == NULL)
+			break;
+		set_cal_data(path);
+	}
+
+	fclose(fp);
+}
+
+void server::init_server(void)
+{
+	m_manager->init();
+
+	/* TODO: setting socket option */
+	m_server->set_option("max_connection", MAX_CONNECTION);
+	m_server->set_option(SO_TYPE, SOCK_STREAM);
+	m_server->bind(m_handler, &m_loop);
+}
+
+static gboolean terminate(gpointer data)
+{
+	sensor_manager *mgr = reinterpret_cast<sensor_manager *>(data);
+	std::vector<sensor_handler *> sensors = mgr->get_sensors();
+
+	if (sensors.size() <= 0) {
+		_I("Terminating.. because there is no sensors");
+		server::stop();
+	}
+
+	return FALSE;
+}
+
+void server::init_termination(void)
+{
+	g_timeout_add_seconds(TIMEOUT_TERM, terminate, m_manager);
 }

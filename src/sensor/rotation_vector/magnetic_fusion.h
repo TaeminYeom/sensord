@@ -20,7 +20,7 @@
 #ifndef __MAGNETIC_FUSION_H__
 #define __MAGNETIC_FUSION_H__
 
-#include <fusion_base.h>
+#include "fusion_base.h"
 
 class magnetic_fusion: public fusion_base {
 public:

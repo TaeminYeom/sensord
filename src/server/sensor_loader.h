@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2013 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,57 +17,46 @@
  *
  */
 
-#ifndef _SENSOR_LOADER_H_
-#define _SENSOR_LOADER_H_
+#ifndef __SENSOR_LOADER_H__
+#define __SENSOR_LOADER_H__
 
-#include <sensor_common.h>
-#include <sensor_types.h>
 #include <sensor_hal.h>
-
-#include <cmutex.h>
-#include <sstream>
-
+#include <physical_sensor.h>
+#include <fusion_sensor.h>
+#include <external_sensor.h>
 #include <string>
 #include <vector>
-#include <map>
-#include <set>
 #include <memory>
+#include <map>
 
-class sensor_base;
+namespace sensor {
 
-typedef std::multimap<sensor_type_t, std::shared_ptr<sensor_base>> sensor_map_t;
-typedef std::map<const sensor_info_t *, std::shared_ptr<sensor_device>> sensor_device_map_t;
+typedef std::vector<std::shared_ptr<sensor_device>> device_sensor_registry_t;
+typedef std::vector<std::shared_ptr<physical_sensor>> physical_sensor_registry_t;
+typedef std::vector<std::shared_ptr<fusion_sensor>> fusion_sensor_registry_t;
+typedef std::vector<std::shared_ptr<external_sensor>> external_sensor_registry_t;
 
 class sensor_loader {
-private:
+public:
 	sensor_loader();
 	virtual ~sensor_loader();
 
-	bool load_sensor_devices(const std::string &path, void* &handle);
+	void load_hal(const std::string &path, device_sensor_registry_t &devices);
+	void load_physical_sensor(const std::string &path, physical_sensor_registry_t &sensors);
+	void load_fusion_sensor(const std::string &path, fusion_sensor_registry_t &sensors);
+	void load_external_sensor(const std::string &path, external_sensor_registry_t &sensors);
 
-	void create_sensors(void);
-	template <typename _sensor> void create_physical_sensors(sensor_type_t type);
-	template <typename _sensor> void create_virtual_sensors(const char *name);
-	template <typename _sensor> void create_external_sensors(const char *name);
-	template <typename _sensor> sensor_base* create_sensor(void);
+	void unload(void);
 
-	void show_sensor_info(void);
-	bool get_paths_from_dir(const std::string &dir_path, std::vector<std::string> &hal_paths);
+private:
+	template<typename T>
+	bool load(const std::string &path, std::vector<std::shared_ptr<T>> &sensors);
 
-	sensor_map_t m_sensors;
-	sensor_device_map_t m_devices;
-	sensor_device_map_t m_active_devices;
-	std::vector<void *> m_handles;
-public:
-	static sensor_loader& get_instance(void);
-	bool load(void);
+	bool get_module_paths(const std::string &dir_path, std::vector<std::string> &paths);
 
-	sensor_base* get_sensor(sensor_type_t type);
-	sensor_base* get_sensor(sensor_id_t id);
-
-	std::vector<sensor_type_t> get_sensor_types(void);
-	std::vector<sensor_base *> get_sensors(sensor_type_t type);
-	std::vector<sensor_base *> get_virtual_sensors(void);
+	std::map<std::string, void *> m_modules;
 };
 
-#endif	/* _SENSOR_LOADER_H_ */
+}
+
+#endif	/* __SENSOR_LOADER_H__ */

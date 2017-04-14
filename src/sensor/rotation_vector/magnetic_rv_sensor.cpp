@@ -17,143 +17,89 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <math.h>
-#include <time.h>
-#include <sys/types.h>
+#include "magnetic_rv_sensor.h"
 
 #include <sensor_log.h>
 #include <sensor_types.h>
-
-#include <sensor_common.h>
-#include <virtual_sensor.h>
-#include <magnetic_rv_sensor.h>
-#include <sensor_loader.h>
 #include <fusion_util.h>
 
-#define SENSOR_NAME "SENSOR_MAGNETIC_ROTATION_VECTOR"
+#define NAME_SENSOR  "http://tizen.org/sensor/mag_rotation_vector/tizen_default"
+#define NAME_VENDOR  "tizen.org"
 
+#define SRC_ID_ACC   0x1
+#define SRC_STR_ACC  "http://tizen.org/sensor/accelerometer"
+
+#define SRC_ID_MAG   0x3
+#define SRC_STR_MAG  "http://tizen.org/sensor/geomagnetic"
+
+static sensor_info2_t sensor_info = {
+	id: 0x1,
+	type: GEOMAGNETIC_RV_SENSOR,
+	uri: NAME_SENSOR,
+	vendor: NAME_VENDOR,
+	min_range: 0,
+	max_range: 1,
+	resolution: 1,
+	min_interval: 10,
+	max_batch_count: 0,
+	wakeup_supported: false,
+	privilege:"",
+};
+
+static required_sensor_s required_sensors[] = {
+	{SRC_ID_ACC,     SRC_STR_ACC},
+	{SRC_ID_MAG,     SRC_STR_MAG},
+};
 
 magnetic_rv_sensor::magnetic_rv_sensor()
-: m_accel_sensor(NULL)
-, m_mag_sensor(NULL)
-, m_x(-1)
+: m_x(-1)
 , m_y(-1)
 , m_z(-1)
 , m_w(-1)
 , m_time(0)
+, m_interval(100)
 , m_accuracy(SENSOR_ACCURACY_UNDEFINED)
 {
 }
 
 magnetic_rv_sensor::~magnetic_rv_sensor()
 {
-	_I("%s is destroyed!", SENSOR_NAME);
 }
 
-bool magnetic_rv_sensor::init(void)
+int magnetic_rv_sensor::get_sensor_info(const sensor_info2_t **info)
 {
-	m_accel_sensor = sensor_loader::get_instance().get_sensor(ACCELEROMETER_SENSOR);
-	m_mag_sensor = sensor_loader::get_instance().get_sensor(GEOMAGNETIC_SENSOR);
-
-	if (!m_accel_sensor || !m_mag_sensor) {
-		_W("cannot load sensors[%s]", SENSOR_NAME);
-		return false;
-	}
-
-	_I("%s is created!", SENSOR_NAME);
-	return true;
+	*info = &sensor_info;
+	return OP_SUCCESS;
 }
 
-sensor_type_t magnetic_rv_sensor::get_type(void)
+int magnetic_rv_sensor::get_required_sensors(const required_sensor_s **sensors)
 {
-	return GEOMAGNETIC_RV_SENSOR;
+	*sensors = required_sensors;
+	return 2;
 }
 
-unsigned int magnetic_rv_sensor::get_event_type(void)
+int magnetic_rv_sensor::update(uint32_t id, sensor_data_t *data, int len)
 {
-	return CONVERT_TYPE_EVENT(GEOMAGNETIC_RV_SENSOR);
-}
-
-const char* magnetic_rv_sensor::get_name(void)
-{
-	return SENSOR_NAME;
-}
-
-bool magnetic_rv_sensor::get_sensor_info(sensor_info &info)
-{
-	info.set_type(get_type());
-	info.set_id(get_id());
-	info.set_privilege(SENSOR_PRIVILEGE_PUBLIC);
-	info.set_name(get_name());
-	info.set_vendor("Samsung Electronics");
-	info.set_min_range(0);
-	info.set_max_range(1);
-	info.set_resolution(1);
-	info.set_min_interval(1);
-	info.set_fifo_count(0);
-	info.set_max_batch_count(0);
-	info.set_supported_event(get_event_type());
-	info.set_wakeup_supported(false);
-
-	return true;
-}
-
-void magnetic_rv_sensor::synthesize(const sensor_event_t& event)
-{
-	sensor_event_t *rotation_vector_event;
-
-	if (event.event_type != ACCELEROMETER_EVENT_RAW_DATA_REPORT_ON_TIME &&
-		event.event_type != GEOMAGNETIC_EVENT_RAW_DATA_REPORT_ON_TIME)
-		return;
-
-	if (event.event_type == ACCELEROMETER_EVENT_RAW_DATA_REPORT_ON_TIME)
-		m_fusion.push_accel(*(event.data));
-	else if (event.event_type == GEOMAGNETIC_EVENT_RAW_DATA_REPORT_ON_TIME)
-		m_fusion.push_mag(*(event.data));
-
-	if (m_accuracy == SENSOR_ACCURACY_UNDEFINED)
-		m_accuracy = event.data->accuracy;
-	else if (m_accuracy > event.data->accuracy)
-		m_accuracy = event.data->accuracy;
-
 	unsigned long long timestamp;
+
+	if (id == SRC_ID_ACC)
+		m_fusion.push_accel(*data);
+	else if (id == SRC_ID_MAG)
+		m_fusion.push_mag(*data);
+
+	if (m_accuracy > data->accuracy)
+		m_accuracy = data->accuracy;
+
 	if (!m_fusion.get_rv(timestamp, m_w, m_x, m_y, m_z))
-		return;
+		return OP_ERROR;
 
 	if (timestamp == m_time)
-		return;
+		return OP_ERROR;
+
 	m_time = timestamp;
 
-	rotation_vector_event = (sensor_event_t *)malloc(sizeof(sensor_event_t));
-	if (!rotation_vector_event) {
-		_E("Failed to allocate memory");
-		return;
-	}
-	rotation_vector_event->data = (sensor_data_t *)malloc(sizeof(sensor_data_t));
-	if (!rotation_vector_event->data) {
-		_E("Failed to allocate memory");
-		free(rotation_vector_event);
-		return;
-	}
-
-	rotation_vector_event->sensor_id = get_id();
-	rotation_vector_event->event_type = CONVERT_TYPE_EVENT(GEOMAGNETIC_RV_SENSOR);
-	rotation_vector_event->data_length = sizeof(sensor_data_t);
-	rotation_vector_event->data->accuracy = m_accuracy;
-	rotation_vector_event->data->timestamp = m_time;
-	rotation_vector_event->data->value_count = 4;
-	rotation_vector_event->data->values[0] = m_w;
-	rotation_vector_event->data->values[1] = m_x;
-	rotation_vector_event->data->values[2] = m_y;
-	rotation_vector_event->data->values[3] = m_z;
-	push(rotation_vector_event);
-	m_accuracy = SENSOR_ACCURACY_UNDEFINED;
-
 	_D("[rotation_vector] : [%10f] [%10f] [%10f] [%10f]", m_x, m_y, m_z, m_w);
+	return OP_SUCCESS;
 }
 
 int magnetic_rv_sensor::get_data(sensor_data_t **data, int *length)
@@ -163,58 +109,14 @@ int magnetic_rv_sensor::get_data(sensor_data_t **data, int *length)
 
 	sensor_data->accuracy = m_accuracy;
 	sensor_data->timestamp = m_time;
-	sensor_data->value_count = 3;
-	sensor_data->values[0] = m_x;
-	sensor_data->values[1] = m_y;
-	sensor_data->values[2] = m_z;
+	sensor_data->value_count = 4;
+	sensor_data->values[0] = m_w;
+	sensor_data->values[1] = m_x;
+	sensor_data->values[2] = m_y;
+	sensor_data->values[3] = m_z;
 
 	*data = sensor_data;
 	*length = sizeof(sensor_data_t);
 
 	return 0;
-}
-
-bool magnetic_rv_sensor::set_interval(unsigned long interval)
-{
-	m_interval = interval;
-	return true;
-}
-
-bool magnetic_rv_sensor::set_batch_latency(unsigned long latency)
-{
-	return false;
-}
-
-bool magnetic_rv_sensor::on_start(void)
-{
-	m_accel_sensor->start();
-	m_mag_sensor->start();
-	m_time = 0;
-	m_accuracy = SENSOR_ACCURACY_UNDEFINED;
-	return activate();
-}
-
-bool magnetic_rv_sensor::on_stop(void)
-{
-	m_accel_sensor->stop();
-	m_mag_sensor->stop();
-	m_time = 0;
-	m_accuracy = SENSOR_ACCURACY_UNDEFINED;
-	return deactivate();
-}
-
-bool magnetic_rv_sensor::add_interval(int client_id, unsigned int interval, bool is_processor)
-{
-	m_accel_sensor->add_interval(client_id, interval, true);
-	m_mag_sensor->add_interval(client_id, interval, true);
-
-	return sensor_base::add_interval(client_id, interval, is_processor);
-}
-
-bool magnetic_rv_sensor::delete_interval(int client_id, bool is_processor)
-{
-	m_accel_sensor->delete_interval(client_id, true);
-	m_mag_sensor->delete_interval(client_id, true);
-
-	return sensor_base::delete_interval(client_id, is_processor);
 }

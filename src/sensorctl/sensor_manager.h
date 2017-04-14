@@ -1,7 +1,7 @@
 /*
  * sensorctl
  *
- * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,19 @@
  *
  */
 
-#pragma once // _SENSOR_MANAGER_H_
+#pragma once /* __SENSOR_MANAGER_H__ */
 
 #include <sensor_internal.h>
 
 class sensor_manager {
 public:
-	virtual bool process(int argc, char *argv[]);
-protected:
-	void usage_sensors(void);
+	virtual ~sensor_manager();
 
-	sensor_type_t get_sensor_type(char *name);
-	const char * get_sensor_name(sensor_type_t type);
+	virtual bool run(int argc, char *argv[]);
+	virtual void stop(void);
+
+protected:
+	sensor_type_t get_sensor_type(const char *name);
+
+	void usage_sensors(void);
 };

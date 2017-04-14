@@ -17,96 +17,58 @@
  *
  */
 
-#include <signal.h>
+#include <unistd.h>
 #include <sensor_log.h>
-#include <server.h>
 #include <dbus_util.h>
-#include <sensor_loader.h>
-#include <string>
+#include <new>
+#include <csignal>
 
-#define CAL_NODE_PATH "/sys/class/sensors/ssp_sensor/set_cal_data"
-#define SET_CAL 1
+#include "server.h"
 
-#define TIMEOUT 10
+#define NEW_FAIL_LIMIT 3
 
-static void sig_term_handler(int signo, siginfo_t *info, void *data)
+using namespace sensor;
+
+static void on_signal(int signum)
 {
-	char proc_name[NAME_MAX];
-
-	get_proc_name(info->si_pid, proc_name);
-
-	_E("Received SIGTERM(%d) from %s(%d)\n", signo, proc_name, info->si_pid);
-
-	server::get_instance().stop();
+	_W("Received SIGNAL(%d : %s)", signum, strsignal(signum));
+	server::stop();
 }
 
-static void signal_init(void)
+static void on_new_failed(void)
 {
-	struct sigaction sig_act;
-	memset(&sig_act, 0, sizeof(struct sigaction));
+	static unsigned fail_count = 0;
+	_E("Failed to allocate memory");
 
-	sig_act.sa_handler = SIG_IGN;
-	sigaction(SIGCHLD, &sig_act, NULL);
-	sigaction(SIGPIPE, &sig_act, NULL);
-
-	sig_act.sa_handler = NULL;
-	sig_act.sa_sigaction = sig_term_handler;
-	sig_act.sa_flags = SA_SIGINFO;
-	sigaction(SIGTERM, &sig_act, NULL);
-	sigaction(SIGABRT, &sig_act, NULL);
-	sigaction(SIGINT, &sig_act, NULL);
-}
-
-static void set_cal_data(void)
-{
-	FILE *fp = fopen(CAL_NODE_PATH, "w");
-
-	if (!fp) {
-		_I("Not support calibration_node");
+	fail_count += 1;
+	if (fail_count >= NEW_FAIL_LIMIT) {
+		raise(SIGTERM);
 		return;
 	}
 
-	fprintf(fp, "%d", SET_CAL);
-
-	if (fp)
-		fclose(fp);
-
-	_I("Succeeded to set calibration data");
-
-	return;
-}
-
-static gboolean terminate(gpointer data)
-{
-	std::vector<sensor_base *> sensors = sensor_loader::get_instance().get_sensors(ALL_SENSOR);
-
-	if (sensors.size() == 0) {
-		_I("Terminating sensord..");
-		server::get_instance().stop();
-	}
-
-	return FALSE;
+	usleep(100000);
 }
 
 int main(int argc, char *argv[])
 {
-	_I("Sensord started");
+	_I("Started");
+	std::signal(SIGINT, on_signal);
+	std::signal(SIGHUP, on_signal);
+	std::signal(SIGTERM, on_signal);
+	std::signal(SIGQUIT, on_signal);
+	std::signal(SIGABRT, on_signal);
+	std::signal(SIGCHLD, SIG_IGN);
+	std::signal(SIGPIPE, SIG_IGN);
 
-	signal_init();
+	std::set_new_handler(on_new_failed);
 
 	init_dbus();
 
-	set_cal_data();
-
-	/* TODO: loading sequence has to be moved to server */
-	sensor_loader::get_instance().load();
-	g_timeout_add_seconds(TIMEOUT, terminate, NULL);
-
-	server::get_instance().run();
-	server::get_instance().stop();
+	server::run();
 
 	fini_dbus();
 
-	_I("Sensord terminated");
+	_I("Stopped");
+
 	return 0;
 }

@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef _AUTO_ROTATION_ALG_H_
-#define _AUTO_ROTATION_ALG_H_
+#ifndef __AUTO_ROTATION_ALG_H__
+#define __AUTO_ROTATION_ALG_H__
 
 class auto_rotation_alg {
 public:
@@ -32,4 +32,4 @@ public:
 	virtual bool get_rotation(float acc[3], unsigned long long timestamp, int prev_rotation, int &rotation) = 0;
 };
 
-#endif /* _AUTO_ROTATION_ALG_H_ */
+#endif /* __AUTO_ROTATION_ALG_H__ */

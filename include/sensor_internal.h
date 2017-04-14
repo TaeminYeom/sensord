@@ -28,7 +28,6 @@
 #include <sys/types.h>
 
 /*header for common sensor type*/
-#include <sensor_common.h>
 #include <sensor_types.h>
 #include <sensor_deprecated.h>
 #include <sensor_internal_deprecated.h>
