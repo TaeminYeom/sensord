@@ -92,7 +92,6 @@ static bool run_echo_command_test(const char *str, int size, int cout)
 			100, 1000, SENSOR_OPTION_ALWAYS_ON, basic_cb, NULL);
 	sensor_adapter::get_handle(info, handle);
 
-	usleep(10000);
 	for (int i = 0; i < 1024; ++i)
 		ret &= sensor_adapter::set_attribute(handle, SENSOR_ATTR_ACCELEROMETER_INJECTION, buf, 4096);
 	ASSERT_TRUE(ret);
@@ -104,8 +103,6 @@ TESTCASE(echo_command_test, echo_command_p)
 {
 	pid_t pid;
 
-	usleep(100000);
-
 	for (int i = 0; i < 100; ++i) {
 		pid = run_process(run_echo_command_test, NULL, 0, 0);
 		EXPECT_GE(pid, 0);
@@ -115,7 +112,6 @@ TESTCASE(echo_command_test, echo_command_p)
 	EXPECT_GE(pid, 0);
 
 	ASSERT_TRUE(true);
-	usleep(100000);
 
 	return true;
 }

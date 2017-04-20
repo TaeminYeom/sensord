@@ -45,7 +45,7 @@ permission_checker::~permission_checker()
 void permission_checker::init_cynara(void)
 {
 	int err;
-	cynara_configuration *conf;
+	cynara_configuration *conf = NULL;
 
 	err = cynara_configuration_create(&conf);
 	retm_if(err != CYNARA_API_SUCCESS, "Failed to create cynara configuration");
