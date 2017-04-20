@@ -17,7 +17,6 @@
  *
  */
 
-#include <unistd.h>
 #include <sensor_log.h>
 #include <dbus_util.h>
 #include <new>
@@ -45,8 +44,6 @@ static void on_new_failed(void)
 		raise(SIGTERM);
 		return;
 	}
-
-	sleep(1);
 }
 
 int main(int argc, char *argv[])
