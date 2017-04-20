@@ -130,8 +130,6 @@ static bool run_socket_client(const char *msg, int size, int count)
 
 	sock.close();
 
-	usleep(100000);
-
 	return true;
 }
 
