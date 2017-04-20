@@ -33,6 +33,7 @@ using namespace ipc;
 
 #define MAX_BUF_SIZE 4096
 #define TEST_PATH "/run/.sensord_test.socket"
+#define SLEEP_1S sleep(1)
 
 typedef bool (*process_func_t)(const char *msg, int size, int count);
 
@@ -115,11 +116,11 @@ static bool run_ipc_client_sleep_10s(const char *str, int size, int count)
 
 	msg.enclose(buf, MAX_BUF_SIZE);
 
-	usleep(10000);
+	SLEEP_1S;
 	ch->send_sync(&msg);
 
 	/* Test */
-	sleep(1);
+	SLEEP_1S;
 
 	ch->read_sync(reply);
 	reply.disclose(buf);
@@ -150,7 +151,7 @@ static bool run_ipc_client_small_buffer(const char *str, int size, int count)
 
 	msg.enclose(buf, MAX_BUF_SIZE);
 
-	usleep(10000);
+	SLEEP_1S;
 
 	int buf_size;
 	ch->get_option(SO_RCVBUF, buf_size);
@@ -193,7 +194,7 @@ static bool run_ipc_client_1M(const char *str, int size, int count)
 
 	msg.enclose(buf, MAX_BUF_SIZE);
 
-	usleep(10000);
+	SLEEP_1S;
 
 	for (int i = 0; i < 256; ++i) {
 		ch->send_sync(&msg);
@@ -278,7 +279,7 @@ static bool run_ipc_client_2_channel_message(const char *str, int size, int coun
 
 	msg.enclose("TESTTESTTEST", 12);
 	ch[0]->send_sync(&msg);
-	usleep(100000);
+	SLEEP_1S;
 	ch[0]->read_sync(reply);
 	reply.disclose(buf);
 	ret = strncmp(buf, "TEXTTEXTTEXTTEXT", 16);
@@ -289,7 +290,7 @@ static bool run_ipc_client_2_channel_message(const char *str, int size, int coun
 
 	msg.enclose("TESTTESTTEST", 12);
 	ch[1]->send_sync(&msg);
-	usleep(100000);
+	SLEEP_1S;
 	ch[1]->read_sync(reply);
 	reply.disclose(buf);
 	ret = strncmp(buf, "TEXTTEXTTEXTTEXT", 16);
@@ -339,7 +340,7 @@ static bool run_ipc_client(const char *str, int size, int count)
 	msg.enclose("TESTTESTTEST", 12);
 	ch->send_sync(&msg);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	ch->read_sync(reply);
 	reply.disclose(buf);
@@ -361,7 +362,7 @@ TESTCASE(sensor_ipc_client_sleep_1s, sleep_1s_p)
 	pid_t pid = run_process(run_ipc_server_echo, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	for (int i = 0; i < 3; ++i) {
 		pid = run_process(run_ipc_client_1M, NULL, 0, 0);
@@ -371,7 +372,7 @@ TESTCASE(sensor_ipc_client_sleep_1s, sleep_1s_p)
 	bool ret = run_ipc_client_sleep_10s(NULL, 0, 0);
 	ASSERT_TRUE(ret);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	return true;
 }
@@ -384,7 +385,7 @@ TESTCASE(sensor_ipc_client_small_2240, ipc_client_small_2240_p)
 	pid_t pid = run_process(run_ipc_server_echo, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	for (int i = 0; i < 3; ++i) {
 		pid = run_process(run_ipc_client_1M, NULL, 0, 0);
@@ -394,7 +395,7 @@ TESTCASE(sensor_ipc_client_small_2240, ipc_client_small_2240_p)
 	bool ret = run_ipc_client_small_buffer(NULL, 0, 0);
 	ASSERT_TRUE(ret);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	return true;
 }
@@ -407,7 +408,7 @@ TESTCASE(sensor_ipc_30_client_1M, ipc_client_p_30_1M)
 	pid_t pid = run_process(run_ipc_server_echo, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	for (int i = 0; i < 30; ++i) {
 		pid = run_process(run_ipc_client_1M, NULL, 0, 0);
@@ -417,7 +418,7 @@ TESTCASE(sensor_ipc_30_client_1M, ipc_client_p_30_1M)
 	bool ret = run_ipc_client_1M(NULL, 0, 0);
 	ASSERT_TRUE(ret);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	return true;
 }
@@ -430,12 +431,12 @@ TESTCASE(sensor_ipc_client_2_channel_message, 2_channel_message_p)
 	pid_t pid = run_process(run_ipc_server, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	bool ret = run_ipc_client_2_channel_message(NULL, 0, 0);
 	ASSERT_TRUE(ret);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	return true;
 }
@@ -448,12 +449,12 @@ TESTCASE(sensor_ipc_client_2_channel, 2_channel_p)
 	pid_t pid = run_process(run_ipc_server, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	bool ret = run_ipc_client_2_channel(NULL, 0, 0);
 	ASSERT_TRUE(ret);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	return true;
 }
@@ -466,7 +467,7 @@ TESTCASE(sensor_ipc_100_client, ipc_client_p_100)
 	pid_t pid = run_process(run_ipc_server, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	for (int i = 0; i < 99; ++i) {
 		pid = run_process(run_ipc_client, NULL, 0, 0);
@@ -476,7 +477,7 @@ TESTCASE(sensor_ipc_100_client, ipc_client_p_100)
 	bool ret = run_ipc_client(NULL, 0, 0);
 	ASSERT_TRUE(ret);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	return true;
 }
@@ -489,7 +490,7 @@ TESTCASE(sensor_ipc_2_client, ipc_client_p_2)
 	pid_t pid = run_process(run_ipc_server, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	pid = run_process(run_ipc_client, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
@@ -497,7 +498,7 @@ TESTCASE(sensor_ipc_2_client, ipc_client_p_2)
 	bool ret = run_ipc_client(NULL, 0, 0);
 	ASSERT_TRUE(ret);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	return true;
 }
@@ -513,12 +514,12 @@ TESTCASE(sensor_ipc_client_0, ipc_client_p_0)
 	pid_t pid = run_process(run_ipc_server, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	bool ret = run_ipc_client(NULL, 0, 0);
 	ASSERT_TRUE(ret);
 
-	usleep(100000);
+	SLEEP_1S;
 
 	return true;
 }

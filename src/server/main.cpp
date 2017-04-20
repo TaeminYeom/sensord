@@ -46,7 +46,7 @@ static void on_new_failed(void)
 		return;
 	}
 
-	usleep(100000);
+	sleep(1);
 }
 
 int main(int argc, char *argv[])

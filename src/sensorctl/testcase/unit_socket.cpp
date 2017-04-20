@@ -76,7 +76,7 @@ static bool run_socket_echo_server(const char *msg, int size, int count)
 	}
 	ASSERT_EQ(total_recv_size, (size * count));
 
-	usleep(10000);
+	sleep(1);
 	/* echo message */
 	while (send_count++ < count) {
 		send_size = client_sock.send(buf, size);
@@ -105,7 +105,7 @@ static bool run_socket_client(const char *msg, int size, int count)
 	int total_send_size = 0;
 	stream_socket sock;
 
-	usleep(100000);
+	sleep(1);
 
 	sock.create(TEST_PATH);
 	sock.set_blocking_mode(true);
