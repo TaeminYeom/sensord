@@ -20,10 +20,12 @@
 #include <sensor_internal.h>
 #include <sensor_internal_deprecated.h>
 #include <sensor_types.h>
+#include <sensor_utils.h>
 
 #include <channel_handler.h>
 #include <sensor_manager.h>
 #include <sensor_listener.h>
+#include <sensor_provider.h>
 #include <sensor_log.h>
 #include <unordered_map>
 
@@ -101,29 +103,12 @@ static std::unordered_map<int, sensor::sensor_listener *> listeners;
 
 API int sensord_get_sensors(sensor_type_t type, sensor_t **list, int *count)
 {
-	int ret = OP_ERROR;
-
-	retvm_if((!list || !count), -EINVAL,
-			"Invalid parameter[%#x, %#x]", list, count);
-	retvm_if(!manager.connect(), -EIO, "Failed to connect");
-
-	ret = manager.get_sensors(type, list, count);
-	retv_if(ret < 0, ret);
-
-	return OP_SUCCESS;
+	return sensord_get_sensors_by_uri(utils::get_uri(type), list, count);
 }
 
 API int sensord_get_default_sensor(sensor_type_t type, sensor_t *sensor)
 {
-	int ret = OP_ERROR;
-
-	retvm_if(!sensor, -EINVAL, "Invalid parameter[%#x]", sensor);
-	retvm_if(!manager.connect(), -EIO, "Failed to connect");
-
-	ret = manager.get_sensor(type, sensor);
-	retv_if(ret < 0, ret);
-
-	return OP_SUCCESS;
+	return sensord_get_default_sensor_by_uri(utils::get_uri(type), sensor);
 }
 
 API bool sensord_get_type(sensor_t sensor, sensor_type_t *type)
@@ -158,8 +143,8 @@ API const char* sensord_get_vendor(sensor_t sensor)
 
 API bool sensord_get_min_range(sensor_t sensor, float *min_range)
 {
-	retvm_if(!manager.connect(), false, "Failed to connect");
 	retvm_if(!min_range, false, "Invalid parameter[%#x]", min_range);
+	retvm_if(!manager.connect(), false, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), false,
 			"Invalid sensor[%#x]", sensor);
 
@@ -546,7 +531,7 @@ API int sensord_get_default_sensor_by_uri(const char *uri, sensor_t *sensor)
 	retvm_if(!sensor, -EINVAL, "Invalid parameter");
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 
-	return OP_SUCCESS;
+	return manager.get_sensor(uri, sensor);
 }
 
 API int sensord_get_sensors_by_uri(const char *uri, sensor_t **list, int *count)
@@ -554,7 +539,7 @@ API int sensord_get_sensors_by_uri(const char *uri, sensor_t **list, int *count)
 	retvm_if((!list || !count), -EINVAL, "Invalid parameter");
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 
-	return OP_SUCCESS;
+	return manager.get_sensors(uri, list, count);
 }
 
 API int sensord_add_sensor_added_cb(sensord_added_cb callback, void *user_data)
@@ -562,6 +547,7 @@ API int sensord_add_sensor_added_cb(sensord_added_cb callback, void *user_data)
 	retvm_if(!callback, -EINVAL, "Invalid paramter");
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 
+	manager.add_sensor_added_cb(callback, user_data);
 	return OP_SUCCESS;
 }
 
@@ -570,6 +556,7 @@ API int sensord_remove_sensor_added_cb(sensord_added_cb callback)
 	retvm_if(!callback, -EINVAL, "Invalid paramter");
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 
+	manager.remove_sensor_added_cb(callback);
 	return OP_SUCCESS;
 }
 
@@ -578,6 +565,7 @@ API int sensord_add_sensor_removed_cb(sensord_removed_cb callback, void *user_da
 	retvm_if(!callback, -EINVAL, "Invalid paramter");
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 
+	manager.add_sensor_removed_cb(callback, user_data);
 	return OP_SUCCESS;
 }
 
@@ -586,6 +574,7 @@ API int sensord_remove_sensor_removed_cb(sensord_removed_cb callback)
 	retvm_if(!callback, -EINVAL, "Invalid paramter");
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 
+	manager.remove_sensor_removed_cb(callback);
 	return OP_SUCCESS;
 }
 
@@ -594,6 +583,12 @@ API int sensord_create_provider(const char *uri, sensord_provider_h *provider)
 {
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 
+	sensor_provider *p;
+
+	p = new(std::nothrow) sensor_provider(uri);
+	retvm_if(!p, -ENOMEM, "Failed to allocate memory");
+
+	*provider = static_cast<sensord_provider_h>(p);
 	return OP_SUCCESS;
 }
 
@@ -601,6 +596,7 @@ API int sensord_destroy_provider(sensord_provider_h provider)
 {
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 
+	delete static_cast<sensor::sensor_provider *>(provider);
 	return OP_SUCCESS;
 }
 
@@ -608,6 +604,18 @@ API int sensord_add_provider(sensord_provider_h provider)
 {
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
+
+	int ret;
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	if (!p->connect())
+		return OP_ERROR;
+
+	ret = manager.add_sensor(p);
+	if (ret < 0) {
+		p->disconnect();
+		return OP_ERROR;
+	}
 
 	return OP_SUCCESS;
 }
@@ -617,12 +625,29 @@ API int sensord_remove_provider(sensord_provider_h provider)
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 
+	int ret;
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	if (!p->disconnect())
+		return OP_ERROR;
+
+	ret = manager.remove_sensor(p);
+	if (ret < 0) {
+		p->connect();
+		return OP_ERROR;
+	}
+
 	return OP_SUCCESS;
 }
 
 API int sensord_provider_set_name(sensord_provider_h provider, const char *name)
 {
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
+
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	sensor_info *info = p->get_sensor_info();
+	info->set_model(name);
 
 	return OP_SUCCESS;
 }
@@ -631,6 +656,11 @@ API int sensord_provider_set_vendor(sensord_provider_h provider, const char *ven
 {
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	sensor_info *info = p->get_sensor_info();
+	info->set_vendor(vendor);
+
 	return OP_SUCCESS;
 }
 
@@ -638,12 +668,23 @@ API int sensord_provider_set_range(sensord_provider_h provider, float min_range,
 {
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	sensor_info *info = p->get_sensor_info();
+	info->set_min_range(min_range);
+	info->set_max_range(max_range);
+
 	return OP_SUCCESS;
 }
 
 API int sensord_provider_set_resolution(sensord_provider_h provider, float resolution)
 {
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
+
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	sensor_info *info = p->get_sensor_info();
+	info->set_resolution(resolution);
 
 	return OP_SUCCESS;
 }
@@ -653,6 +694,10 @@ API int sensord_provider_set_start_cb(sensord_provider_h provider, sensord_provi
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 	retvm_if(!callback, -EINVAL, "Invalid paramter");
 
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	p->set_start_cb(callback, user_data);
+
 	return OP_SUCCESS;
 }
 
@@ -661,6 +706,9 @@ API int sensord_provider_set_stop_cb(sensord_provider_h provider, sensord_provid
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 	retvm_if(!callback, -EINVAL, "Invalid paramter");
 
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	p->set_stop_cb(callback, user_data);
 
 	return OP_SUCCESS;
 }
@@ -670,6 +718,10 @@ API int sensord_provider_set_set_interval_cb(sensord_provider_h provider, sensor
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 	retvm_if(!callback, -EINVAL, "Invalid paramter");
 
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	p->set_interval_cb(callback, user_data);
+
 	return OP_SUCCESS;
 }
 
@@ -677,7 +729,10 @@ API int sensord_provider_publish(sensord_provider_h provider, sensor_data_t data
 {
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 
-	return OP_SUCCESS;
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	/* TODO: synchronous call is enough? */
+	return p->publish(&data, sizeof(data));
 }
 
 /* deperecated */
