@@ -540,40 +540,144 @@ API bool sensord_set_passive_mode(int handle, bool passive)
 	return true;
 }
 
-API int sensord_external_connect(const char *key, sensor_external_command_cb_t cb, void *user_data)
+/* Sensor Internal API using URI */
+API int sensord_get_default_sensor_by_uri(const char *uri, sensor_t *sensor)
 {
-	/*
-	 * 1. check parameter
-	 * 2. create handle in this client
-	 * 3. first connection(client)
-	 * 4. cmd_connect for external sensor with key
-	 */
-	retvm_if(!key, -EINVAL, "Invalid key");
-	return 0;
+	retvm_if(!sensor, -EINVAL, "Invalid parameter");
+	retvm_if(!manager.connect(), -EIO, "Failed to connect");
+
+	return OP_SUCCESS;
 }
 
-API bool sensord_external_disconnect(int handle)
+API int sensord_get_sensors_by_uri(const char *uri, sensor_t **list, int *count)
 {
-	/*
-	 * 1. check parameter
-	 * 2. create handle in this client
-	 * 3. first connection(client)
-	 * 4. cmd_connect for external sensor with key
-	 * 5. disconnect this handle
-	 * 6. if there is no active sensor, remove client id and stop listener
-	 */
-	return true;
+	retvm_if((!list || !count), -EINVAL, "Invalid parameter");
+	retvm_if(!manager.connect(), -EIO, "Failed to connect");
+
+	return OP_SUCCESS;
 }
 
-API bool sensord_external_post(int handle, unsigned long long timestamp, const float* data, int data_cnt)
+API int sensord_add_sensor_added_cb(sensord_added_cb callback, void *user_data)
 {
-	/*
-	 * 1. check parameter
-	 * 1.1 (data_cnt <= 0) || (data_cnt > POST_DATA_LEN_MAX)), return false
-	 * 2. cmd_post
-	 */
+	retvm_if(!callback, -EINVAL, "Invalid paramter");
+	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 
-	return true;
+	return OP_SUCCESS;
+}
+
+API int sensord_remove_sensor_added_cb(sensord_added_cb callback)
+{
+	retvm_if(!callback, -EINVAL, "Invalid paramter");
+	retvm_if(!manager.connect(), -EIO, "Failed to connect");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_add_sensor_removed_cb(sensord_removed_cb callback, void *user_data)
+{
+	retvm_if(!callback, -EINVAL, "Invalid paramter");
+	retvm_if(!manager.connect(), -EIO, "Failed to connect");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_remove_sensor_removed_cb(sensord_removed_cb callback)
+{
+	retvm_if(!callback, -EINVAL, "Invalid paramter");
+	retvm_if(!manager.connect(), -EIO, "Failed to connect");
+
+	return OP_SUCCESS;
+}
+
+/* Sensor provider */
+API int sensord_create_provider(const char *uri, sensord_provider_h *provider)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_destroy_provider(sensord_provider_h provider)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_add_provider(sensord_provider_h provider)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+	retvm_if(!manager.connect(), -EIO, "Failed to connect");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_remove_provider(sensord_provider_h provider)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+	retvm_if(!manager.connect(), -EIO, "Failed to connect");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_provider_set_name(sensord_provider_h provider, const char *name)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_provider_set_vendor(sensord_provider_h provider, const char *vendor)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_provider_set_range(sensord_provider_h provider, float min_range, float max_range)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_provider_set_resolution(sensord_provider_h provider, float resolution)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_provider_set_start_cb(sensord_provider_h provider, sensord_provider_start_cb callback, void *user_data)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+	retvm_if(!callback, -EINVAL, "Invalid paramter");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_provider_set_stop_cb(sensord_provider_h provider, sensord_provider_stop_cb callback, void *user_data)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+	retvm_if(!callback, -EINVAL, "Invalid paramter");
+
+
+	return OP_SUCCESS;
+}
+
+API int sensord_provider_set_set_interval_cb(sensord_provider_h provider, sensord_provider_set_interval_cb callback, void *user_data)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+	retvm_if(!callback, -EINVAL, "Invalid paramter");
+
+	return OP_SUCCESS;
+}
+
+API int sensord_provider_publish(sensord_provider_h provider, sensor_data_t data)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+
+	return OP_SUCCESS;
 }
 
 /* deperecated */
@@ -638,6 +742,45 @@ API bool sensord_send_command(int handle, const char *command, int command_len)
 API bool sensord_get_privilege(sensor_t sensor, sensor_privilege_t *privilege)
 {
 	*privilege = SENSOR_PRIVILEGE_PUBLIC;
+
+	return true;
+}
+
+/* deprecated */
+API int sensord_external_connect(const char *key, sensor_external_command_cb_t cb, void *user_data)
+{
+	/*
+	 * 1. check parameter
+	 * 2. create handle in this client
+	 * 3. first connection(client)
+	 * 4. cmd_connect for external sensor with key
+	 */
+	retvm_if(!key, -EINVAL, "Invalid key");
+	return 0;
+}
+
+/* deprecated */
+API bool sensord_external_disconnect(int handle)
+{
+	/*
+	 * 1. check parameter
+	 * 2. create handle in this client
+	 * 3. first connection(client)
+	 * 4. cmd_connect for external sensor with key
+	 * 5. disconnect this handle
+	 * 6. if there is no active sensor, remove client id and stop listener
+	 */
+	return true;
+}
+
+/* deprecated */
+API bool sensord_external_post(int handle, unsigned long long timestamp, const float* data, int data_cnt)
+{
+	/*
+	 * 1. check parameter
+	 * 1.1 (data_cnt <= 0) || (data_cnt > POST_DATA_LEN_MAX)), return false
+	 * 2. cmd_post
+	 */
 
 	return true;
 }

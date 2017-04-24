@@ -379,13 +379,50 @@ bool sensord_get_data(int handle, unsigned int data_id, sensor_data_t* sensor_da
  */
 bool sensord_flush(int handle);
 
-typedef void (*sensor_external_command_cb_t)(int handle, const char* data, int data_cnt, void *user_data);
+bool sensord_set_passive_mode(int handle, bool passive);
 
+
+/* Sensor Internal API using URI */
+int sensord_get_default_sensor_by_uri(const char *uri, sensor_t *sensor);
+int sensord_get_sensors_by_uri(const char *uri, sensor_t **list, int *sensor_count);
+
+typedef void (*sensord_added_cb)(const char *uri, void *user_data);
+int sensord_add_sensor_added_cb(sensord_added_cb callback, void *user_data);
+int sensord_remove_sensor_added_cb(sensord_added_cb callback);
+
+typedef void (*sensord_removed_cb)(const char *uri, void *user_data);
+int sensord_add_sensor_removed_cb(sensord_removed_cb callback, void *user_data);
+int sensord_remove_sensor_removed_cb(sensord_removed_cb callback);
+
+/* Sensor provider */
+typedef void *sensord_provider_h;
+int sensord_create_provider(const char *uri, sensord_provider_h *provider);
+int sensord_destroy_provider(sensord_provider_h provider);
+int sensord_add_provider(sensord_provider_h provider);
+int sensord_remove_provider(sensord_provider_h provider);
+
+int sensord_provider_set_name(sensord_provider_h provider, const char *name);
+int sensord_provider_set_vendor(sensord_provider_h provider, const char *vendor);
+int sensord_provider_set_range(sensord_provider_h provider, float min_range, float max_range);
+int sensord_provider_set_resolution(sensord_provider_h provider, float resolution);
+
+typedef void (*sensord_provider_start_cb)(sensord_provider_h provider, void *user_data);
+int sensord_provider_set_start_cb(sensord_provider_h provider, sensord_provider_start_cb callback, void *user_data);
+
+typedef void (*sensord_provider_stop_cb)(sensord_provider_h provider, void *user_data);
+int sensord_provider_set_stop_cb(sensord_provider_h provider, sensord_provider_stop_cb callback, void *user_data);
+
+typedef void (*sensord_provider_set_interval_cb)(sensord_provider_h provider, unsigned int interval_ms, void *user_data);
+int sensord_provider_set_set_interval_cb(sensord_provider_h provider, sensord_provider_set_interval_cb callback, void *user_data);
+
+int sensord_provider_publish(sensord_provider_h provider, sensor_data_t data);
+
+/* Deprecated */
+typedef void (*sensor_external_command_cb_t)(int handle, const char* data, int data_cnt, void *user_data);
 int sensord_external_connect(const char *key, sensor_external_command_cb_t cb, void *user_data);
 bool sensord_external_disconnect(int handle);
 bool sensord_external_post(int handle, unsigned long long timestamp, const float* data, int data_cnt);
 
-bool sensord_set_passive_mode(int handle, bool passive);
 /**
   * @}
  */
