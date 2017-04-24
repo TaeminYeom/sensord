@@ -28,6 +28,8 @@
 #include <atomic>
 
 #include "sensor_internal.h"
+#include "sensor_provider.h"
+#include "sensor_manager_handler.h"
 
 namespace sensor {
 
@@ -38,20 +40,25 @@ public:
 
 	bool connect(void);
 	void disconnect(void);
+	void restore(void);
 
-	int get_sensor(sensor_type_t type, sensor_t *sensor);
-	int get_sensors(sensor_type_t type, sensor_t **list, int *count);
 	int get_sensor(const char *uri, sensor_t *sensor);
 	int get_sensors(const char *uri, sensor_t **list, int *count);
 
 	bool is_supported(sensor_t sensor);
 	bool is_supported(const char *uri);
 
-	void restore(void);
+	/* sensor provider */
+	int add_sensor(sensor_info &info);
+	int add_sensor(sensor_provider *provider);
+	int remove_sensor(const char *uri);
+	int remove_sensor(sensor_provider *provider);
 
-	/* TODO: register sensor_provider by using manager */
-	/* int register_sensor(sensor_provider *provider); */
-	/* int unregister_sensor(const char *uri) */
+	void add_sensor_added_cb(sensord_added_cb cb, void *user_data);
+	void remove_sensor_added_cb(sensord_added_cb cb);
+
+	void add_sensor_removed_cb(sensord_removed_cb cb, void *user_data);
+	void remove_sensor_removed_cb(sensord_removed_cb cb);
 
 private:
 	typedef std::vector<sensor_info> sensor_list_t;
@@ -70,10 +77,10 @@ private:
 	std::vector<sensor_info *> get_infos(const char *uri);
 
 	ipc::ipc_client *m_client;
-	ipc::channel_handler *m_handler;
 	ipc::channel *m_channel;
 	ipc::event_loop m_loop;
 	std::atomic<bool> m_connected;
+	sensor_manager_handler *m_handler;
 
 	sensor_list_t m_sensors;
 };
