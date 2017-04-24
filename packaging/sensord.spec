@@ -32,7 +32,6 @@ of the Sensor Framework. The library replaces the dummy library installed by %{n
 
 %package    dummy
 Summary:    Sensor Framework 'dummy' library
-Provides:   libsensord
 Provides:   %{name}-profile_tv = %{version}-%{release}
 
 %description dummy
@@ -44,7 +43,6 @@ Installing %{name} replaces this dummy library with the actually functional libr
 Summary:    Internal Sensor API (Development)
 Group:      System/Development
 Requires:   %{name}-dummy = %{version}-%{release}
-Provides:   libsensord-devel
 
 %description devel
 Internal Sensor API (Development)
@@ -64,24 +62,6 @@ Group:      System/Testing
 
 %description -n sensor-test
 Sensor functional testing
-
-
-# These dummy packages will be removed later.
-%package -n libsensord
-Summary:    Dummy package for backward compatibility
-Requires:   sensord
-
-%description -n libsensord
-A yaml requires libsensord explicitly. This is a temporal solution to prevent image creation failures.
-
-
-%package -n libsensord-devel
-Summary:    Dummy package for backward compatibility
-Requires:   sensord-devel
-
-%description -n libsensord-devel
-Some packages require libsensord-devel directly, and it causes local gbs build failures
-with the old build snapshots. This is a temporal solution to handle such cases.
 
 
 %prep
@@ -153,8 +133,3 @@ echo "You need to reinstall %{name}-dummy to keep using the APIs after uninstall
 
 %files -n sensor-test
 %{_bindir}/sensorctl
-
-
-%files -n libsensord
-
-%files -n libsensord-devel
