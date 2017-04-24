@@ -53,13 +53,14 @@ void server_channel_handler::connected(channel *ch)
 
 void server_channel_handler::disconnected(channel *ch)
 {
+	m_manager->deregister_channel(ch);
+
 	auto it_asensor = m_app_sensors.find(ch);
 	if (it_asensor != m_app_sensors.end()) {
 		sensor_info info = it_asensor->second->get_sensor_info();
 
 		_I("Disconnected provider[%s]", info.get_uri().c_str());
 
-		/* TODO: if sensor is unregistered, related listeners has to be handled */
 		m_manager->deregister_sensor(info.get_uri());
 		m_app_sensors.erase(ch);
 	}
@@ -79,6 +80,10 @@ void server_channel_handler::read(channel *ch, message &msg)
 	int err = -EINVAL;
 
 	switch (msg.type()) {
+	case CMD_MANAGER_CONNECT:
+		err = manager_connect(ch, msg); break;
+	case CMD_MANAGER_DISCONNECT:
+		err = manager_disconnect(ch, msg); break;
 	case CMD_MANAGER_SENSOR_LIST:
 		err = manager_get_sensor_list(ch, msg); break;
 	case CMD_LISTENER_CONNECT:
@@ -110,6 +115,18 @@ void server_channel_handler::read(channel *ch, message &msg)
 		message reply(err);
 		ch->send_sync(&reply);
 	}
+}
+
+int server_channel_handler::manager_connect(channel *ch, message &msg)
+{
+	m_manager->register_channel(ch);
+	return send_reply(ch, OP_SUCCESS);
+}
+
+int server_channel_handler::manager_disconnect(channel *ch, message &msg)
+{
+	m_manager->deregister_channel(ch);
+	return send_reply(ch, OP_SUCCESS);
 }
 
 int server_channel_handler::manager_get_sensor_list(channel *ch, message &msg)

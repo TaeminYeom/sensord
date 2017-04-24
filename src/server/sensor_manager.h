@@ -24,7 +24,8 @@
 #include <vector>
 #include <unordered_map>
 
-#include "event_loop.h"
+#include <channel.h>
+#include <event_loop.h>
 
 #include "sensor_handler.h"
 #include "sensor_observer.h"
@@ -49,6 +50,9 @@ public:
 	bool register_sensor(sensor_handler *sensor);
 	void deregister_sensor(const std::string uri);
 
+	void register_channel(ipc::channel *ch);
+	void deregister_channel(ipc::channel *ch);
+
 	sensor_handler *get_sensor_by_type(const std::string uri);
 	sensor_handler *get_sensor(const std::string uri);
 	std::vector<sensor_handler *> get_sensors(void);
@@ -67,11 +71,19 @@ private:
 	void init_sensors(void);
 	void register_handler(physical_sensor_handler *sensor);
 
+	int serialize(sensor_info *info, char **bytes);
+
+	void send(ipc::message &msg);
+	void send_added_msg(sensor_info *info);
+	void send_removed_msg(const std::string &uri);
+
 	void show(void);
 
 	ipc::event_loop *m_loop;
 	sensor_loader m_loader;
 	sensor_map_t m_sensors;
+
+	std::vector<ipc::channel *> m_channels;
 };
 
 }

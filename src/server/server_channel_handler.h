@@ -44,7 +44,10 @@ public:
 	void error_caught(ipc::channel *ch, int error) {}
 
 private:
+	int manager_connect(ipc::channel *ch, ipc::message &msg);
+	int manager_disconnect(ipc::channel *ch, ipc::message &msg);
 	int manager_get_sensor_list(ipc::channel *ch, ipc::message &msg);
+
 
 	int listener_connect(ipc::channel *ch, ipc::message &msg);
 	int listener_disconnect(ipc::channel *ch, ipc::message &msg);
