@@ -35,8 +35,7 @@ application_sensor_handler::~application_sensor_handler()
 
 int application_sensor_handler::post(sensor_data_t *data, int len)
 {
-	std::string uri = m_info.get_type_uri();
-
+	std::string uri = m_info.get_uri();
 	return notify(uri.c_str(), data, len);
 }
 
