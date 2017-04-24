@@ -23,14 +23,15 @@
 #include <channel.h>
 #include <message.h>
 
-#include "sensor_handler.h"
+#include "sensor_manager.h"
 #include "sensor_observer.h"
 
 namespace sensor {
 
 class sensor_listener_proxy : public sensor_observer {
 public:
-	sensor_listener_proxy(uint32_t id, sensor_handler *sensor, ipc::channel *ch);
+	sensor_listener_proxy(uint32_t id,
+			std::string uri, sensor_manager *manager, ipc::channel *ch);
 	~sensor_listener_proxy();
 
 	uint32_t get_id(void);
@@ -52,8 +53,9 @@ public:
 
 private:
 	uint32_t m_id;
+	std::string m_uri;
 
-	sensor_handler *m_sensor;
+	sensor_manager *m_manager;
 	ipc::channel *m_ch;
 
 	bool m_passive;

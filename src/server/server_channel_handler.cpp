@@ -116,16 +116,13 @@ int server_channel_handler::manager_get_sensor_list(channel *ch, message &msg)
 int server_channel_handler::listener_connect(channel *ch, message &msg)
 {
 	static uint32_t listener_id = 1;
-	sensor_handler *sensor;
 	cmd_listener_connect_t buf;
 
 	msg.disclose((char *)&buf);
 
-	sensor = m_manager->get_sensor(buf.sensor);
-	retv_if(!sensor, OP_ERROR);
-
-	sensor_listener_proxy *listener =
-		new(std::nothrow) sensor_listener_proxy(listener_id, sensor, ch);
+	sensor_listener_proxy *listener;
+	listener = new(std::nothrow) sensor_listener_proxy(listener_id,
+				buf.sensor, m_manager, ch);
 	retvm_if(!listener, OP_ERROR, "Failed to allocate memory");
 	retvm_if(!has_privileges(ch->get_fd(), listener->get_required_privileges()),
 			-EACCES, "Permission denied");
