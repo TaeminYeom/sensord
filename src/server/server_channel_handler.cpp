@@ -82,7 +82,7 @@ void server_channel_handler::read(channel *ch, message &msg)
 		err = provider_connect(ch, msg); break;
 	case CMD_PROVIDER_DISCONNECT:
 		err = provider_disconnect(ch, msg); break;
-	case CMD_PROVIDER_POST:
+	case CMD_PROVIDER_PUBLISH:
 		err = provider_post(ch, msg); break;
 	case CMD_HAS_PRIVILEGE:
 		err = has_privileges(ch, msg); break;
