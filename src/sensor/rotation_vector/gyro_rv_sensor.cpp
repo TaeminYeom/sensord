@@ -23,7 +23,7 @@
 #include <sensor_types.h>
 #include <fusion_util.h>
 
-#define NAME_SENSOR  "http://tizen.org/sensor/gyro_rotation_vector/tizen_default"
+#define NAME_SENSOR  "http://tizen.org/sensor/gyroscope_rotation_vector/tizen_default"
 #define NAME_VENDOR  "tizen.org"
 
 #define SRC_ID_ACC   0x1

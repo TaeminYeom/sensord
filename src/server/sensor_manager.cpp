@@ -205,10 +205,15 @@ void sensor_manager::deregister_channel(ipc::channel *ch)
 
 sensor_handler *sensor_manager::get_sensor_by_type(const std::string uri)
 {
-	auto it = m_sensors.begin();
-	for (; it != m_sensors.end(); ++it) {
-		std::size_t found = it->first.rfind(uri);
-		if (found != std::string::npos)
+	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
+		if (it->first == uri)
+			return it->second;
+
+		std::size_t found = it->first.find_last_of("/");
+		if (found == std::string::npos)
+			continue;
+
+		if (it->first.substr(0, found) == uri)
 			return it->second;
 	}
 

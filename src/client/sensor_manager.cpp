@@ -98,9 +98,14 @@ bool sensor_manager::is_supported(const char *uri)
 		return true;
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
-		std::size_t found = (*it).get_uri().rfind(uri);
+		if ((*it).get_uri() == uri)
+			return true;
 
-		if (found != std::string::npos)
+		std::size_t found = (*it).get_uri().find_last_of("/");
+		if (found == std::string::npos)
+			continue;
+
+		if ((*it).get_uri().substr(0, found) == uri)
 			return true;
 	}
 
@@ -331,15 +336,23 @@ sensor_info *sensor_manager::get_info(const char *uri)
 		return &m_sensors[0];
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
-		std::size_t found = (*it).get_uri().rfind(uri);
-
-		if (found == std::string::npos)
+		if ((*it).get_uri() != uri)
 			continue;
 
-		if ((*it).get_privilege().empty())
+		if ((*it).get_privilege().empty() || has_privilege((*it).get_uri()))
 			return &*it;
 
-		if (has_privilege((*it).get_uri()))
+		return NULL;
+	}
+
+	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
+		std::size_t found = (*it).get_uri().find_last_of("/");
+		if (found == std::string::npos)
+			continue;
+		if ((*it).get_uri().substr(0, found) != uri)
+			continue;
+
+		if ((*it).get_privilege().empty() || has_privilege((*it).get_uri()))
 			return &*it;
 	}
 
@@ -355,17 +368,23 @@ std::vector<sensor_info *> sensor_manager::get_infos(const char *uri)
 		all = true;
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
-		std::size_t found = (*it).get_uri().rfind(uri);
+		if ((*it).get_uri() != uri)
+			continue;
 
+		if ((*it).get_privilege().empty() || has_privilege((*it).get_uri()))
+			infos.push_back(&*it);
+
+		return infos;
+	}
+
+	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
+		std::size_t found = (*it).get_uri().find_last_of("/");
 		if (!all && found == std::string::npos)
 			continue;
-
-		if ((*it).get_privilege().empty()) {
-			infos.push_back(&*it);
+		if (!all && (*it).get_uri().substr(0, found) != uri)
 			continue;
-		}
 
-		if (has_privilege((*it).get_uri()))
+		if ((*it).get_privilege().empty() || has_privilege((*it).get_uri()))
 			infos.push_back(&*it);
 	}
 
