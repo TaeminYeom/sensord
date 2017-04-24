@@ -123,13 +123,22 @@ API bool sensord_get_type(sensor_t sensor, sensor_type_t *type)
 	return true;
 }
 
-API const char* sensord_get_name(sensor_t sensor)
+API const char* sensord_get_uri(sensor_t sensor)
 {
 	retvm_if(!manager.connect(), NULL, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), NULL,
 			"Invalid sensor[%#x]", sensor);
 
 	return static_cast<sensor_info *>(sensor)->get_uri().c_str();
+}
+
+API const char* sensord_get_name(sensor_t sensor)
+{
+	retvm_if(!manager.connect(), NULL, "Failed to connect");
+	retvm_if(!manager.is_supported(sensor), NULL,
+			"Invalid sensor[%#x]", sensor);
+
+	return static_cast<sensor_info *>(sensor)->get_model().c_str();
 }
 
 API const char* sensord_get_vendor(sensor_t sensor)

@@ -48,6 +48,11 @@ API bool sensord_get_type(sensor_t sensor, sensor_type_t *type)
 	return false;
 }
 
+API const char* sensord_get_uri(sensor_t sensor)
+{
+	return NULL;
+}
+
 API const char* sensord_get_name(sensor_t sensor)
 {
 	return NULL;

@@ -95,6 +95,14 @@ int sensord_get_default_sensor(sensor_type_t type, sensor_t *sensor);
 bool sensord_get_type(sensor_t sensor, sensor_type_t *type);
 
 /**
+ * @brief Get the URI string of this sensor.
+ *
+ * @param[in] sensor a sensor to get uri.
+ * @return the name string of this sensor on success, otherwise NULL.
+ */
+const char* sensord_get_uri(sensor_t sensor);
+
+/**
  * @brief Get the name string of this sensor.
  *
  * @param[in] sensor a sensor to get name.
