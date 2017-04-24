@@ -27,6 +27,12 @@ using namespace sensor;
 
 sensor_provider_handler::sensor_provider_handler(sensor_provider *provider)
 : m_provider(provider)
+, m_start_cb(NULL)
+, m_stop_cb(NULL)
+, m_set_interval_cb(NULL)
+, m_start_user_data(NULL)
+, m_stop_user_data(NULL)
+, m_set_interval_user_data(NULL)
 {
 }
 
