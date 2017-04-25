@@ -17,7 +17,7 @@
  *
  */
 
-#include "sensor_manager_handler.h"
+#include "sensor_manager_channel_handler.h"
 
 #include <sensor_log.h>
 #include <command_types.h>
@@ -25,22 +25,22 @@
 
 using namespace sensor;
 
-sensor_manager_handler::sensor_manager_handler(sensor_manager *manager)
+sensor_manager::channel_handler::channel_handler(sensor_manager *manager)
 : m_manager(manager)
 {
 }
 
-void sensor_manager_handler::connected(ipc::channel *ch)
+void sensor_manager::channel_handler::connected(ipc::channel *ch)
 {
 }
 
-void sensor_manager_handler::disconnected(ipc::channel *ch)
+void sensor_manager::channel_handler::disconnected(ipc::channel *ch)
 {
 	/* If channel->disconnect() is not explicitly called, it will be restored */
 	m_manager->restore();
 }
 
-void sensor_manager_handler::read(ipc::channel *ch, ipc::message &msg)
+void sensor_manager::channel_handler::read(ipc::channel *ch, ipc::message &msg)
 {
 	switch (msg.header()->type) {
 	case CMD_MANAGER_SENSOR_ADDED:
@@ -52,15 +52,15 @@ void sensor_manager_handler::read(ipc::channel *ch, ipc::message &msg)
 	}
 }
 
-void sensor_manager_handler::read_complete(ipc::channel *ch)
+void sensor_manager::channel_handler::read_complete(ipc::channel *ch)
 {
 }
 
-void sensor_manager_handler::error_caught(ipc::channel *ch, int error)
+void sensor_manager::channel_handler::error_caught(ipc::channel *ch, int error)
 {
 }
 
-void sensor_manager_handler::on_sensor_added(ipc::channel *ch, ipc::message &msg)
+void sensor_manager::channel_handler::on_sensor_added(ipc::channel *ch, ipc::message &msg)
 {
 	ret_if(msg.header()->err < OP_SUCCESS);
 
@@ -77,7 +77,7 @@ void sensor_manager_handler::on_sensor_added(ipc::channel *ch, ipc::message &msg
 	}
 }
 
-void sensor_manager_handler::on_sensor_removed(ipc::channel *ch, ipc::message &msg)
+void sensor_manager::channel_handler::on_sensor_removed(ipc::channel *ch, ipc::message &msg)
 {
 	ret_if(msg.header()->err < 0);
 	char uri[NAME_MAX] = {0, };
@@ -92,22 +92,22 @@ void sensor_manager_handler::on_sensor_removed(ipc::channel *ch, ipc::message &m
 	}
 }
 
-void sensor_manager_handler::add_sensor_added_cb(sensord_added_cb cb, void *user_data)
+void sensor_manager::channel_handler::add_sensor_added_cb(sensord_added_cb cb, void *user_data)
 {
 	m_sensor_added_callbacks.emplace(cb, user_data);
 }
 
-void sensor_manager_handler::remove_sensor_added_cb(sensord_added_cb cb)
+void sensor_manager::channel_handler::remove_sensor_added_cb(sensord_added_cb cb)
 {
 	m_sensor_added_callbacks.erase(cb);
 }
 
-void sensor_manager_handler::add_sensor_removed_cb(sensord_removed_cb cb, void *user_data)
+void sensor_manager::channel_handler::add_sensor_removed_cb(sensord_removed_cb cb, void *user_data)
 {
 	m_sensor_removed_callbacks.emplace(cb, user_data);
 }
 
-void sensor_manager_handler::remove_sensor_removed_cb(sensord_removed_cb cb)
+void sensor_manager::channel_handler::remove_sensor_removed_cb(sensord_removed_cb cb)
 {
 	m_sensor_removed_callbacks.erase(cb);
 }

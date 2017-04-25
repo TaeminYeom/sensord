@@ -29,7 +29,6 @@
 
 #include "sensor_internal.h"
 #include "sensor_provider.h"
-#include "sensor_manager_handler.h"
 
 namespace sensor {
 
@@ -61,7 +60,7 @@ public:
 	void remove_sensor_removed_cb(sensord_removed_cb cb);
 
 private:
-	typedef std::vector<sensor_info> sensor_list_t;
+	class channel_handler;
 
 	bool init(void);
 	void deinit(void);
@@ -80,9 +79,9 @@ private:
 	ipc::channel *m_channel;
 	ipc::event_loop m_loop;
 	std::atomic<bool> m_connected;
-	sensor_manager_handler *m_handler;
+	channel_handler *m_handler;
 
-	sensor_list_t m_sensors;
+	std::vector<sensor_info> m_sensors;
 };
 
 }

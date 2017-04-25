@@ -17,44 +17,45 @@
  *
  */
 
-#ifndef __SENSOR_PROVIDER_HANDLER__
-#define __SENSOR_PROVIDER_HANDLER__
+#ifndef __SENSOR_MANAGER_CHANNEL_HANDLER__
+#define __SENSOR_MANAGER_CHANNEL_HANDLER__
 
 #include <sensor_internal.h>
+#include <sensor_manager.h>
 #include <channel_handler.h>
+#include <map>
 
 namespace sensor {
 
-class sensor_provider;
-
-class sensor_provider_handler : public ipc::channel_handler
+class sensor_manager::channel_handler : public ipc::channel_handler
 {
 public:
-	sensor_provider_handler(sensor_provider *provider);
+	channel_handler(sensor_manager *manager);
 
 	void connected(ipc::channel *ch);
 	void disconnected(ipc::channel *ch);
 	void read(ipc::channel *ch, ipc::message &msg);
-
 	void read_complete(ipc::channel *ch);
 	void error_caught(ipc::channel *ch, int error);
 
-	void set_start_cb(sensord_provider_start_cb cb, void *user_data);
-	void set_stop_cb(sensord_provider_stop_cb cb, void *user_data);
-	void set_interval_cb(sensord_provider_set_interval_cb cb, void *user_data);
+	void on_sensor_added(ipc::channel *ch, ipc::message &msg);
+	void on_sensor_removed(ipc::channel *ch, ipc::message &msg);
+
+	void add_sensor_added_cb(sensord_added_cb cb, void *user_data);
+	void remove_sensor_added_cb(sensord_added_cb cb);
+
+	void add_sensor_removed_cb(sensord_removed_cb cb, void *user_data);
+	void remove_sensor_removed_cb(sensord_removed_cb cb);
 
 private:
-	sensor_provider *m_provider;
+	typedef std::map<sensord_added_cb, void *> sensor_added_cb_list_t;
+	typedef std::map<sensord_removed_cb, void *> sensor_removed_cb_list_t;
 
-	sensord_provider_start_cb m_start_cb;
-	sensord_provider_stop_cb m_stop_cb;
-	sensord_provider_set_interval_cb m_set_interval_cb;
-
-	void *m_start_user_data;
-	void *m_stop_user_data;
-	void *m_set_interval_user_data;
+	sensor_manager *m_manager;
+	sensor_added_cb_list_t m_sensor_added_callbacks;
+	sensor_removed_cb_list_t m_sensor_removed_callbacks;
 };
 
 }
 
-#endif /* __SENSOR_PROVIDER_HANDLER__ */
+#endif /* __SENSOR_MANAGER_CHANNEL_HANDLER__ */

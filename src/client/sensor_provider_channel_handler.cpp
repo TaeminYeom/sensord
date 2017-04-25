@@ -17,7 +17,7 @@
  *
  */
 
-#include "sensor_provider_handler.h"
+#include "sensor_provider_channel_handler.h"
 
 #include <command_types.h>
 #include <sensor_log.h>
@@ -25,7 +25,7 @@
 
 using namespace sensor;
 
-sensor_provider_handler::sensor_provider_handler(sensor_provider *provider)
+sensor_provider::channel_handler::channel_handler(sensor_provider *provider)
 : m_provider(provider)
 , m_start_cb(NULL)
 , m_stop_cb(NULL)
@@ -36,18 +36,18 @@ sensor_provider_handler::sensor_provider_handler(sensor_provider *provider)
 {
 }
 
-void sensor_provider_handler::connected(ipc::channel *ch)
+void sensor_provider::channel_handler::connected(ipc::channel *ch)
 {
 	_I("Connected");
 }
 
-void sensor_provider_handler::disconnected(ipc::channel *ch)
+void sensor_provider::channel_handler::disconnected(ipc::channel *ch)
 {
 	/* TODO */
 	/* m_provider->restore(); */
 }
 
-void sensor_provider_handler::read(ipc::channel *ch, ipc::message &msg)
+void sensor_provider::channel_handler::read(ipc::channel *ch, ipc::message &msg)
 {
 	switch (msg.type()) {
 	case CMD_PROVIDER_START:
@@ -66,27 +66,27 @@ void sensor_provider_handler::read(ipc::channel *ch, ipc::message &msg)
 	}
 }
 
-void sensor_provider_handler::read_complete(ipc::channel *ch)
+void sensor_provider::channel_handler::read_complete(ipc::channel *ch)
 {
 }
 
-void sensor_provider_handler::error_caught(ipc::channel *ch, int error)
+void sensor_provider::channel_handler::error_caught(ipc::channel *ch, int error)
 {
 }
 
-void sensor_provider_handler::set_start_cb(sensord_provider_start_cb cb, void *user_data)
+void sensor_provider::channel_handler::set_start_cb(sensord_provider_start_cb cb, void *user_data)
 {
 	m_start_cb = cb;
 	m_start_user_data = user_data;
 }
 
-void sensor_provider_handler::set_stop_cb(sensord_provider_stop_cb cb, void *user_data)
+void sensor_provider::channel_handler::set_stop_cb(sensord_provider_stop_cb cb, void *user_data)
 {
 	m_stop_cb = cb;
 	m_stop_user_data = user_data;
 }
 
-void sensor_provider_handler::set_interval_cb(sensord_provider_set_interval_cb cb, void *user_data)
+void sensor_provider::channel_handler::set_interval_cb(sensord_provider_set_interval_cb cb, void *user_data)
 {
 	m_set_interval_cb = cb;
 	m_set_interval_user_data = user_data;
