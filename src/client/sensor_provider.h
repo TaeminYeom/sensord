@@ -40,7 +40,7 @@ public:
 	const char *get_uri(void);
 	sensor_info *get_sensor_info(void);
 
-	bool connect(void);
+	int connect(void);
 	bool disconnect(void);
 	void restore(void);
 

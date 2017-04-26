@@ -617,13 +617,13 @@ API int sensord_add_provider(sensord_provider_h provider)
 	int ret;
 	sensor_provider *p = static_cast<sensor_provider *>(provider);
 
-	if (!p->connect())
-		return OP_ERROR;
+	ret = p->connect();
+	retv_if(ret < 0, ret);
 
 	ret = manager.add_sensor(p);
 	if (ret < 0) {
 		p->disconnect();
-		return OP_ERROR;
+		return ret;
 	}
 
 	return OP_SUCCESS;

@@ -119,10 +119,10 @@ int sensor_provider::send_sensor_info(sensor_info *info)
 	return OP_SUCCESS;
 }
 
-bool sensor_provider::connect(void)
+int sensor_provider::connect(void)
 {
 	m_channel = m_client->connect(m_handler, &m_loop);
-	retvm_if(!m_channel, false, "Failed to connect to server");
+	retvm_if(!m_channel, -EIO, "Failed to connect to server");
 
 	/* serialize and send sensor info */
 	send_sensor_info(get_sensor_info());
@@ -136,7 +136,7 @@ bool sensor_provider::connect(void)
 
 	_I("Provider URI[%s]", get_uri());
 
-	return true;
+	return OP_SUCCESS;
 }
 
 bool sensor_provider::disconnect(void)
