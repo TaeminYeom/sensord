@@ -26,7 +26,7 @@
 #include <ipc_client.h>
 #include <command_types.h>
 
-#include "sensor_provider_handler.h"
+#include "sensor_provider_channel_handler.h"
 
 using namespace sensor;
 
@@ -49,7 +49,7 @@ bool sensor_provider::init(const char *uri)
 	m_client = new(std::nothrow) ipc::ipc_client(SENSOR_CHANNEL_PATH);
 	retvm_if(!m_client, false, "Failed to allocate memory");
 
-	m_handler = new(std::nothrow) sensor_provider_handler(this);
+	m_handler = new(std::nothrow) channel_handler(this);
 	if (!m_handler) {
 		delete m_client;
 		return false;

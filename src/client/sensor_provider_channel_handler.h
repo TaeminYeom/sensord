@@ -17,59 +17,43 @@
  *
  */
 
-#ifndef __SENSOR_PROVIDER_H__
-#define __SENSOR_PROVIDER_H__
+#ifndef __SENSOR_PROVIDER_CHANNEL_HANDLER__
+#define __SENSOR_PROVIDER_CHANNEL_HANDLER__
 
-#include <ipc_client.h>
-#include <channel.h>
 #include <channel_handler.h>
-#include <event_loop.h>
 #include <sensor_internal.h>
-#include <sensor_info.h>
-#include <sensor_types.h>
-#include <map>
-#include <atomic>
+#include "sensor_provider.h"
 
 namespace sensor {
 
-class sensor_provider {
+class sensor_provider::channel_handler : public ipc::channel_handler
+{
 public:
-	sensor_provider(const char *uri);
-	virtual ~sensor_provider();
+	channel_handler(sensor_provider *provider);
 
-	const char *get_uri(void);
-	sensor_info *get_sensor_info(void);
+	void connected(ipc::channel *ch);
+	void disconnected(ipc::channel *ch);
+	void read(ipc::channel *ch, ipc::message &msg);
 
-	bool connect(void);
-	bool disconnect(void);
-	void restore(void);
+	void read_complete(ipc::channel *ch);
+	void error_caught(ipc::channel *ch, int error);
 
 	void set_start_cb(sensord_provider_start_cb cb, void *user_data);
 	void set_stop_cb(sensord_provider_stop_cb cb, void *user_data);
 	void set_interval_cb(sensord_provider_set_interval_cb cb, void *user_data);
 
-	int publish(sensor_data_t *data, int len);
-
 private:
-	class channel_handler;
+	sensor_provider *m_provider;
 
-	bool init(const char *uri);
-	void deinit(void);
+	sensord_provider_start_cb m_start_cb;
+	sensord_provider_stop_cb m_stop_cb;
+	sensord_provider_set_interval_cb m_set_interval_cb;
 
-	bool is_connected(void);
-
-	int serialize(sensor_info *info, char **bytes);
-	int send_sensor_info(sensor_info *info);
-
-	sensor_info m_sensor;
-
-	ipc::ipc_client *m_client;
-	ipc::channel *m_channel;
-	ipc::event_loop m_loop;
-	channel_handler *m_handler;
-	std::atomic<bool> m_connected;
+	void *m_start_user_data;
+	void *m_stop_user_data;
+	void *m_set_interval_user_data;
 };
 
 }
 
-#endif /* __SENSOR_PROVIDER_H__ */
+#endif /* __SENSOR_PROVIDER_CHANNEL_HANDLER__ */

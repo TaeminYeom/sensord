@@ -27,6 +27,8 @@
 #include <message.h>
 #include <channel.h>
 
+#include "sensor_manager_channel_handler.h"
+
 #define SIZE_STR_SENSOR_ALL 27
 
 using namespace sensor;
@@ -170,7 +172,7 @@ bool sensor_manager::init(void)
 	m_client = new(std::nothrow) ipc::ipc_client(SENSOR_CHANNEL_PATH);
 	retvm_if(!m_client, false, "Failed to allocate memory");
 
-	m_handler = new(std::nothrow) sensor_manager_handler(this);
+	m_handler = new(std::nothrow) channel_handler(this);
 	if (!m_handler) {
 		delete m_client;
 		m_client = NULL;
