@@ -20,6 +20,7 @@
 #include <sensor_internal.h>
 #include <sensor_internal_deprecated.h>
 #include <sensor_types.h>
+#include <sensor_types_private.h>
 #include <sensor_utils.h>
 
 #include <channel_handler.h>
@@ -28,6 +29,7 @@
 #include <sensor_provider.h>
 #include <sensor_log.h>
 #include <unordered_map>
+#include <regex>
 
 #define CONVERT_OPTION_PAUSE_POLICY(option) ((option) ^ 0b11)
 
@@ -591,6 +593,14 @@ API int sensord_remove_sensor_removed_cb(sensord_removed_cb callback)
 API int sensord_create_provider(const char *uri, sensord_provider_h *provider)
 {
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
+
+	std::string str_uri(uri);
+	retvm_if(str_uri.find(PREDEFINED_TYPE_URI) != std::string::npos,
+			-EINVAL, "Invalid URI format[%s]", uri);
+
+	static std::regex uri_regex(SENSOR_URI_REGEX, std::regex::optimize);
+	retvm_if(!std::regex_match(uri, uri_regex),
+			-EINVAL, "Invalid URI format[%s]", uri);
 
 	sensor_provider *p;
 

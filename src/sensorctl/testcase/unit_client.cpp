@@ -174,7 +174,7 @@ static gboolean publish(gpointer gdata)
 /* TODO: change it from manual test to auto-test */
 TESTCASE(sensor_api_mysensor_provider, provider_p_1)
 {
-	const char *uri = "http://example.org/mysensor/mysensor";
+	const char *uri = "http://example.org/sensor/mysensor/mysensor";
 	const char *name = "mysensor";
 	const char *vendor = "tizen";
 
@@ -220,7 +220,7 @@ TESTCASE(sensor_api_mysensor_provider, provider_p_1)
 
 TESTCASE(sensor_api_mysensor_listener, listener_p_1)
 {
-	const char *uri = "http://example.org/mysensor/mysensor";
+	const char *uri = "http://example.org/sensor/mysensor/mysensor";
 	int err;
 	bool ret;
 	int handle;
@@ -259,7 +259,7 @@ TESTCASE(sensor_api_mysensor_listener, listener_p_1)
 
 static void add_mysensor(void)
 {
-	const char *uri = "http://example.org/mysensor/mysensor";
+	const char *uri = "http://example.org/sensor/mysensor/mysensor";
 	const char *name = "mysensor";
 	const char *vendor = "tizen";
 
