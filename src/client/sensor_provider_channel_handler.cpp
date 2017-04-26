@@ -51,16 +51,18 @@ void sensor_provider::channel_handler::read(ipc::channel *ch, ipc::message &msg)
 {
 	switch (msg.type()) {
 	case CMD_PROVIDER_START:
-		m_start_cb(m_provider, m_start_user_data);
+		if (m_start_cb)
+			m_start_cb(m_provider, m_start_user_data);
 		break;
 	case CMD_PROVIDER_STOP:
-		m_stop_cb(m_provider, m_stop_user_data);
+		if (m_stop_cb)
+			m_stop_cb(m_provider, m_stop_user_data);
 		break;
 	case CMD_PROVIDER_ATTR_INT:
 		cmd_provider_attr_int_t buf;
 		msg.disclose((char *)&buf);
 
-		if (buf.attribute == SENSORD_ATTRIBUTE_INTERVAL)
+		if (buf.attribute == SENSORD_ATTRIBUTE_INTERVAL && m_set_interval_cb)
 			m_set_interval_cb(m_provider, buf.value, m_set_interval_user_data);
 		break;
 	}
