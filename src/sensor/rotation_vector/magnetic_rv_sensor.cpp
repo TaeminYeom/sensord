@@ -23,14 +23,14 @@
 #include <sensor_types.h>
 #include <fusion_util.h>
 
-#define NAME_SENSOR  "http://tizen.org/sensor/mag_rotation_vector/tizen_default"
+#define NAME_SENSOR  "http://tizen.org/sensor/geomagnetic_rotation_vector/tizen_default"
 #define NAME_VENDOR  "tizen.org"
 
 #define SRC_ID_ACC   0x1
 #define SRC_STR_ACC  "http://tizen.org/sensor/accelerometer"
 
 #define SRC_ID_MAG   0x3
-#define SRC_STR_MAG  "http://tizen.org/sensor/geomagnetic"
+#define SRC_STR_MAG  "http://tizen.org/sensor/magnetic"
 
 static sensor_info2_t sensor_info = {
 	id: 0x1,

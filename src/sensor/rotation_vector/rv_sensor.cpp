@@ -33,7 +33,7 @@
 #define SRC_STR_GYRO "http://tizen.org/sensor/gyroscope"
 
 #define SRC_ID_MAG   0x3
-#define SRC_STR_MAG  "http://tizen.org/sensor/geomagnetic"
+#define SRC_STR_MAG  "http://tizen.org/sensor/magnetic"
 
 static sensor_info2_t sensor_info = {
 	id: 0x1,

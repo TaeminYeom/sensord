@@ -30,7 +30,6 @@ using namespace sensor;
 
 sensor_info::sensor_info()
 : m_type(UNKNOWN_SENSOR)
-, m_type_uri(SENSOR_UNKNOWN_TYPE)
 , m_uri(SENSOR_UNKNOWN_NAME)
 , m_model(SENSOR_UNKNOWN_NAME)
 , m_vendor(SENSOR_UNKNOWN_NAME)
@@ -46,7 +45,6 @@ sensor_info::sensor_info()
 
 sensor_info::sensor_info(const sensor_info &info)
 : m_type(info.m_type)
-, m_type_uri(info.m_type_uri)
 , m_uri(info.m_uri)
 , m_model(info.m_model)
 , m_vendor(info.m_vendor)
@@ -63,13 +61,12 @@ sensor_info::sensor_info(const sensor_info &info)
 sensor_info::sensor_info(const sensor_info_t &info)
 {
 	/* TODO: HAL should change name from single name to URI */
-	const char *type_uri = sensor::utils::get_uri((sensor_type_t)info.type);
-	std::string name(type_uri);
-	name.append("/").append(info.name);
+	const char *type = sensor::utils::get_uri((sensor_type_t)info.type);
+	std::string uri(type);
+	uri.append("/").append(info.name);
 
 	set_type((sensor_type_t)info.type);
-	set_type_uri(type_uri);
-	set_uri(name.c_str());
+	set_uri(uri.c_str());
 	set_model(info.model_name);
 	set_vendor(info.vendor);
 	set_min_range(info.min_range);
@@ -88,7 +85,6 @@ sensor_info::sensor_info(const sensor_info2_t &info)
 	std::size_t found = uri.find_last_of("/\\");
 
 	set_type(info.type);
-	set_type_uri(uri.substr(0, found).c_str());
 	set_uri(uri.c_str());
 	set_model(uri.substr(found + 1, uri.length()).c_str());
 	set_vendor(info.vendor);
@@ -104,11 +100,6 @@ sensor_info::sensor_info(const sensor_info2_t &info)
 sensor_type_t sensor_info::get_type(void)
 {
 	return m_type;
-}
-
-std::string &sensor_info::get_type_uri(void)
-{
-	return m_type_uri;
 }
 
 std::string &sensor_info::get_uri(void)
@@ -166,11 +157,6 @@ void sensor_info::set_type(sensor_type_t type)
 	m_type = type;
 }
 
-void sensor_info::set_type_uri(const char *type_uri)
-{
-	m_type_uri = type_uri;
-}
-
 void sensor_info::set_uri(const char *name)
 {
 	m_uri = name;
@@ -224,7 +210,6 @@ void sensor_info::set_privilege(const char *privilege)
 void sensor_info::serialize(raw_data_t &data)
 {
 	put(data, m_type);
-	put(data, m_type_uri);
 	put(data, m_uri);
 	put(data, m_model);
 	put(data, m_vendor);
@@ -246,7 +231,6 @@ void sensor_info::deserialize(const char *data, int data_len)
 	it = get(it, type);
 	m_type = (sensor_type_t)type;
 
-	it = get(it, m_type_uri);
 	it = get(it, m_uri);
 	it = get(it, m_model);
 	it = get(it, m_vendor);
@@ -261,7 +245,6 @@ void sensor_info::deserialize(const char *data, int data_len)
 
 void sensor_info::show(void)
 {
-	_I("Type = %s", m_type_uri.c_str());
 	_I("URI = %s", m_uri.c_str());
 	_I("Model = %s", m_model.c_str());
 	_I("Vendor = %s", m_vendor.c_str());
@@ -277,7 +260,6 @@ void sensor_info::show(void)
 void sensor_info::clear(void)
 {
 	m_type = UNKNOWN_SENSOR;
-	m_type_uri.clear();
 	m_uri.clear();
 	m_model.clear();
 	m_vendor.clear();

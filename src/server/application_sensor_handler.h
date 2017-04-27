@@ -23,6 +23,7 @@
 #include <channel.h>
 #include <sensor_types.h>
 #include <unordered_map>
+#include <atomic>
 
 #include "sensor_handler.h"
 #include "sensor_observer.h"
@@ -31,11 +32,11 @@ namespace sensor {
 
 class application_sensor_handler : public sensor_handler {
 public:
-	application_sensor_handler(const sensor_info &info);
+	application_sensor_handler(const sensor_info &info, ipc::channel *ch);
 	~application_sensor_handler();
 
 	/* TODO: const */
-	int post(sensor_data_t *data, int len);
+	int publish(sensor_data_t *data, int len);
 
 	/* sensor interface */
 	const sensor_info &get_sensor_info(void);
@@ -52,7 +53,14 @@ public:
 
 private:
 	sensor_info m_info;
+	ipc::channel *m_ch;
+	std::atomic<bool> m_started;
+	int32_t m_prev_interval;
+
+	int get_min_interval(void);
+
 	std::vector<sensor_handler *> m_required_sensors;
+	std::unordered_map<sensor_observer *, int> m_interval_map;
 };
 
 }

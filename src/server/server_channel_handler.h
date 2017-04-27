@@ -44,7 +44,10 @@ public:
 	void error_caught(ipc::channel *ch, int error) {}
 
 private:
+	int manager_connect(ipc::channel *ch, ipc::message &msg);
+	int manager_disconnect(ipc::channel *ch, ipc::message &msg);
 	int manager_get_sensor_list(ipc::channel *ch, ipc::message &msg);
+
 
 	int listener_connect(ipc::channel *ch, ipc::message &msg);
 	int listener_disconnect(ipc::channel *ch, ipc::message &msg);
@@ -56,7 +59,7 @@ private:
 
 	int provider_connect(ipc::channel *ch, ipc::message &msg);
 	int provider_disconnect(ipc::channel *ch, ipc::message &msg);
-	int provider_post(ipc::channel *ch, ipc::message &msg);
+	int provider_publish(ipc::channel *ch, ipc::message &msg);
 
 	int has_privileges(ipc::channel *ch, ipc::message &msg);
 
@@ -68,14 +71,14 @@ private:
 	sensor_manager *m_manager;
 
 	/* {id, listener} */
-	std::unordered_map<uint32_t, sensor_listener_proxy *> m_listeners;
+	static std::unordered_map<uint32_t, sensor_listener_proxy *> m_listeners;
 
 	/* {channel, id} */
-	std::unordered_map<ipc::channel *, uint32_t> m_listener_ids;
+	static std::unordered_map<ipc::channel *, uint32_t> m_listener_ids;
 
-	/* {name, application_sensor_handler} */
-	/* TODO: move it to sensor_manager */
-	std::unordered_map<std::string, application_sensor_handler *> m_sensors;
+	/* {channel, application_sensor_handler} */
+	/* it should move to sensor_manager */
+	static std::unordered_map<ipc::channel *, application_sensor_handler *> m_app_sensors;
 };
 
 }

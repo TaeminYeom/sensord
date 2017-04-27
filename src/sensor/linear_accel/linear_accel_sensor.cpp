@@ -23,7 +23,7 @@
 #include <sensor_types.h>
 #include <fusion_util.h>
 
-#define NAME_SENSOR "http://tizen.org/sensor/linear_accel/tizen_default"
+#define NAME_SENSOR "http://tizen.org/sensor/linear_acceleration/tizen_default"
 #define NAME_VENDOR "tizen.org"
 
 #define SRC_ID_ACC   0x1

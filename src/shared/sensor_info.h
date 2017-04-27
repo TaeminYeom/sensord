@@ -39,9 +39,8 @@ public:
 	sensor_info(const sensor_info_t &info);
 	sensor_info(const sensor_info2_t &info);
 
-	/* TODO: it would be better to get_type() returns type(URI) */
+	/* TODO: it would be better to return type(URI) */
 	sensor_type_t get_type(void);
-	std::string &get_type_uri(void);
 	std::string &get_uri(void);
 	std::string &get_model(void);
 	std::string &get_vendor(void);
@@ -53,9 +52,7 @@ public:
 	bool is_wakeup_supported(void);
 	std::string &get_privilege(void);
 
-	/* TODO: it would be better to get_type() returns type(URI) */
 	void set_type(sensor_type_t type);
-	void set_type_uri(const char *type_uri);
 	void set_uri(const char *name);
 	void set_model(const char *name);
 	void set_vendor(const char *vendor);
@@ -75,7 +72,6 @@ public:
 
 private:
 	sensor_type_t m_type;
-	std::string m_type_uri;
 	std::string m_uri;
 	std::string m_model;
 	std::string m_vendor;

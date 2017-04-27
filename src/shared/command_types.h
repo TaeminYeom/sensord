@@ -32,10 +32,14 @@ enum cmd_type_e {
 	CMD_NONE = 0,
 
 	/* Manager */
+	CMD_MANAGER_CONNECT = 0x100,
+	CMD_MANAGER_DISCONNECT,
 	CMD_MANAGER_SENSOR_LIST,
+	CMD_MANAGER_SENSOR_ADDED,
+	CMD_MANAGER_SENSOR_REMOVED,
 
 	/* Listener */
-	CMD_LISTENER_EVENT,
+	CMD_LISTENER_EVENT = 0x200,
 	CMD_LISTENER_ACC_EVENT,
 	CMD_LISTENER_CONNECT,
 	CMD_LISTENER_DISCONNECT,
@@ -45,13 +49,16 @@ enum cmd_type_e {
 	CMD_LISTENER_ATTR_STR,
 	CMD_LISTENER_GET_DATA,
 
-	/* Provider(Dyanmic/External sensor) */
-	CMD_PROVIDER_CMD_EVENT,
-	CMD_PROVIDER_CONNECT,
+	/* Provider */
+	CMD_PROVIDER_CONNECT = 0x300,
 	CMD_PROVIDER_DISCONNECT,
-	CMD_PROVIDER_POST,
+	CMD_PROVIDER_START,
+	CMD_PROVIDER_STOP,
+	CMD_PROVIDER_ATTR_INT,
+	CMD_PROVIDER_PUBLISH,
 
-	CMD_HAS_PRIVILEGE,
+	/* Etc */
+	CMD_HAS_PRIVILEGE = 0x1000,
 
 	CMD_CNT,
 };
@@ -98,22 +105,20 @@ typedef struct {
 } cmd_listener_get_data_t;
 
 typedef struct {
-	int provider_id;
-	int sensor_id;
-	char sensor[NAME_MAX];
-	char s_info[0];
+	char info[0];
 } cmd_provider_connect_t;
 
 typedef struct {
-	int provider_id;
-	char sensor[NAME_MAX];
 } cmd_provider_disconnect_t;
 
 typedef struct {
-	int provider_id;
-	char sensor[NAME_MAX];
-	sensorhub_data_t base_data;
-} cmd_provider_post_t;
+	sensor_data_t data;
+} cmd_provider_publish_t;
+
+typedef struct  {
+	int attribute;
+	int value;
+} cmd_provider_attr_int_t;
 
 typedef struct {
 	char sensor[NAME_MAX];

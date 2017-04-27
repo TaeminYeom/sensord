@@ -26,11 +26,17 @@
 #include <command_types.h>
 
 #include "permission_checker.h"
+#include "application_sensor_handler.h"
 
 #define PRIV_DELIMINATOR ";"
 
 using namespace sensor;
 using namespace ipc;
+
+/* TODO */
+std::unordered_map<uint32_t, sensor_listener_proxy *> server_channel_handler::m_listeners;
+std::unordered_map<ipc::channel *, uint32_t> server_channel_handler::m_listener_ids;
+std::unordered_map<ipc::channel *, application_sensor_handler *> server_channel_handler::m_app_sensors;
 
 server_channel_handler::server_channel_handler(sensor_manager *manager)
 : m_manager(manager)
@@ -47,14 +53,26 @@ void server_channel_handler::connected(channel *ch)
 
 void server_channel_handler::disconnected(channel *ch)
 {
-	auto it = m_listener_ids.find(ch);
-	ret_if(it == m_listener_ids.end());
+	m_manager->deregister_channel(ch);
 
-	_I("Disconnected listener[%u]", it->second);
+	auto it_asensor = m_app_sensors.find(ch);
+	if (it_asensor != m_app_sensors.end()) {
+		sensor_info info = it_asensor->second->get_sensor_info();
 
-	delete m_listeners[it->second];
-	m_listeners.erase(it->second);
-	m_listener_ids.erase(ch);
+		_I("Disconnected provider[%s]", info.get_uri().c_str());
+
+		m_manager->deregister_sensor(info.get_uri());
+		m_app_sensors.erase(ch);
+	}
+
+	auto it_listener = m_listener_ids.find(ch);
+	if (it_listener != m_listener_ids.end()) {
+		_I("Disconnected listener[%u]", it_listener->second);
+
+		delete m_listeners[it_listener->second];
+		m_listeners.erase(it_listener->second);
+		m_listener_ids.erase(ch);
+	}
 }
 
 void server_channel_handler::read(channel *ch, message &msg)
@@ -62,6 +80,10 @@ void server_channel_handler::read(channel *ch, message &msg)
 	int err = -EINVAL;
 
 	switch (msg.type()) {
+	case CMD_MANAGER_CONNECT:
+		err = manager_connect(ch, msg); break;
+	case CMD_MANAGER_DISCONNECT:
+		err = manager_disconnect(ch, msg); break;
 	case CMD_MANAGER_SENSOR_LIST:
 		err = manager_get_sensor_list(ch, msg); break;
 	case CMD_LISTENER_CONNECT:
@@ -82,8 +104,8 @@ void server_channel_handler::read(channel *ch, message &msg)
 		err = provider_connect(ch, msg); break;
 	case CMD_PROVIDER_DISCONNECT:
 		err = provider_disconnect(ch, msg); break;
-	case CMD_PROVIDER_POST:
-		err = provider_post(ch, msg); break;
+	case CMD_PROVIDER_PUBLISH:
+		err = provider_publish(ch, msg); break;
 	case CMD_HAS_PRIVILEGE:
 		err = has_privileges(ch, msg); break;
 	default: break;
@@ -93,6 +115,18 @@ void server_channel_handler::read(channel *ch, message &msg)
 		message reply(err);
 		ch->send_sync(&reply);
 	}
+}
+
+int server_channel_handler::manager_connect(channel *ch, message &msg)
+{
+	m_manager->register_channel(ch);
+	return send_reply(ch, OP_SUCCESS);
+}
+
+int server_channel_handler::manager_disconnect(channel *ch, message &msg)
+{
+	m_manager->deregister_channel(ch);
+	return send_reply(ch, OP_SUCCESS);
 }
 
 int server_channel_handler::manager_get_sensor_list(channel *ch, message &msg)
@@ -116,16 +150,13 @@ int server_channel_handler::manager_get_sensor_list(channel *ch, message &msg)
 int server_channel_handler::listener_connect(channel *ch, message &msg)
 {
 	static uint32_t listener_id = 1;
-	sensor_handler *sensor;
 	cmd_listener_connect_t buf;
 
 	msg.disclose((char *)&buf);
 
-	sensor = m_manager->get_sensor(buf.sensor);
-	retv_if(!sensor, OP_ERROR);
-
-	sensor_listener_proxy *listener =
-		new(std::nothrow) sensor_listener_proxy(listener_id, sensor, ch);
+	sensor_listener_proxy *listener;
+	listener = new(std::nothrow) sensor_listener_proxy(listener_id,
+				buf.sensor, m_manager, ch);
 	retvm_if(!listener, OP_ERROR, "Failed to allocate memory");
 	retvm_if(!has_privileges(ch->get_fd(), listener->get_required_privileges()),
 			-EACCES, "Permission denied");
@@ -284,17 +315,56 @@ int server_channel_handler::listener_get_data(channel *ch, message &msg)
 
 int server_channel_handler::provider_connect(channel *ch, message &msg)
 {
-	return send_reply(ch, OP_ERROR);
+	retvm_if(!has_privileges(ch->get_fd(), PRIV_APPLICATION_SENSOR_WRITE),
+			-EACCES, "Permission denied");
+
+	sensor_info info;
+	info.clear();
+	info.deserialize(msg.body(), msg.size());
+
+	info.show();
+
+	application_sensor_handler *sensor;
+	sensor = new(std::nothrow) application_sensor_handler(info, ch);
+	retvm_if(!sensor, -ENOMEM, "Failed to allocate memory");
+
+	if (!m_manager->register_sensor(sensor)) {
+		delete sensor;
+		return -EINVAL;
+	}
+
+	/* temporarily */
+	m_app_sensors[ch] = sensor;
+
+	return send_reply(ch, OP_SUCCESS);
 }
 
 int server_channel_handler::provider_disconnect(channel *ch, message &msg)
 {
-	return send_reply(ch, OP_ERROR);
+	auto it = m_app_sensors.find(ch);
+	retv_if(it == m_app_sensors.end(), -EINVAL);
+
+	sensor_info info = it->second->get_sensor_info();
+
+	m_manager->deregister_sensor(info.get_uri());
+	m_app_sensors.erase(ch);
+
+	return send_reply(ch, OP_SUCCESS);
 }
 
-int server_channel_handler::provider_post(channel *ch, message &msg)
+int server_channel_handler::provider_publish(channel *ch, message &msg)
 {
-	return send_reply(ch, OP_ERROR);
+	auto it = m_app_sensors.find(ch);
+	retv_if(it == m_app_sensors.end(), -EINVAL);
+
+	sensor_data_t *data = (sensor_data_t *)malloc(sizeof(sensor_data_t));
+	retvm_if(!data, -ENOMEM, "Failed to allocate memory");
+
+	msg.disclose((char *)data);
+
+	it->second->publish(data, sizeof(sensor_data_t));
+
+	return OP_SUCCESS;
 }
 
 int server_channel_handler::has_privileges(channel *ch, message &msg)

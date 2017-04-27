@@ -27,41 +27,17 @@
 #include <message.h>
 #include <channel.h>
 
+#include "sensor_manager_channel_handler.h"
+
 #define SIZE_STR_SENSOR_ALL 27
 
 using namespace sensor;
 
-class manager_handler : public ipc::channel_handler
-{
-public:
-	manager_handler(sensor_manager *manager)
-	: m_manager(manager)
-	{}
-	void connected(ipc::channel *ch) {}
-	void disconnected(ipc::channel *ch)
-	{
-		/* If channel->disconnect() is not explicitly called, it will be restored */
-		m_manager->restore();
-	}
-
-	void read(ipc::channel *ch, ipc::message &msg)
-	{
-		/* TODO: if dynamic sensor is loaded,
-		 * it will be called with the sensor information */
-	}
-
-	void read_complete(ipc::channel *ch) {}
-	void error_caught(ipc::channel *ch, int error) {}
-
-private:
-	sensor_manager *m_manager;
-};
-
 sensor_manager::sensor_manager()
 : m_client(NULL)
-, m_handler(NULL)
 , m_channel(NULL)
 , m_connected(false)
+, m_handler(NULL)
 {
 	init();
 }
@@ -69,16 +45,6 @@ sensor_manager::sensor_manager()
 sensor_manager::~sensor_manager()
 {
 	deinit();
-}
-
-int sensor_manager::get_sensor(sensor_type_t type, sensor_t *sensor)
-{
-	return get_sensor(utils::get_uri(type), sensor);
-}
-
-int sensor_manager::get_sensors(sensor_type_t type, sensor_t **list, int *count)
-{
-	return get_sensors(utils::get_uri(type), list, count);
 }
 
 int sensor_manager::get_sensor(const char *uri, sensor_t *sensor)
@@ -134,13 +100,71 @@ bool sensor_manager::is_supported(const char *uri)
 		return true;
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
-		std::size_t found = (*it).get_uri().rfind(uri);
+		if ((*it).get_uri() == uri)
+			return true;
 
-		if (found != std::string::npos)
+		std::size_t found = (*it).get_uri().find_last_of("/");
+		if (found == std::string::npos)
+			continue;
+
+		if ((*it).get_uri().substr(0, found) == uri)
 			return true;
 	}
 
 	return false;
+}
+
+int sensor_manager::add_sensor(sensor_info &info)
+{
+	retv_if(is_supported(info.get_uri().c_str()), OP_ERROR);
+
+	m_sensors.push_back(info);
+
+	return OP_SUCCESS;
+}
+
+int sensor_manager::add_sensor(sensor_provider *provider)
+{
+	retvm_if(!provider, -EINVAL, "Invalid parameter");
+	return add_sensor(*(provider->get_sensor_info()));
+}
+
+int sensor_manager::remove_sensor(const char *uri)
+{
+	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
+		if ((*it).get_uri() == uri) {
+			m_sensors.erase(it);
+			return OP_SUCCESS;
+		}
+	}
+
+	return OP_ERROR;
+}
+
+int sensor_manager::remove_sensor(sensor_provider *provider)
+{
+	retvm_if(!provider, -EINVAL, "Invalid parameter");
+	return remove_sensor(provider->get_uri());
+}
+
+void sensor_manager::add_sensor_added_cb(sensord_added_cb cb, void *user_data)
+{
+	m_handler->add_sensor_added_cb(cb, user_data);
+}
+
+void sensor_manager::remove_sensor_added_cb(sensord_added_cb cb)
+{
+	m_handler->remove_sensor_added_cb(cb);
+}
+
+void sensor_manager::add_sensor_removed_cb(sensord_removed_cb cb, void *user_data)
+{
+	m_handler->add_sensor_removed_cb(cb, user_data);
+}
+
+void sensor_manager::remove_sensor_removed_cb(sensord_removed_cb cb)
+{
+	m_handler->remove_sensor_removed_cb(cb);
 }
 
 bool sensor_manager::init(void)
@@ -148,7 +172,7 @@ bool sensor_manager::init(void)
 	m_client = new(std::nothrow) ipc::ipc_client(SENSOR_CHANNEL_PATH);
 	retvm_if(!m_client, false, "Failed to allocate memory");
 
-	m_handler = new(std::nothrow) manager_handler(this);
+	m_handler = new(std::nothrow) channel_handler(this);
 	if (!m_handler) {
 		delete m_client;
 		m_client = NULL;
@@ -174,6 +198,16 @@ bool sensor_manager::connect_channel(void)
 	m_channel = m_client->connect(m_handler, &m_loop);
 	retvm_if(!m_channel, false, "Failed to connect to server");
 
+	ipc::message msg;
+	msg.set_type(CMD_MANAGER_CONNECT);
+	m_channel->send_sync(&msg);
+	m_channel->read_sync(msg);
+
+	if (msg.header()->err < 0) {
+		/* TODO: if failed, disconnect channel */
+		return false;
+	}
+
 	m_connected.store(true);
 
 	_D("Connected");
@@ -191,6 +225,14 @@ bool sensor_manager::connect(void)
 void sensor_manager::disconnect(void)
 {
 	ret_if(!is_connected());
+
+	ipc::message msg;
+	ipc::message reply;
+	msg.set_type(CMD_MANAGER_DISCONNECT);
+
+	m_channel->send_sync(&msg);
+	m_channel->read_sync(reply);
+	retm_if(reply.header()->err < 0, "Failed to disconnect");
 
 	m_connected.store(false);
 	m_channel->disconnect();
@@ -296,15 +338,23 @@ sensor_info *sensor_manager::get_info(const char *uri)
 		return &m_sensors[0];
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
-		std::size_t found = (*it).get_uri().rfind(uri);
-
-		if (found == std::string::npos)
+		if ((*it).get_uri() != uri)
 			continue;
 
-		if ((*it).get_privilege().empty())
+		if ((*it).get_privilege().empty() || has_privilege((*it).get_uri()))
 			return &*it;
 
-		if (has_privilege((*it).get_uri()))
+		return NULL;
+	}
+
+	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
+		std::size_t found = (*it).get_uri().find_last_of("/");
+		if (found == std::string::npos)
+			continue;
+		if ((*it).get_uri().substr(0, found) != uri)
+			continue;
+
+		if ((*it).get_privilege().empty() || has_privilege((*it).get_uri()))
 			return &*it;
 	}
 
@@ -320,17 +370,23 @@ std::vector<sensor_info *> sensor_manager::get_infos(const char *uri)
 		all = true;
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
-		std::size_t found = (*it).get_uri().rfind(uri);
+		if ((*it).get_uri() != uri)
+			continue;
 
+		if ((*it).get_privilege().empty() || has_privilege((*it).get_uri()))
+			infos.push_back(&*it);
+
+		return infos;
+	}
+
+	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
+		std::size_t found = (*it).get_uri().find_last_of("/");
 		if (!all && found == std::string::npos)
 			continue;
-
-		if ((*it).get_privilege().empty()) {
-			infos.push_back(&*it);
+		if (!all && (*it).get_uri().substr(0, found) != uri)
 			continue;
-		}
 
-		if (has_privilege((*it).get_uri()))
+		if ((*it).get_privilege().empty() || has_privilege((*it).get_uri()))
 			infos.push_back(&*it);
 	}
 

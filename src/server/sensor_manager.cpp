@@ -21,6 +21,8 @@
 
 #include <unistd.h>
 #include <sensor_log.h>
+#include <message.h>
+#include <command_types.h>
 #include <string>
 #include <vector>
 #include <memory>
@@ -105,6 +107,53 @@ bool sensor_manager::is_supported(std::string uri)
 	return false;
 }
 
+int sensor_manager::serialize(sensor_info *info, char **bytes)
+{
+	int size;
+	raw_data_t *raw = new(std::nothrow) raw_data_t;
+	retvm_if(!raw, -ENOMEM, "Failed to allocated memory");
+
+	info->serialize(*raw);
+
+	*bytes = new(std::nothrow) char[raw->size()];
+	retvm_if(!*bytes, -ENOMEM, "Failed to allocate memory");
+
+	std::copy(raw->begin(), raw->end(), *bytes);
+
+	size = raw->size();
+	delete raw;
+
+	return size;
+}
+
+void sensor_manager::send(ipc::message &msg)
+{
+	for (auto it = m_channels.begin(); it != m_channels.end(); ++it)
+		(*it)->send_sync(&msg);
+}
+
+void sensor_manager::send_added_msg(sensor_info *info)
+{
+	char *bytes;
+	int size;
+
+	size = serialize(info, &bytes);
+
+	ipc::message msg((const char *)bytes, size);
+	msg.set_type(CMD_MANAGER_SENSOR_ADDED);
+
+	send(msg);
+}
+
+void sensor_manager::send_removed_msg(const std::string &uri)
+{
+	ipc::message msg;
+	msg.set_type(CMD_MANAGER_SENSOR_REMOVED);
+	msg.enclose(uri.c_str(), uri.size());
+
+	send(msg);
+}
+
 bool sensor_manager::register_sensor(sensor_handler *sensor)
 {
 	retvm_if(!sensor, false, "Invalid sensor");
@@ -115,6 +164,8 @@ bool sensor_manager::register_sensor(sensor_handler *sensor)
 	retvm_if(it != m_sensors.end(), false, "There is already a sensor with the same name");
 
 	m_sensors[info.get_uri()] = sensor;
+
+	send_added_msg(&info);
 
 	_I("Registered[%s]", info.get_uri().c_str());
 
@@ -129,15 +180,40 @@ void sensor_manager::deregister_sensor(const std::string uri)
 	delete it->second;
 	m_sensors.erase(it);
 
+	send_removed_msg(uri);
+
 	_I("Deregistered[%s]", uri.c_str());
+}
+
+void sensor_manager::register_channel(ipc::channel *ch)
+{
+	ret_if(!ch);
+	m_channels.push_back(ch);
+}
+
+void sensor_manager::deregister_channel(ipc::channel *ch)
+{
+	ret_if(!ch);
+
+	for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
+		if (*it == ch) {
+			m_channels.erase(it);
+			return;
+		}
+	}
 }
 
 sensor_handler *sensor_manager::get_sensor_by_type(const std::string uri)
 {
-	auto it = m_sensors.begin();
-	for (; it != m_sensors.end(); ++it) {
-		std::size_t found = it->first.rfind(uri);
-		if (found != std::string::npos)
+	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
+		if (it->first == uri)
+			return it->second;
+
+		std::size_t found = it->first.find_last_of("/");
+		if (found == std::string::npos)
+			continue;
+
+		if (it->first.substr(0, found) == uri)
 			return it->second;
 	}
 
@@ -247,6 +323,7 @@ static void put_int_to_vec(std::vector<char> &data, int value)
 	std::copy(&buf[0], &buf[sizeof(buf)], back_inserter(data));
 }
 
+/* TODO: remove socket fd parameter */
 /* packet format :
  * [count:4] {[size:4] [info:n] [size:4] [info:n] ...}
  */

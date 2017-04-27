@@ -48,6 +48,11 @@ API bool sensord_get_type(sensor_t sensor, sensor_type_t *type)
 	return false;
 }
 
+API const char* sensord_get_uri(sensor_t sensor)
+{
+	return NULL;
+}
+
 API const char* sensord_get_name(sensor_t sensor)
 {
 	return NULL;
@@ -201,4 +206,96 @@ API bool sensord_register_hub_event(int handle, unsigned int event_type, unsigne
 API bool sensord_set_passive_mode(int handle, bool passive)
 {
 	return false;
+}
+
+/* Sensor Internal API using URI */
+API int sensord_get_default_sensor_by_uri(const char *uri, sensor_t *sensor)
+{
+	return OP_ERROR;
+}
+
+API int sensord_get_sensors_by_uri(const char *uri, sensor_t **list, int *count)
+{
+	return OP_ERROR;
+}
+
+API int sensord_add_sensor_added_cb(sensord_added_cb callback, void *user_data)
+{
+	return OP_ERROR;
+}
+
+API int sensord_remove_sensor_added_cb(sensord_added_cb callback)
+{
+	return OP_ERROR;
+}
+
+API int sensord_add_sensor_removed_cb(sensord_removed_cb callback, void *user_data)
+{
+	return OP_ERROR;
+}
+
+API int sensord_remove_sensor_removed_cb(sensord_removed_cb callback)
+{
+	return OP_ERROR;
+}
+
+/* Sensor provider */
+API int sensord_create_provider(const char *uri, sensord_provider_h *provider)
+{
+	return OP_ERROR;
+}
+
+API int sensord_destroy_provider(sensord_provider_h provider)
+{
+	return OP_ERROR;
+}
+
+API int sensord_add_provider(sensord_provider_h provider)
+{
+	return OP_ERROR;
+}
+
+API int sensord_remove_provider(sensord_provider_h provider)
+{
+	return OP_ERROR;
+}
+
+API int sensord_provider_set_name(sensord_provider_h provider, const char *name)
+{
+	return OP_ERROR;
+}
+
+API int sensord_provider_set_vendor(sensord_provider_h provider, const char *vendor)
+{
+	return OP_ERROR;
+}
+
+API int sensord_provider_set_range(sensord_provider_h provider, float min_range, float max_range)
+{
+	return OP_ERROR;
+}
+
+API int sensord_provider_set_resolution(sensord_provider_h provider, float resolution)
+{
+	return OP_ERROR;
+}
+
+API int sensord_provider_set_start_cb(sensord_provider_h provider, sensord_provider_start_cb callback, void *user_data)
+{
+	return OP_ERROR;
+}
+
+API int sensord_provider_set_stop_cb(sensord_provider_h provider, sensord_provider_stop_cb callback, void *user_data)
+{
+	return OP_ERROR;
+}
+
+API int sensord_provider_set_set_interval_cb(sensord_provider_h provider, sensord_provider_set_interval_cb callback, void *user_data)
+{
+	return OP_ERROR;
+}
+
+API int sensord_provider_publish(sensord_provider_h provider, sensor_data_t data)
+{
+	return OP_ERROR;
 }

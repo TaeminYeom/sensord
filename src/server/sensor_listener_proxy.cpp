@@ -25,12 +25,15 @@
 #include <sensor_log.h>
 #include <sensor_types.h>
 
+#include "sensor_handler.h"
+
 using namespace sensor;
 
-sensor_listener_proxy::sensor_listener_proxy(
-		uint32_t id, sensor_handler *sensor, ipc::channel *ch)
+sensor_listener_proxy::sensor_listener_proxy(uint32_t id,
+			std::string uri, sensor_manager *manager, ipc::channel *ch)
 : m_id(id)
-, m_sensor(sensor)
+, m_uri(uri)
+, m_manager(manager)
 , m_ch(ch)
 , m_passive(false)
 , m_pause_policy(SENSORD_PAUSE_ALL)
@@ -63,16 +66,22 @@ int sensor_listener_proxy::update(const char *uri, ipc::message *msg)
 
 int sensor_listener_proxy::start(void)
 {
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
 	/* TODO: listen pause policy */
-	return m_sensor->start(this);
+	return sensor->start(this);
 }
 
 int sensor_listener_proxy::stop(void)
 {
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
 	/* TODO: listen pause policy */
 	int ret;
 
-	ret = m_sensor->stop(this);
+	ret = sensor->stop(this);
 	retv_if(ret < 0, OP_ERROR);
 
 	/* unset attributes */
@@ -84,12 +93,18 @@ int sensor_listener_proxy::stop(void)
 
 int sensor_listener_proxy::set_interval(unsigned int interval)
 {
-	return m_sensor->set_interval(this, interval);
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
+	return sensor->set_interval(this, interval);
 }
 
 int sensor_listener_proxy::set_max_batch_latency(unsigned int max_batch_latency)
 {
-	return m_sensor->set_batch_latency(this, max_batch_latency);
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
+	return sensor->set_batch_latency(this, max_batch_latency);
 }
 
 int sensor_listener_proxy::set_passive_mode(bool passive)
@@ -101,6 +116,9 @@ int sensor_listener_proxy::set_passive_mode(bool passive)
 
 int sensor_listener_proxy::set_attribute(int attribute, int value)
 {
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
 	if (attribute == SENSORD_ATTRIBUTE_PAUSE_POLICY) {
 		m_pause_policy = value;
 		return OP_SUCCESS;
@@ -109,27 +127,39 @@ int sensor_listener_proxy::set_attribute(int attribute, int value)
 		return OP_SUCCESS;
 	}
 
-	return m_sensor->set_attribute(this, attribute, value);
+	return sensor->set_attribute(this, attribute, value);
 }
 
 int sensor_listener_proxy::set_attribute(int attribute, const char *value, int len)
 {
-	return m_sensor->set_attribute(this, attribute, value, len);
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
+	return sensor->set_attribute(this, attribute, value, len);
 }
 
 int sensor_listener_proxy::flush(void)
 {
-	return m_sensor->flush(this);
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
+	return sensor->flush(this);
 }
 
 int sensor_listener_proxy::get_data(sensor_data_t **data, int *len)
 {
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
 	/* TODO : caching the last data & retry logic if there is no data */
-	return m_sensor->get_data(data, len);
+	return sensor->get_data(data, len);
 }
 
 std::string sensor_listener_proxy::get_required_privileges(void)
 {
-	sensor_info info = m_sensor->get_sensor_info();
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, "");
+
+	sensor_info info = sensor->get_sensor_info();
 	return info.get_privilege();
 }
