@@ -1,6 +1,6 @@
 Name:       sensord
 Summary:    Sensor daemon
-Version:    2.0.11
+Version:    4.0.0
 Release:    1
 Group:      System/Sensor Framework
 License:    Apache-2.0
@@ -84,7 +84,8 @@ install -m 0644 %SOURCE2 %{buildroot}%{_unitdir}
 %install_service multi-user.target.wants sensord.service
 %install_service sockets.target.wants sensord.socket
 
-ln -s libsensor.so.2 %{buildroot}%{_libdir}/libsensor.so.1
+ln -s libsensor.so.%{version} %{buildroot}/%{_libdir}/libsensor.so.2
+ln -s libsensor.so.%{version} %{buildroot}/%{_libdir}/libsensor.so.1
 
 %post
 pushd %{_libdir}
