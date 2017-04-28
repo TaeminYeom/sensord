@@ -24,7 +24,7 @@
 
 #include "sensor_log.h"
 
-#define SLEEP_100_MS usleep(100000)
+#define SLEEP_10_MS usleep(10000)
 
 using namespace ipc;
 
@@ -54,7 +54,7 @@ ssize_t stream_socket::on_send(const void *buffer, size_t size) const
 
 		if (len < 0) {
 			if ((errno == EINTR) || (errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-				SLEEP_100_MS;
+				SLEEP_10_MS;
 				continue;
 			}
 
@@ -88,7 +88,7 @@ ssize_t stream_socket::on_recv(void *buffer, size_t size) const
 
 		if (len < 0) {
 			if ((errno == EINTR) || (errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-				SLEEP_100_MS;
+				SLEEP_10_MS;
 				continue;
 			}
 
