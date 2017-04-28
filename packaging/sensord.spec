@@ -33,7 +33,6 @@ of the Sensor Framework. The library replaces the dummy library installed by %{n
 %package    dummy
 Summary:    Sensor Framework 'dummy' library
 Provides:   %{name}-profile_tv = %{version}-%{release}
-Provides:   libsensor.so.2
 
 %description dummy
 This package provides the dummy library of the sensor internal API.
