@@ -38,6 +38,8 @@ public:
 	channel(socket *sock);
 	~channel();
 
+	/* TODO */
+	void bind(void);
 	void bind(channel_handler *handler, event_loop *loop);
 
 	bool connect(channel_handler *handler, event_loop *loop);

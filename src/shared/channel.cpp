@@ -24,6 +24,7 @@
 #include <memory>
 
 #include "sensor_log.h"
+#include "channel_event_handler.h"
 
 #define SYSTEMD_SOCK_BUF_SIZE 40000
 
@@ -109,6 +110,14 @@ void channel::bind(channel_handler *handler, event_loop *loop)
 
 	if (m_handler)
 		m_handler->connected(this);
+}
+
+void channel::bind(void)
+{
+	ret_if(!m_loop);
+	m_event_id = m_loop->add_event(m_socket->get_fd(),
+			(EVENT_IN | EVENT_HUP | EVENT_NVAL),
+			dynamic_cast<channel_event_handler *>(m_handler));
 }
 
 bool channel::connect(channel_handler *handler, event_loop *loop)

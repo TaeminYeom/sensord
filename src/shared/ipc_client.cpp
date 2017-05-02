@@ -50,7 +50,7 @@ channel *ipc_client::connect(channel_handler *handler)
 	return connect(handler, NULL);
 }
 
-channel *ipc_client::connect(channel_handler *handler, event_loop *loop)
+channel *ipc_client::connect(channel_handler *handler, event_loop *loop, bool bind)
 {
 	socket *sock;
 	channel *ch;
@@ -81,7 +81,7 @@ channel *ipc_client::connect(channel_handler *handler, event_loop *loop)
 
 	ch->connect(ev_handler, loop);
 
-	if (loop) {
+	if (loop && bind) {
 		uint64_t id = loop->add_event(sock->get_fd(),
 				(EVENT_IN | EVENT_HUP | EVENT_NVAL), ev_handler);
 		ch->set_event_id(id);

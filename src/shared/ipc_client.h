@@ -38,7 +38,8 @@ public:
 
 	/* call channel->disconnect() after you have used it */
 	channel *connect(channel_handler *handler);
-	channel *connect(channel_handler *handler, event_loop *loop);
+	/* TODO: remove bind parameter */
+	channel *connect(channel_handler *handler, event_loop *loop, bool bind = true);
 
 private:
 	std::string m_path;
