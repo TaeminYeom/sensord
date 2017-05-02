@@ -152,7 +152,7 @@ bool sensor_listener::connect(void)
 	m_cmd_channel = m_client->connect(NULL);
 	retvm_if(!m_cmd_channel, false, "Failed to connect to server");
 
-	m_evt_channel = m_client->connect(m_handler, &m_loop);
+	m_evt_channel = m_client->connect(m_handler, &m_loop, false);
 	retvm_if(!m_evt_channel, false, "Failed to connect to server");
 
 	ipc::message msg;
@@ -169,6 +169,8 @@ bool sensor_listener::connect(void)
 
 	m_id = buf.listener_id;
 	m_connected.store(true);
+
+	m_evt_channel->bind();
 
 	_D("Listener ID[%d]", get_id());
 
