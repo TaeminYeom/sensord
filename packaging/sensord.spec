@@ -33,12 +33,8 @@ of the Sensor Framework. The library replaces the dummy library installed by %{n
 %package    dummy
 Summary:    Sensor Framework 'dummy' library
 Provides:   %{name}-profile_tv = %{version}-%{release}
-%ifarch aarch64
-Provides:   libsensor.so.2()(64bit)
-%else
+# To support old-snapshot-based package builds
 Provides:   libsensor.so.2
-%endif
-
 
 %description dummy
 This package provides the dummy library of the sensor internal API.
@@ -49,6 +45,8 @@ Installing %{name} replaces this dummy library with the actually functional libr
 Summary:    Internal Sensor API (Development)
 Group:      System/Development
 Requires:   %{name}-dummy = %{version}-%{release}
+# To support old-snapshot-based package builds
+Provides:   libsensord-devel
 
 %description devel
 Internal Sensor API (Development)
