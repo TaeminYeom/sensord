@@ -20,9 +20,16 @@
 #ifndef __SENSOR_TYPES_PRIVATE__
 #define __SENSOR_TYPES_PRIVATE__
 
-#define URI_REGEX(CATEGORY) R"~(^http:\/\/[\w-]+(\.[\w-]+)*\/)~" CATEGORY R"~(\/[\w-]+(\.[\w-]+)*(\/[\w-]+(\.[\w-]+)*)$)~"
+#define URI_REGEX(CATEGORY) R"~(^http:\/\/[\w-]+(\.[\w-]+)*\/)~" CATEGORY R"~(\/(general|healthinfo)\/[\w-]+(\.[\w-]+)*(\/[\w-]+(\.[\w-]+)*)$)~"
 #define SENSOR_URI_REGEX URI_REGEX("sensor")
 
 #define PREDEFINED_TYPE_URI "http://tizen.org/sensor/"
+
+#define URI_DELIMITER "/"
+#define PRIVILEGE_HEALTHINFO_STR "healthinfo"
+#define PRIVILEGE_HEALTHINFO_URI "http://tizen.org/privilege/healthinfo"
+
+#define URI_PRIV_INDEX 4
+#define URI_SENSOR_TYPE_INDEX 5
 
 #endif /* __SENSOR_TYPES_PRIVATE__ */

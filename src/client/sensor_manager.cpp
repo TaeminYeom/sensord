@@ -29,13 +29,12 @@
 
 #include "sensor_manager_channel_handler.h"
 
-#define SIZE_STR_SENSOR_ALL 27
-
 using namespace sensor;
 
 sensor_manager::sensor_manager()
 : m_client(NULL)
-, m_channel(NULL)
+, m_cmd_channel(NULL)
+, m_mon_channel(NULL)
 , m_connected(false)
 , m_handler(NULL)
 {
@@ -96,7 +95,7 @@ bool sensor_manager::is_supported(sensor_t sensor)
 
 bool sensor_manager::is_supported(const char *uri)
 {
-	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
+	if (strncmp(uri, utils::get_uri(ALL_SENSOR), strlen(utils::get_uri(ALL_SENSOR))) == 0)
 		return true;
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
@@ -195,18 +194,16 @@ void sensor_manager::deinit(void)
 
 bool sensor_manager::connect_channel(void)
 {
-	m_channel = m_client->connect(m_handler, &m_loop);
-	retvm_if(!m_channel, false, "Failed to connect to server");
-
 	ipc::message msg;
-	msg.set_type(CMD_MANAGER_CONNECT);
-	m_channel->send_sync(&msg);
-	m_channel->read_sync(msg);
 
-	if (msg.header()->err < 0) {
-		/* TODO: if failed, disconnect channel */
-		return false;
-	}
+	m_cmd_channel = m_client->connect(NULL);
+	retvm_if(!m_cmd_channel, false, "Failed to connect to server");
+
+	m_mon_channel = m_client->connect(m_handler, &m_loop);
+	retvm_if(!m_mon_channel, false, "Failed to connect to server");
+
+	msg.set_type(CMD_MANAGER_CONNECT);
+	m_mon_channel->send_sync(&msg);
 
 	m_connected.store(true);
 
@@ -230,16 +227,20 @@ void sensor_manager::disconnect(void)
 	ipc::message reply;
 	msg.set_type(CMD_MANAGER_DISCONNECT);
 
-	m_channel->send_sync(&msg);
-	m_channel->read_sync(reply);
+	m_mon_channel->send_sync(&msg);
+	m_mon_channel->read_sync(reply);
 	retm_if(reply.header()->err < 0, "Failed to disconnect");
 
+	m_mon_channel->disconnect();
+
+	delete m_mon_channel;
+	m_mon_channel = NULL;
+
+	m_cmd_channel->disconnect();
+	delete m_cmd_channel;
+	m_cmd_channel = NULL;
+
 	m_connected.store(false);
-	m_channel->disconnect();
-
-	delete m_channel;
-	m_channel = NULL;
-
 	_D("Disconnected");
 }
 
@@ -294,10 +295,10 @@ bool sensor_manager::get_sensors_internal(void)
 
 	msg.set_type(CMD_MANAGER_SENSOR_LIST);
 
-	ret = m_channel->send_sync(&msg);
+	ret = m_cmd_channel->send_sync(&msg);
 	retvm_if(!ret, false, "Failed to send message");
 
-	ret = m_channel->read_sync(reply);
+	ret = m_cmd_channel->read_sync(reply);
 	retvm_if(!ret, false, "Failed to receive message");
 
 	reply.disclose(buf);
@@ -320,10 +321,10 @@ bool sensor_manager::has_privilege(std::string &uri)
 	memcpy(buf.sensor, uri.c_str(), uri.size());
 	msg.enclose((const char *)&buf, sizeof(buf));
 
-	ret = m_channel->send_sync(&msg);
+	ret = m_cmd_channel->send_sync(&msg);
 	retvm_if(!ret, false, "Failed to send message");
 
-	ret = m_channel->read_sync(reply);
+	ret = m_cmd_channel->read_sync(reply);
 	retvm_if(!ret, false, "Failed to receive message");
 
 	if (reply.header()->err == OP_SUCCESS)
@@ -334,7 +335,7 @@ bool sensor_manager::has_privilege(std::string &uri)
 
 sensor_info *sensor_manager::get_info(const char *uri)
 {
-	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
+	if (strncmp(uri, utils::get_uri(ALL_SENSOR), strlen(utils::get_uri(ALL_SENSOR))) == 0)
 		return &m_sensors[0];
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
@@ -366,7 +367,7 @@ std::vector<sensor_info *> sensor_manager::get_infos(const char *uri)
 	std::vector<sensor_info *> infos;
 	bool all = false;
 
-	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
+	if (strncmp(uri, utils::get_uri(ALL_SENSOR), strlen(utils::get_uri(ALL_SENSOR))) == 0)
 		all = true;
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {

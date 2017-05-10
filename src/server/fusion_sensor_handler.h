@@ -76,7 +76,6 @@ private:
 	int get_min_interval(void);
 	int get_min_batch_latency(void);
 
-	sensor_info m_info;
 	fusion_sensor *m_sensor;
 	std::unordered_map<std::string, required_sensor> m_required_sensors;
 

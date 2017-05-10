@@ -23,6 +23,7 @@
 #include <channel.h>
 #include <sensor_log.h>
 #include <sensor_types.h>
+#include <sensor_utils.h>
 #include <ipc_client.h>
 #include <command_types.h>
 
@@ -59,7 +60,9 @@ bool sensor_provider::init(const char *uri)
 	m_sensor.set_min_range(0);
 	m_sensor.set_max_range(1);
 	m_sensor.set_resolution(1);
-	m_sensor.set_privilege(PRIV_APPLICATION_SENSOR);
+	/* TODO: temporary walkaround */
+	const char *priv = sensor::utils::get_privilege(uri);
+	m_sensor.set_privilege(priv);
 
 	return true;
 }

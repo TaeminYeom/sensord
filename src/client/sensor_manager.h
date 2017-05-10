@@ -76,7 +76,8 @@ private:
 	std::vector<sensor_info *> get_infos(const char *uri);
 
 	ipc::ipc_client *m_client;
-	ipc::channel *m_channel;
+	ipc::channel *m_cmd_channel;     /* get sensor information */
+	ipc::channel *m_mon_channel;     /* monitor sensors dinamically added/removed */
 	ipc::event_loop m_loop;
 	std::atomic<bool> m_connected;
 	channel_handler *m_handler;

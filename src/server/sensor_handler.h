@@ -30,6 +30,7 @@ namespace sensor {
 
 class sensor_handler : public sensor_publisher {
 public:
+	sensor_handler(const sensor_info &info);
 	virtual ~sensor_handler() {}
 
 	/* publisher */
@@ -50,6 +51,9 @@ public:
 	virtual int set_attribute(sensor_observer *ob, int32_t attr, const char *value, int len) = 0;
 	virtual int flush(sensor_observer *ob) = 0;
 	virtual int get_data(sensor_data_t **data, int *len) = 0;
+
+protected:
+	sensor_info m_info;
 
 private:
 	std::list<sensor_observer *> m_observers;

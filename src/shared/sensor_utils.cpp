@@ -28,7 +28,9 @@
 #include <stddef.h>
 #include <map>
 
+#include <sensor_log.h>
 #include <sensor_types.h>
+#include <sensor_types_private.h>
 
 #ifndef PATH_MAX
 #define PATH_MAX 256
@@ -36,90 +38,90 @@
 
 /* TODO: move and define string type to sensor_type.h */
 static std::map<sensor_type_t, const char *> types = {
-	{UNKNOWN_SENSOR,                 "http://tizen.org/sensor/unknown"},
-	{ALL_SENSOR,                     "http://tizen.org/sensor/all"},
-	{ACCELEROMETER_SENSOR,           "http://tizen.org/sensor/accelerometer"},
-	{GRAVITY_SENSOR,                 "http://tizen.org/sensor/gravity"},
-	{LINEAR_ACCEL_SENSOR,            "http://tizen.org/sensor/linear_acceleration"},
-	{GEOMAGNETIC_SENSOR,             "http://tizen.org/sensor/magnetic"},
-	{ROTATION_VECTOR_SENSOR,         "http://tizen.org/sensor/rotation_vector"},
-	{ORIENTATION_SENSOR,             "http://tizen.org/sensor/orientation"},
-	{GYROSCOPE_SENSOR,               "http://tizen.org/sensor/gyroscope"},
-	{LIGHT_SENSOR,                   "http://tizen.org/sensor/light"},
-	{PROXIMITY_SENSOR,               "http://tizen.org/sensor/proximity"},
-	{PRESSURE_SENSOR,                "http://tizen.org/sensor/pressure"},
-	{ULTRAVIOLET_SENSOR,             "http://tizen.org/sensor/ultraviolet"},
-	{TEMPERATURE_SENSOR,             "http://tizen.org/sensor/temperature"},
-	{HUMIDITY_SENSOR,                "http://tizen.org/sensor/humidity"},
-	{HRM_SENSOR,                     "http://tizen.org/sensor/heart_rate_monitor"},
-	{HRM_LED_GREEN_SENSOR,           "http://tizen.org/sensor/heart_rate_monitor.led_green"},
-	{HRM_LED_IR_SENSOR,              "http://tizen.org/sensor/heart_rate_monitor.led_ir"},
-	{HRM_LED_RED_SENSOR,             "http://tizen.org/sensor/heart_rate_monitor.led_red"},
-	{GYROSCOPE_UNCAL_SENSOR,         "http://tizen.org/sensor/gyroscope.uncalibrated"},
-	{GEOMAGNETIC_UNCAL_SENSOR,       "http://tizen.org/sensor/geomagnetic.uncalibrated"},
-	{GYROSCOPE_RV_SENSOR,            "http://tizen.org/sensor/gyroscope_rotation_vector"},
-	{GEOMAGNETIC_RV_SENSOR,          "http://tizen.org/sensor/geomagnetic_rotation_vector"},
+	{UNKNOWN_SENSOR,                 "http://tizen.org/sensor/general/unknown"},
+	{ALL_SENSOR,                     "http://tizen.org/sensor/general/all"},
+	{ACCELEROMETER_SENSOR,           "http://tizen.org/sensor/general/accelerometer"},
+	{GRAVITY_SENSOR,                 "http://tizen.org/sensor/general/gravity"},
+	{LINEAR_ACCEL_SENSOR,            "http://tizen.org/sensor/general/linear_acceleration"},
+	{GEOMAGNETIC_SENSOR,             "http://tizen.org/sensor/general/magnetic"},
+	{ROTATION_VECTOR_SENSOR,         "http://tizen.org/sensor/general/rotation_vector"},
+	{ORIENTATION_SENSOR,             "http://tizen.org/sensor/general/orientation"},
+	{GYROSCOPE_SENSOR,               "http://tizen.org/sensor/general/gyroscope"},
+	{LIGHT_SENSOR,                   "http://tizen.org/sensor/general/light"},
+	{PROXIMITY_SENSOR,               "http://tizen.org/sensor/general/proximity"},
+	{PRESSURE_SENSOR,                "http://tizen.org/sensor/general/pressure"},
+	{ULTRAVIOLET_SENSOR,             "http://tizen.org/sensor/general/ultraviolet"},
+	{TEMPERATURE_SENSOR,             "http://tizen.org/sensor/general/temperature"},
+	{HUMIDITY_SENSOR,                "http://tizen.org/sensor/general/humidity"},
+	{HRM_SENSOR,                     "http://tizen.org/sensor/healthinfo/heart_rate_monitor"},
+	{HRM_LED_GREEN_SENSOR,           "http://tizen.org/sensor/healthinfo/heart_rate_monitor.led_green"},
+	{HRM_LED_IR_SENSOR,              "http://tizen.org/sensor/healthinfo/heart_rate_monitor.led_ir"},
+	{HRM_LED_RED_SENSOR,             "http://tizen.org/sensor/healthinfo/heart_rate_monitor.led_red"},
+	{GYROSCOPE_UNCAL_SENSOR,         "http://tizen.org/sensor/general/gyroscope.uncalibrated"},
+	{GEOMAGNETIC_UNCAL_SENSOR,       "http://tizen.org/sensor/general/geomagnetic.uncalibrated"},
+	{GYROSCOPE_RV_SENSOR,            "http://tizen.org/sensor/general/gyroscope_rotation_vector"},
+	{GEOMAGNETIC_RV_SENSOR,          "http://tizen.org/sensor/general/geomagnetic_rotation_vector"},
 
-	{HUMAN_PEDOMETER_SENSOR,         "http://tizen.org/sensor/human_pedometer"},
-	{HUMAN_SLEEP_MONITOR_SENSOR,     "http://tizen.org/sensor/human_sleep_monitor"},
-	{HUMAN_SLEEP_DETECTOR_SENSOR,    "http://tizen.org/sensor/human_sleep_detector"},
-	{HUMAN_STRESS_MONITOR_SENSOR,    "http://tizen.org/sensor/human_stress_monitor"},
+	{HUMAN_PEDOMETER_SENSOR,         "http://tizen.org/sensor/healthinfo/human_pedometer"},
+	{HUMAN_SLEEP_MONITOR_SENSOR,     "http://tizen.org/sensor/healthinfo/human_sleep_monitor"},
+	{HUMAN_SLEEP_DETECTOR_SENSOR,    "http://tizen.org/sensor/healthinfo/human_sleep_detector"},
+	{HUMAN_STRESS_MONITOR_SENSOR,    "http://tizen.org/sensor/healthinfo/human_stress_monitor"},
 
-	{EXERCISE_WALKING_SENSOR,        "http://tizen.org/sensor/exercise.walking"},
-	{EXERCISE_RUNNING_SENSOR,        "http://tizen.org/sensor/exercise.running"},
-	{EXERCISE_HIKING_SENSOR,         "http://tizen.org/sensor/exercise.hiking"},
-	{EXERCISE_CYCLING_SENSOR,        "http://tizen.org/sensor/exercise.cycling"},
-	{EXERCISE_ELLIPTICAL_SENSOR,     "http://tizen.org/sensor/exercise.elliptical"},
-	{EXERCISE_INDOOR_CYCLING_SENSOR, "http://tizen.org/sensor/exercise.indoor_cycling"},
-	{EXERCISE_ROWING_SENSOR,         "http://tizen.org/sensor/exercise.rowing"},
-	{EXERCISE_STEPPER_SENSOR,        "http://tizen.org/sensor/exercise.stepper"},
+	{EXERCISE_WALKING_SENSOR,        "http://tizen.org/sensor/healthinfo/exercise.walking"},
+	{EXERCISE_RUNNING_SENSOR,        "http://tizen.org/sensor/healthinfo/exercise.running"},
+	{EXERCISE_HIKING_SENSOR,         "http://tizen.org/sensor/healthinfo/exercise.hiking"},
+	{EXERCISE_CYCLING_SENSOR,        "http://tizen.org/sensor/healthinfo/exercise.cycling"},
+	{EXERCISE_ELLIPTICAL_SENSOR,     "http://tizen.org/sensor/healthinfo/exercise.elliptical"},
+	{EXERCISE_INDOOR_CYCLING_SENSOR, "http://tizen.org/sensor/healthinfo/exercise.indoor_cycling"},
+	{EXERCISE_ROWING_SENSOR,         "http://tizen.org/sensor/healthinfo/exercise.rowing"},
+	{EXERCISE_STEPPER_SENSOR,        "http://tizen.org/sensor/healthinfo/exercise.stepper"},
 
-	{EXTERNAL_EXERCISE_SENSOR,       "http://tizen.org/sensor/external_exercise"},
+	{EXTERNAL_EXERCISE_SENSOR,       "http://tizen.org/sensor/healthinfo/external_exercise"},
 
-	{FUSION_SENSOR,                  "http://tizen.org/sensor/fusion"},
-	{AUTO_ROTATION_SENSOR,           "http://tizen.org/sensor/auto_rotation"},
-	{AUTO_BRIGHTNESS_SENSOR,         "http://tizen.org/sensor/auto_brightness"},
+	{FUSION_SENSOR,                  "http://tizen.org/sensor/general/fusion"},
+	{AUTO_ROTATION_SENSOR,           "http://tizen.org/sensor/general/auto_rotation"},
+	{AUTO_BRIGHTNESS_SENSOR,         "http://tizen.org/sensor/general/auto_brightness"},
 
-	{GESTURE_MOVEMENT_SENSOR,        "http://tizen.org/sensor/gesture_movement"},
-	{GESTURE_WRIST_UP_SENSOR,        "http://tizen.org/sensor/gesture_wrist_up"},
-	{GESTURE_WRIST_DOWN_SENSOR,      "http://tizen.org/sensor/gesture_wrist_down"},
-	{GESTURE_MOVEMENT_STATE_SENSOR,  "http://tizen.org/sensor/gesture_movement_state"},
-	{GESTURE_FACE_DOWN_SENSOR,       "http://tizen.org/sensor/gesture_face_down"},
+	{GESTURE_MOVEMENT_SENSOR,        "http://tizen.org/sensor/general/gesture_movement"},
+	{GESTURE_WRIST_UP_SENSOR,        "http://tizen.org/sensor/general/gesture_wrist_up"},
+	{GESTURE_WRIST_DOWN_SENSOR,      "http://tizen.org/sensor/general/gesture_wrist_down"},
+	{GESTURE_MOVEMENT_STATE_SENSOR,  "http://tizen.org/sensor/general/gesture_movement_state"},
+	{GESTURE_FACE_DOWN_SENSOR,       "http://tizen.org/sensor/general/gesture_face_down"},
 
-	{ACTIVITY_TRACKER_SENSOR,        "http://tizen.org/sensor/activity_tracker"},
-	{ACTIVITY_LEVEL_MONITOR_SENSOR,  "http://tizen.org/sensor/activity_level_monitor"},
-	{GPS_BATCH_SENSOR,               "http://tizen.org/sensor/gps_batch"},
+	{ACTIVITY_TRACKER_SENSOR,        "http://tizen.org/sensor/general/activity_tracker"},
+	{ACTIVITY_LEVEL_MONITOR_SENSOR,  "http://tizen.org/sensor/general/activity_level_monitor"},
+	{GPS_BATCH_SENSOR,               "http://tizen.org/sensor/general/gps_batch"},
 
-	{HRM_CTRL_SENSOR,                "http://tizen.org/sensor/hrm_ctrl"},
+	{HRM_CTRL_SENSOR,                "http://tizen.org/sensor/general/hrm_ctrl"},
 
-	{WEAR_STATUS_SENSOR,             "http://tizen.org/sensor/wear_status"},
-	{WEAR_ON_MONITOR_SENSOR,         "http://tizen.org/sensor/wear_on_monitor"},
-	{NO_MOVE_DETECTOR_SENSOR,        "http://tizen.org/sensor/no_move_detector"},
-	{RESTING_HR_SENSOR,              "http://tizen.org/sensor/resting_hr"},
-	{STEP_LEVEL_MONITOR_SENSOR,      "http://tizen.org/sensor/step_level_monitor"},
-	{EXERCISE_STANDALONE_SENSOR,     "http://tizen.org/sensor/exercise_standalone"},
-	{EXERCISE_HR_SENSOR,             "http://tizen.org/sensor/exercise_hr"},
-	{WORKOUT_SENSOR,                 "http://tizen.org/sensor/workout"},
-	{CYCLE_MONITOR_SENSOR,           "http://tizen.org/sensor/cycle_monitor"},
-	{STAIR_TRACKER_SENSOR,           "http://tizen.org/sensor/stair_tracker"},
-	{PRESSURE_INDICATOR_SENSOR,      "http://tizen.org/sensor/pressure_indicator"},
-	{PRESSURE_ALERT_SENSOR,          "http://tizen.org/sensor/pressure_alert"},
-	{HR_CALORIE_SENSOR,              "http://tizen.org/sensor/hr_calorie"},
+	{WEAR_STATUS_SENSOR,             "http://tizen.org/sensor/general/wear_status"},
+	{WEAR_ON_MONITOR_SENSOR,         "http://tizen.org/sensor/general/wear_on_monitor"},
+	{NO_MOVE_DETECTOR_SENSOR,        "http://tizen.org/sensor/general/no_move_detector"},
+	{RESTING_HR_SENSOR,              "http://tizen.org/sensor/healthinfo/resting_hr"},
+	{STEP_LEVEL_MONITOR_SENSOR,      "http://tizen.org/sensor/healthinfo/step_level_monitor"},
+	{EXERCISE_STANDALONE_SENSOR,     "http://tizen.org/sensor/healthinfo/exercise_standalone"},
+	{EXERCISE_HR_SENSOR,             "http://tizen.org/sensor/healthinfo/exercise_hr"},
+	{WORKOUT_SENSOR,                 "http://tizen.org/sensor/healthinfo/workout"},
+	{CYCLE_MONITOR_SENSOR,           "http://tizen.org/sensor/healthinfo/cycle_monitor"},
+	{STAIR_TRACKER_SENSOR,           "http://tizen.org/sensor/healthinfo/stair_tracker"},
+	{PRESSURE_INDICATOR_SENSOR,      "http://tizen.org/sensor/general/pressure_indicator"},
+	{PRESSURE_ALERT_SENSOR,          "http://tizen.org/sensor/general/pressure_alert"},
+	{HR_CALORIE_SENSOR,              "http://tizen.org/sensor/healthinfo/hr_calorie"},
 
-	{CONTEXT_SENSOR,                 "http://tizen.org/sensor/context"},
-	{MOTION_SENSOR,                  "http://tizen.org/sensor/motion"},
-	{PIR_SENSOR,                     "http://tizen.org/sensor/pir"},
-	{PIR_LONG_SENSOR,                "http://tizen.org/sensor/pir_long"},
-	{DUST_SENSOR,                    "http://tizen.org/sensor/dust"},
-	{THERMOMETER_SENSOR,             "http://tizen.org/sensor/thermometer"},
-	{PEDOMETER_SENSOR,               "http://tizen.org/sensor/pedometer"},
-	{FLAT_SENSOR,                    "http://tizen.org/sensor/flat"},
-	{HRM_RAW_SENSOR,                 "http://tizen.org/sensor/hrm_raw"},
-	{TILT_SENSOR,                    "http://tizen.org/sensor/tilt"},
-	{RV_RAW_SENSOR,                  "http://tizen.org/sensor/rv_raw"},
-	{GSR_SENSOR,                     "http://tizen.org/sensor/gsr"},
-	{SIMSENSE_SENSOR,                "http://tizen.org/sensor/simsense"},
-	{PPG_SENSOR,                     "http://tizen.org/sensor/ppg"},
+	{CONTEXT_SENSOR,                 "http://tizen.org/sensor/general/context"},
+	{MOTION_SENSOR,                  "http://tizen.org/sensor/general/motion"},
+	{PIR_SENSOR,                     "http://tizen.org/sensor/general/pir"},
+	{PIR_LONG_SENSOR,                "http://tizen.org/sensor/general/pir_long"},
+	{DUST_SENSOR,                    "http://tizen.org/sensor/general/dust"},
+	{THERMOMETER_SENSOR,             "http://tizen.org/sensor/general/thermometer"},
+	{PEDOMETER_SENSOR,               "http://tizen.org/sensor/healthinfo/pedometer"},
+	{FLAT_SENSOR,                    "http://tizen.org/sensor/general/flat"},
+	{HRM_RAW_SENSOR,                 "http://tizen.org/sensor/healthinfo/hrm_raw"},
+	{TILT_SENSOR,                    "http://tizen.org/sensor/general/tilt"},
+	{RV_RAW_SENSOR,                  "http://tizen.org/sensor/general/rv_raw"},
+	{GSR_SENSOR,                     "http://tizen.org/sensor/healthinfo/gsr"},
+	{SIMSENSE_SENSOR,                "http://tizen.org/sensor/healthinfo/simsense"},
+	{PPG_SENSOR,                     "http://tizen.org/sensor/healthinfo/ppg"},
 };
 
 const char *sensor::utils::get_uri(sensor_type_t type)
@@ -127,6 +129,68 @@ const char *sensor::utils::get_uri(sensor_type_t type)
 	auto it = types.find(type);
 	if (it == types.end())
 		return "Unknown Type";
+	return it->second;
+}
+
+const char *sensor::utils::get_privilege(std::string uri)
+{
+	std::size_t start = 0;
+	std::size_t end = uri.length();
+	std::size_t size = uri.size();
+
+	for (int i = 0; i < URI_PRIV_INDEX; ++i) {
+		retv_if(start >= uri.length(), "");
+		start = uri.find(URI_DELIMITER, start + 1);
+		retv_if(start == std::string::npos, "");
+	}
+
+	end = uri.find(URI_DELIMITER, start + 1);
+	retv_if(end == std::string::npos, "");
+
+	size = end - (start + 1);
+
+	if (uri.substr(start + 1, size) == PRIVILEGE_HEALTHINFO_STR)
+		return PRIVILEGE_HEALTHINFO_URI;
+
+	return "";
+}
+
+static void init_types(std::map<std::string, sensor_type_t> &sensor_types)
+{
+	ret_if(!sensor_types.empty());
+
+	for (auto it = types.begin(); it != types.end(); ++it) {
+		std::string uri(it->second);
+		std::size_t found = uri.find_last_of("/");
+		std::size_t len = uri.length() - (found + 1);
+
+		sensor_types.emplace(uri.substr(found + 1, len), it->first);
+	}
+}
+
+sensor_type_t sensor::utils::get_type(std::string uri)
+{
+	static std::map<std::string, sensor_type_t> sensor_types;
+	init_types(sensor_types);
+
+	std::size_t start = 0;
+	std::size_t end = uri.length();
+	std::size_t size = uri.size();
+
+	for (int i = 0; i < URI_SENSOR_TYPE_INDEX; ++i) {
+		retv_if(start >= uri.length(), UNKNOWN_SENSOR);
+		start = uri.find(URI_DELIMITER, start + 1);
+		retv_if(start == std::string::npos, UNKNOWN_SENSOR);
+	}
+
+	end = uri.find(URI_DELIMITER, start + 1);
+	retv_if(end == std::string::npos, UNKNOWN_SENSOR);
+
+	size = end - (start + 1);
+
+	auto it = sensor_types.find(uri.substr(start + 1, size));
+	retv_if(it == sensor_types.end(), UNKNOWN_SENSOR);
+
 	return it->second;
 }
 

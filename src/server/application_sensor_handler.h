@@ -52,7 +52,6 @@ public:
 	int get_data(sensor_data_t **data, int *len);
 
 private:
-	sensor_info m_info;
 	ipc::channel *m_ch;
 	std::atomic<bool> m_started;
 	int32_t m_prev_interval;
