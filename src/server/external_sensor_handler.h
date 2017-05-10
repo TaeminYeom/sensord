@@ -55,7 +55,6 @@ private:
 	int get_min_interval(void);
 	int get_min_batch_latency(void);
 
-	sensor_info m_info;
 	external_sensor *m_sensor;
 	sensor_notifier *m_notifier;
 	int m_policy;

@@ -27,7 +27,7 @@
 using namespace sensor;
 
 application_sensor_handler::application_sensor_handler(const sensor_info &info, ipc::channel *ch)
-: m_info(info)
+: sensor_handler(info)
 , m_ch(ch)
 , m_started(false)
 , m_prev_interval(0)

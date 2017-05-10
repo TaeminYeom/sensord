@@ -17,11 +17,17 @@
  *
  */
 
-#include <message.h>
-#include <sensor_log.h>
 #include "sensor_handler.h"
 
+#include <message.h>
+#include <sensor_log.h>
+
 using namespace sensor;
+
+sensor_handler::sensor_handler(const sensor_info &info)
+: m_info(info)
+{
+}
 
 bool sensor_handler::has_observer(sensor_observer *ob)
 {

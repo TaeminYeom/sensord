@@ -27,7 +27,7 @@ using namespace sensor;
 
 fusion_sensor_handler::fusion_sensor_handler(const sensor_info &info,
 		fusion_sensor *sensor)
-: m_info(info)
+: sensor_handler(info)
 , m_sensor(sensor)
 {
 }

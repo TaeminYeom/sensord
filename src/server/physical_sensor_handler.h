@@ -59,7 +59,6 @@ private:
 	int get_min_interval(void);
 	int get_min_batch_latency(void);
 
-	sensor_info m_info;
 	sensor_device *m_device;
 	physical_sensor *m_sensor;
 	uint32_t m_hal_id;
