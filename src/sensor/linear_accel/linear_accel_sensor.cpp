@@ -23,14 +23,14 @@
 #include <sensor_types.h>
 #include <fusion_util.h>
 
-#define NAME_SENSOR "http://tizen.org/sensor/linear_acceleration/tizen_default"
+#define NAME_SENSOR "http://tizen.org/sensor/general/linear_acceleration/tizen_default"
 #define NAME_VENDOR "tizen.org"
 
 #define SRC_ID_ACC   0x1
-#define SRC_STR_ACC  "http://tizen.org/sensor/accelerometer"
+#define SRC_STR_ACC  "http://tizen.org/sensor/general/accelerometer"
 
 #define SRC_ID_GRAVITY  0x2
-#define SRC_STR_GRAVITY "http://tizen.org/sensor/gravity"
+#define SRC_STR_GRAVITY "http://tizen.org/sensor/general/gravity"
 
 #define GRAVITY 9.80665
 

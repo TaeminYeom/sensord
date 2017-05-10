@@ -24,11 +24,11 @@
 
 #include "auto_rotation_alg_emul.h"
 
-#define NAME_SENSOR "http://tizen.org/sensor/auto_rotation/tizen_default"
+#define NAME_SENSOR "http://tizen.org/sensor/general/auto_rotation/tizen_default"
 #define NAME_VENDOR "tizen.org"
 
 #define SRC_ID_ACC  0x1
-#define SRC_STR_ACC "http://tizen.org/sensor/accelerometer"
+#define SRC_STR_ACC "http://tizen.org/sensor/general/accelerometer"
 
 static sensor_info2_t sensor_info = {
 	id: 0x1,

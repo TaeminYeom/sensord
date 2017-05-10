@@ -24,11 +24,11 @@
 #include <fusion_util.h>
 #include <cmath>
 
-#define NAME_SENSOR "http://tizen.org/sensor/gravity/tizen_lowpass"
+#define NAME_SENSOR "http://tizen.org/sensor/general/gravity/tizen_lowpass"
 #define NAME_VENDOR "tizen.org"
 
 #define SRC_ID_ACC   0x1
-#define SRC_STR_ACC  "http://tizen.org/sensor/accelerometer"
+#define SRC_STR_ACC  "http://tizen.org/sensor/general/accelerometer"
 
 #define GRAVITY 9.80665
 #define US_PER_SEC 1000000

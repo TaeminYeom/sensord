@@ -23,11 +23,11 @@
 #include <sensor_types.h>
 #include <fusion_util.h>
 
-#define NAME_SENSOR "http://tizen.org/sensor/orientation/tizen_default"
+#define NAME_SENSOR "http://tizen.org/sensor/general/orientation/tizen_default"
 #define NAME_VENDOR "tizen.org"
 
 #define SRC_ID_RV   0x1
-#define SRC_STR_RV  "http://tizen.org/sensor/rotation_vector"
+#define SRC_STR_RV  "http://tizen.org/sensor/general/rotation_vector"
 
 static sensor_info2_t sensor_info = {
 	id: 0x1,

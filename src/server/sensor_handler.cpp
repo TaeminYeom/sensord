@@ -21,12 +21,15 @@
 
 #include <message.h>
 #include <sensor_log.h>
+#include <sensor_utils.h>
 
 using namespace sensor;
 
 sensor_handler::sensor_handler(const sensor_info &info)
 : m_info(info)
 {
+	const char *priv = sensor::utils::get_privilege(m_info.get_uri());
+	m_info.set_privilege(priv);
 }
 
 bool sensor_handler::has_observer(sensor_observer *ob)
