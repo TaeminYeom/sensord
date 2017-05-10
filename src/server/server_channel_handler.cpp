@@ -120,7 +120,7 @@ void server_channel_handler::read(channel *ch, message &msg)
 int server_channel_handler::manager_connect(channel *ch, message &msg)
 {
 	m_manager->register_channel(ch);
-	return send_reply(ch, OP_SUCCESS);
+	return OP_SUCCESS;
 }
 
 int server_channel_handler::manager_disconnect(channel *ch, message &msg)
