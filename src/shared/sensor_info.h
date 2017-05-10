@@ -63,6 +63,7 @@ public:
 	void set_max_batch_count(int max_batch_count);
 	void set_wakeup_supported(bool supported);
 	void set_privilege(const char *privilege);
+	void add_privilege(const char *privilege);
 
 	void clear(void);
 

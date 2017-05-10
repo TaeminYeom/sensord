@@ -90,7 +90,7 @@ static std::map<sensor_type_t, const char *> types = {
 
 	{ACTIVITY_TRACKER_SENSOR,        "http://tizen.org/sensor/general/activity_tracker"},
 	{ACTIVITY_LEVEL_MONITOR_SENSOR,  "http://tizen.org/sensor/general/activity_level_monitor"},
-	{GPS_BATCH_SENSOR,               "http://tizen.org/sensor/general/gps_batch"},
+	{GPS_BATCH_SENSOR,               "http://tizen.org/sensor/location/gps_batch"},
 
 	{HRM_CTRL_SENSOR,                "http://tizen.org/sensor/general/hrm_ctrl"},
 
@@ -151,6 +151,8 @@ const char *sensor::utils::get_privilege(std::string uri)
 
 	if (uri.substr(start + 1, size) == PRIVILEGE_HEALTHINFO_STR)
 		return PRIVILEGE_HEALTHINFO_URI;
+	else if (uri.substr(start + 1, size) == PRIVILEGE_LOCATION_STR)
+		return PRIVILEGE_LOCATION_URI;
 
 	return "";
 }
