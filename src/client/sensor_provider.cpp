@@ -59,7 +59,6 @@ bool sensor_provider::init(const char *uri)
 	m_sensor.set_min_range(0);
 	m_sensor.set_max_range(1);
 	m_sensor.set_resolution(1);
-	m_sensor.set_privilege(PRIV_APPLICATION_SENSOR);
 
 	return true;
 }

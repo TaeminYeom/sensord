@@ -60,9 +60,6 @@ extern "C"
 #define SENSOR_UNKNOWN_TYPE "http://tizen.org/sensor/unknown"
 #define SENSOR_UNKNOWN_NAME "Unknown"
 
-#define PRIV_APPLICATION_SENSOR "http://tizen.org/privilege/applicationsensor"
-#define PRIV_APPLICATION_SENSOR_WRITE "http://tizen.org/privilege/applicationsensor.write"
-
 typedef int64_t sensor_id_t;
 typedef void *sensor_t;
 

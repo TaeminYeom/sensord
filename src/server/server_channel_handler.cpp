@@ -315,9 +315,6 @@ int server_channel_handler::listener_get_data(channel *ch, message &msg)
 
 int server_channel_handler::provider_connect(channel *ch, message &msg)
 {
-	retvm_if(!has_privileges(ch->get_fd(), PRIV_APPLICATION_SENSOR_WRITE),
-			-EACCES, "Permission denied");
-
 	sensor_info info;
 	info.clear();
 	info.deserialize(msg.body(), msg.size());

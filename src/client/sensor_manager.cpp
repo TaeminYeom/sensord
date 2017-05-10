@@ -29,8 +29,6 @@
 
 #include "sensor_manager_channel_handler.h"
 
-#define SIZE_STR_SENSOR_ALL 27
-
 using namespace sensor;
 
 sensor_manager::sensor_manager()
@@ -97,7 +95,7 @@ bool sensor_manager::is_supported(sensor_t sensor)
 
 bool sensor_manager::is_supported(const char *uri)
 {
-	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
+	if (strncmp(uri, utils::get_uri(ALL_SENSOR), strlen(utils::get_uri(ALL_SENSOR))) == 0)
 		return true;
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
@@ -337,7 +335,7 @@ bool sensor_manager::has_privilege(std::string &uri)
 
 sensor_info *sensor_manager::get_info(const char *uri)
 {
-	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
+	if (strncmp(uri, utils::get_uri(ALL_SENSOR), strlen(utils::get_uri(ALL_SENSOR))) == 0)
 		return &m_sensors[0];
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
@@ -369,7 +367,7 @@ std::vector<sensor_info *> sensor_manager::get_infos(const char *uri)
 	std::vector<sensor_info *> infos;
 	bool all = false;
 
-	if (strncmp(uri, utils::get_uri(ALL_SENSOR), SIZE_STR_SENSOR_ALL) == 0)
+	if (strncmp(uri, utils::get_uri(ALL_SENSOR), strlen(utils::get_uri(ALL_SENSOR))) == 0)
 		all = true;
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
