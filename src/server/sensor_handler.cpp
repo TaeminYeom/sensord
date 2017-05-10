@@ -30,6 +30,9 @@ sensor_handler::sensor_handler(const sensor_info &info)
 {
 	const char *priv = sensor::utils::get_privilege(m_info.get_uri());
 	m_info.set_privilege(priv);
+
+	sensor_type_t type = sensor::utils::get_type(m_info.get_uri());
+	m_info.set_type(type);
 }
 
 bool sensor_handler::has_observer(sensor_observer *ob)

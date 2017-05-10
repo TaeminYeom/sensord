@@ -155,6 +155,45 @@ const char *sensor::utils::get_privilege(std::string uri)
 	return "";
 }
 
+static void init_types(std::map<std::string, sensor_type_t> &sensor_types)
+{
+	ret_if(!sensor_types.empty());
+
+	for (auto it = types.begin(); it != types.end(); ++it) {
+		std::string uri(it->second);
+		std::size_t found = uri.find_last_of("/");
+		std::size_t len = uri.length() - (found + 1);
+
+		sensor_types.emplace(uri.substr(found + 1, len), it->first);
+	}
+}
+
+sensor_type_t sensor::utils::get_type(std::string uri)
+{
+	static std::map<std::string, sensor_type_t> sensor_types;
+	init_types(sensor_types);
+
+	std::size_t start = 0;
+	std::size_t end = uri.length();
+	std::size_t size = uri.size();
+
+	for (int i = 0; i < URI_SENSOR_TYPE_INDEX; ++i) {
+		retv_if(start >= uri.length(), UNKNOWN_SENSOR);
+		start = uri.find(URI_DELIMITER, start + 1);
+		retv_if(start == std::string::npos, UNKNOWN_SENSOR);
+	}
+
+	end = uri.find(URI_DELIMITER, start + 1);
+	retv_if(end == std::string::npos, UNKNOWN_SENSOR);
+
+	size = end - (start + 1);
+
+	auto it = sensor_types.find(uri.substr(start + 1, size));
+	retv_if(it == sensor_types.end(), UNKNOWN_SENSOR);
+
+	return it->second;
+}
+
 unsigned long long sensor::utils::get_timestamp(void)
 {
 	struct timespec t;

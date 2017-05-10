@@ -30,6 +30,7 @@ namespace sensor {
 namespace utils {
 	const char *get_uri(sensor_type_t type);
 	const char *get_privilege(std::string uri);
+	sensor_type_t get_type(std::string uri);
 
 	unsigned long long get_timestamp(void);
 	unsigned long long get_timestamp(timeval *t);
