@@ -46,7 +46,7 @@ Summary:    Internal Sensor API (Development)
 Group:      System/Development
 Requires:   %{name}-dummy = %{version}-%{release}
 # To support old-snapshot-based package builds
-Provides:   libsensord-devel
+#Provides:   libsensord-devel
 
 %description devel
 Internal Sensor API (Development)
@@ -138,3 +138,28 @@ echo "You need to reinstall %{name}-dummy to keep using the APIs after uninstall
 
 %files -n sensor-test
 %{_bindir}/sensorctl
+
+
+# Dummy packages for Tizen 3.0.
+# When building other packages on Tizen 3.0, after building sensord first,
+# some dependency conflicts may occur. These dummy packages may fix such
+# dependency issues.
+%package -n libsensord
+Summary:    Dummy libsensord
+Requires:   sensord-dummy
+Group:      System/Sensor Framework
+
+%description -n libsensord
+Dummy libsensord
+
+%files -n libsensord
+
+%package -n libsensord-devel
+Summary:    Dummy libsensord-devel
+Requires:   sensord-devel
+Group:      System/Sensor Framework
+
+%description -n libsensord-devel
+Dummy libsensord-devel
+
+%files -n libsensord-devel
