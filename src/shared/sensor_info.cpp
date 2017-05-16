@@ -20,6 +20,7 @@
 #include "sensor_info.h"
 
 #include <sensor_types.h>
+#include <sensor_types_private.h>
 #include <sensor_log.h>
 #include <algorithm>
 #include <string>
@@ -205,6 +206,13 @@ void sensor_info::set_wakeup_supported(bool supported)
 void sensor_info::set_privilege(const char *privilege)
 {
 	m_privilege = privilege;
+}
+
+void sensor_info::add_privilege(const char *privilege)
+{
+	if (!m_privilege.empty())
+		m_privilege.append(PRIV_DELIMITER);
+	m_privilege.append(privilege);
 }
 
 void sensor_info::serialize(raw_data_t &data)

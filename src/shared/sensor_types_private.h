@@ -25,9 +25,14 @@
 
 #define PREDEFINED_TYPE_URI "http://tizen.org/sensor/"
 
+#define PRIV_DELIMITER ";"
 #define URI_DELIMITER "/"
+
 #define PRIVILEGE_HEALTHINFO_STR "healthinfo"
 #define PRIVILEGE_HEALTHINFO_URI "http://tizen.org/privilege/healthinfo"
+
+#define PRIVILEGE_LOCATION_STR "location"
+#define PRIVILEGE_LOCATION_URI "http://tizen.org/privilege/location"
 
 #define URI_PRIV_INDEX 4
 #define URI_SENSOR_TYPE_INDEX 5

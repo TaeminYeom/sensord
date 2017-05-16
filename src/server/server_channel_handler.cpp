@@ -23,12 +23,11 @@
 #include <sensor_info.h>
 #include <sensor_handler.h>
 #include <sensor_utils.h>
+#include <sensor_types_private.h>
 #include <command_types.h>
 
 #include "permission_checker.h"
 #include "application_sensor_handler.h"
-
-#define PRIV_DELIMINATOR ";"
 
 using namespace sensor;
 using namespace ipc;
@@ -397,7 +396,7 @@ bool server_channel_handler::has_privilege(int fd, std::string &priv)
 bool server_channel_handler::has_privileges(int fd, std::string priv)
 {
 	std::vector<std::string> privileges;
-	privileges = utils::tokenize(priv, PRIV_DELIMINATOR);
+	privileges = utils::tokenize(priv, PRIV_DELIMITER);
 
 	for (auto it = privileges.begin(); it != privileges.end(); ++it) {
 		if (!has_privilege(fd, *it))

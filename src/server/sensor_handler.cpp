@@ -22,6 +22,7 @@
 #include <message.h>
 #include <sensor_log.h>
 #include <sensor_utils.h>
+#include <sensor_types_private.h>
 
 using namespace sensor;
 
@@ -33,6 +34,16 @@ sensor_handler::sensor_handler(const sensor_info &info)
 
 	sensor_type_t type = sensor::utils::get_type(m_info.get_uri());
 	m_info.set_type(type);
+
+	/* TODO: temporary walkaround for sensors that require multiple privileges */
+	switch (m_info.get_type()) {
+	case EXTERNAL_EXERCISE_SENSOR:
+	case EXERCISE_STANDALONE_SENSOR:
+		m_info.add_privilege(PRIVILEGE_LOCATION_URI);
+		break;
+	default:
+		break;
+	}
 }
 
 bool sensor_handler::has_observer(sensor_observer *ob)
