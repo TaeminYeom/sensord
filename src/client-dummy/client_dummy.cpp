@@ -290,7 +290,7 @@ API int sensord_provider_set_stop_cb(sensord_provider_h provider, sensord_provid
 	return OP_ERROR;
 }
 
-API int sensord_provider_set_set_interval_cb(sensord_provider_h provider, sensord_provider_set_interval_cb callback, void *user_data)
+API int sensord_provider_set_interval_changed_cb(sensord_provider_h provider, sensord_provider_interval_changed_cb callback, void *user_data)
 {
 	return OP_ERROR;
 }

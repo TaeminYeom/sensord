@@ -420,8 +420,8 @@ int sensord_provider_set_start_cb(sensord_provider_h provider, sensord_provider_
 typedef void (*sensord_provider_stop_cb)(sensord_provider_h provider, void *user_data);
 int sensord_provider_set_stop_cb(sensord_provider_h provider, sensord_provider_stop_cb callback, void *user_data);
 
-typedef void (*sensord_provider_set_interval_cb)(sensord_provider_h provider, unsigned int interval_ms, void *user_data);
-int sensord_provider_set_set_interval_cb(sensord_provider_h provider, sensord_provider_set_interval_cb callback, void *user_data);
+typedef void (*sensord_provider_interval_changed_cb)(sensord_provider_h provider, unsigned int interval_ms, void *user_data);
+int sensord_provider_set_interval_changed_cb(sensord_provider_h provider, sensord_provider_interval_changed_cb callback, void *user_data);
 
 int sensord_provider_publish(sensord_provider_h provider, sensor_data_t data);
 

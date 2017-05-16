@@ -164,7 +164,7 @@ TESTCASE(sensor_api_provider_mysensor, provider_p_1)
 	ASSERT_EQ(err, 0);
 	err = sensord_provider_set_stop_cb(provider, stop_cb, NULL);
 	ASSERT_EQ(err, 0);
-	err = sensord_provider_set_set_interval_cb(provider, interval_cb, NULL);
+	err = sensord_provider_set_interval_changed_cb(provider, interval_cb, NULL);
 	ASSERT_EQ(err, 0);
 
 	err = sensord_get_default_sensor_by_uri(MYSENSOR_URI, &sensor);

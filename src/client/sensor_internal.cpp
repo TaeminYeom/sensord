@@ -732,7 +732,7 @@ API int sensord_provider_set_stop_cb(sensord_provider_h provider, sensord_provid
 	return OP_SUCCESS;
 }
 
-API int sensord_provider_set_set_interval_cb(sensord_provider_h provider, sensord_provider_set_interval_cb callback, void *user_data)
+API int sensord_provider_set_interval_changed_cb(sensord_provider_h provider, sensord_provider_interval_changed_cb callback, void *user_data)
 {
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 	retvm_if(!callback, -EINVAL, "Invalid paramter");
