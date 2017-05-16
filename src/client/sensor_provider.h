@@ -46,7 +46,7 @@ public:
 
 	void set_start_cb(sensord_provider_start_cb cb, void *user_data);
 	void set_stop_cb(sensord_provider_stop_cb cb, void *user_data);
-	void set_interval_cb(sensord_provider_set_interval_cb cb, void *user_data);
+	void set_interval_cb(sensord_provider_interval_changed_cb cb, void *user_data);
 
 	int publish(sensor_data_t *data, int len);
 

@@ -40,18 +40,18 @@ public:
 
 	void set_start_cb(sensord_provider_start_cb cb, void *user_data);
 	void set_stop_cb(sensord_provider_stop_cb cb, void *user_data);
-	void set_interval_cb(sensord_provider_set_interval_cb cb, void *user_data);
+	void set_interval_cb(sensord_provider_interval_changed_cb cb, void *user_data);
 
 private:
 	sensor_provider *m_provider;
 
 	sensord_provider_start_cb m_start_cb;
 	sensord_provider_stop_cb m_stop_cb;
-	sensord_provider_set_interval_cb m_set_interval_cb;
+	sensord_provider_interval_changed_cb m_interval_changed_cb;
 
 	void *m_start_user_data;
 	void *m_stop_user_data;
-	void *m_set_interval_user_data;
+	void *m_interval_changed_user_data;
 };
 
 }

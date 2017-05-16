@@ -29,10 +29,10 @@ sensor_provider::channel_handler::channel_handler(sensor_provider *provider)
 : m_provider(provider)
 , m_start_cb(NULL)
 , m_stop_cb(NULL)
-, m_set_interval_cb(NULL)
+, m_interval_changed_cb(NULL)
 , m_start_user_data(NULL)
 , m_stop_user_data(NULL)
-, m_set_interval_user_data(NULL)
+, m_interval_changed_user_data(NULL)
 {
 }
 
@@ -62,8 +62,8 @@ void sensor_provider::channel_handler::read(ipc::channel *ch, ipc::message &msg)
 		cmd_provider_attr_int_t buf;
 		msg.disclose((char *)&buf);
 
-		if (buf.attribute == SENSORD_ATTRIBUTE_INTERVAL && m_set_interval_cb)
-			m_set_interval_cb(m_provider, buf.value, m_set_interval_user_data);
+		if (buf.attribute == SENSORD_ATTRIBUTE_INTERVAL && m_interval_changed_cb)
+			m_interval_changed_cb(m_provider, buf.value, m_interval_changed_user_data);
 		break;
 	}
 }
@@ -88,8 +88,8 @@ void sensor_provider::channel_handler::set_stop_cb(sensord_provider_stop_cb cb, 
 	m_stop_user_data = user_data;
 }
 
-void sensor_provider::channel_handler::set_interval_cb(sensord_provider_set_interval_cb cb, void *user_data)
+void sensor_provider::channel_handler::set_interval_cb(sensord_provider_interval_changed_cb cb, void *user_data)
 {
-	m_set_interval_cb = cb;
-	m_set_interval_user_data = user_data;
+	m_interval_changed_cb = cb;
+	m_interval_changed_user_data = user_data;
 }

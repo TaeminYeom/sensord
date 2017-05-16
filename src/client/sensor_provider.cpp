@@ -199,7 +199,7 @@ void sensor_provider::set_stop_cb(sensord_provider_stop_cb cb, void *user_data)
 	m_handler->set_stop_cb(cb, user_data);
 }
 
-void sensor_provider::set_interval_cb(sensord_provider_set_interval_cb cb, void *user_data)
+void sensor_provider::set_interval_cb(sensord_provider_interval_changed_cb cb, void *user_data)
 {
 	m_handler->set_interval_cb(cb, user_data);
 }
