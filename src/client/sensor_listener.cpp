@@ -182,15 +182,7 @@ void sensor_listener::disconnect(void)
 	ret_if(!is_connected());
 	m_connected.store(false);
 
-	ipc::message msg;
-	ipc::message reply;
-
-	msg.set_type(CMD_LISTENER_DISCONNECT);
-	m_evt_channel->send_sync(&msg);
-
-	m_evt_channel->read_sync(reply);
 	m_evt_channel->disconnect();
-
 	delete m_evt_channel;
 	m_evt_channel = NULL;
 

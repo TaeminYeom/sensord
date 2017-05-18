@@ -222,17 +222,9 @@ bool sensor_manager::connect(void)
 void sensor_manager::disconnect(void)
 {
 	ret_if(!is_connected());
-
-	ipc::message msg;
-	ipc::message reply;
-	msg.set_type(CMD_MANAGER_DISCONNECT);
-
-	m_mon_channel->send_sync(&msg);
-	m_mon_channel->read_sync(reply);
-	retm_if(reply.header()->err < 0, "Failed to disconnect");
+	m_connected.store(false);
 
 	m_mon_channel->disconnect();
-
 	delete m_mon_channel;
 	m_mon_channel = NULL;
 
@@ -240,7 +232,6 @@ void sensor_manager::disconnect(void)
 	delete m_cmd_channel;
 	m_cmd_channel = NULL;
 
-	m_connected.store(false);
 	_D("Disconnected");
 }
 

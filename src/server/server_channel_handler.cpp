@@ -81,14 +81,10 @@ void server_channel_handler::read(channel *ch, message &msg)
 	switch (msg.type()) {
 	case CMD_MANAGER_CONNECT:
 		err = manager_connect(ch, msg); break;
-	case CMD_MANAGER_DISCONNECT:
-		err = manager_disconnect(ch, msg); break;
 	case CMD_MANAGER_SENSOR_LIST:
 		err = manager_get_sensor_list(ch, msg); break;
 	case CMD_LISTENER_CONNECT:
 		err = listener_connect(ch, msg); break;
-	case CMD_LISTENER_DISCONNECT:
-		err = listener_disconnect(ch, msg); break;
 	case CMD_LISTENER_START:
 		err = listener_start(ch, msg); break;
 	case CMD_LISTENER_STOP:
@@ -101,8 +97,6 @@ void server_channel_handler::read(channel *ch, message &msg)
 		err = listener_get_data(ch, msg); break;
 	case CMD_PROVIDER_CONNECT:
 		err = provider_connect(ch, msg); break;
-	case CMD_PROVIDER_DISCONNECT:
-		err = provider_disconnect(ch, msg); break;
 	case CMD_PROVIDER_PUBLISH:
 		err = provider_publish(ch, msg); break;
 	case CMD_HAS_PRIVILEGE:
@@ -120,12 +114,6 @@ int server_channel_handler::manager_connect(channel *ch, message &msg)
 {
 	m_manager->register_channel(ch);
 	return OP_SUCCESS;
-}
-
-int server_channel_handler::manager_disconnect(channel *ch, message &msg)
-{
-	m_manager->deregister_channel(ch);
-	return send_reply(ch, OP_SUCCESS);
 }
 
 int server_channel_handler::manager_get_sensor_list(channel *ch, message &msg)
@@ -175,25 +163,6 @@ int server_channel_handler::listener_connect(channel *ch, message &msg)
 	listener_id++;
 
 	return OP_SUCCESS;
-}
-
-int server_channel_handler::listener_disconnect(channel *ch, message &msg)
-{
-	auto it = m_listener_ids.find(ch);
-	retv_if(it == m_listener_ids.end(), -EINVAL);
-
-	uint32_t id = it->second;
-
-	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
-			-EACCES, "Permission denied");
-
-	delete m_listeners[id];
-	m_listeners.erase(id);
-	m_listener_ids.erase(ch);
-
-	_D("Disconnected sensor_listener[%u]", id);
-
-	return send_reply(ch, OP_SUCCESS);
 }
 
 int server_channel_handler::listener_start(channel *ch, message &msg)
@@ -331,19 +300,6 @@ int server_channel_handler::provider_connect(channel *ch, message &msg)
 
 	/* temporarily */
 	m_app_sensors[ch] = sensor;
-
-	return send_reply(ch, OP_SUCCESS);
-}
-
-int server_channel_handler::provider_disconnect(channel *ch, message &msg)
-{
-	auto it = m_app_sensors.find(ch);
-	retv_if(it == m_app_sensors.end(), -EINVAL);
-
-	sensor_info info = it->second->get_sensor_info();
-
-	m_manager->deregister_sensor(info.get_uri());
-	m_app_sensors.erase(ch);
 
 	return send_reply(ch, OP_SUCCESS);
 }
