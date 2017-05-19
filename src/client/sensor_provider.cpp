@@ -147,16 +147,7 @@ bool sensor_provider::disconnect(void)
 	retv_if(!is_connected(), false);
 	m_connected.store(false);
 
-	ipc::message msg(OP_SUCCESS);
-	ipc::message reply;
-
-	msg.set_type(CMD_PROVIDER_DISCONNECT);
-
-	m_channel->send_sync(&msg);
-	m_channel->read_sync(reply);
-
 	m_channel->disconnect();
-
 	delete m_channel;
 	m_channel = NULL;
 

@@ -33,7 +33,6 @@ enum cmd_type_e {
 
 	/* Manager */
 	CMD_MANAGER_CONNECT = 0x100,
-	CMD_MANAGER_DISCONNECT,
 	CMD_MANAGER_SENSOR_LIST,
 	CMD_MANAGER_SENSOR_ADDED,
 	CMD_MANAGER_SENSOR_REMOVED,
@@ -42,7 +41,6 @@ enum cmd_type_e {
 	CMD_LISTENER_EVENT = 0x200,
 	CMD_LISTENER_ACC_EVENT,
 	CMD_LISTENER_CONNECT,
-	CMD_LISTENER_DISCONNECT,
 	CMD_LISTENER_START,
 	CMD_LISTENER_STOP,
 	CMD_LISTENER_ATTR_INT,
@@ -51,7 +49,6 @@ enum cmd_type_e {
 
 	/* Provider */
 	CMD_PROVIDER_CONNECT = 0x300,
-	CMD_PROVIDER_DISCONNECT,
 	CMD_PROVIDER_START,
 	CMD_PROVIDER_STOP,
 	CMD_PROVIDER_ATTR_INT,
@@ -72,10 +69,6 @@ typedef struct {
 	int listener_id;
 	char sensor[NAME_MAX];
 } cmd_listener_connect_t;
-
-typedef struct {
-	int listener_id;
-} cmd_listener_disconnect_t;
 
 typedef struct {
 	int listener_id;
@@ -107,9 +100,6 @@ typedef struct {
 typedef struct {
 	char info[0];
 } cmd_provider_connect_t;
-
-typedef struct {
-} cmd_provider_disconnect_t;
 
 typedef struct {
 	sensor_data_t data;
