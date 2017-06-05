@@ -65,7 +65,7 @@ bool sensor_manager::init(void)
 	m_loader.load_fusion_sensor(VIRTUAL_SENSOR_DIR_PATH, fusion_sensors);
 	m_loader.load_external_sensor(EXTERNAL_SENSOR_DIR_PATH, external_sensors);
 
-	retvm_if(devices.empty(), false, "There is no sensors");
+	retvm_if(devices.empty() && external_sensors.empty(), false, "There is no sensors");
 
 	/* TODO: support dynamic sensor */
 	create_physical_sensors(devices, physical_sensors);
