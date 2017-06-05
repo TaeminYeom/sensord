@@ -59,6 +59,7 @@ int external_sensor_notifier::notify(void)
 external_sensor_handler::external_sensor_handler(const sensor_info &info,
 		external_sensor *sensor)
 : sensor_handler(info)
+, m_sensor(sensor)
 , m_notifier(NULL)
 , m_policy(OP_DEFAULT)
 {
@@ -96,6 +97,8 @@ int external_sensor_handler::start(sensor_observer *ob)
 
 	int policy = m_sensor->start(ob);
 	retv_if(policy <= OP_ERROR, policy);
+
+	add_observer(ob);
 
 	return OP_SUCCESS;
 }
