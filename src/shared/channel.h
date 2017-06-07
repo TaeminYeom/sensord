@@ -51,7 +51,7 @@ public:
 	bool send_sync(message *msg);
 
 	bool read(void);
-	bool read_sync(message &msg);
+	bool read_sync(message &msg, bool select = true);
 
 	bool get_option(int type, int &value) const;
 	bool set_option(int type, int value);

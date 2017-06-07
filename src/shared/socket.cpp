@@ -310,7 +310,18 @@ ssize_t socket::send(const void *buffer, size_t size, bool select) const
 
 ssize_t socket::recv(void* buffer, size_t size, bool select) const
 {
-	/* WARNING: if select() is called here, it affects performance */
+	if (select) {
+		const int TIMEOUT = 1;
+		fd_set read_fds;
+		FD_ZERO(&read_fds);
+		FD_SET(m_sock_fd, &read_fds);
+
+		if (!select_fds(m_sock_fd, &read_fds, NULL, TIMEOUT)) {
+			_E("Failed to receive message(timeout)");
+			return 0;
+		}
+	}
+
 	return on_recv(buffer, size);
 }
 

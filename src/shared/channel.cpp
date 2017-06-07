@@ -77,7 +77,7 @@ public:
 		if (condition & (EVENT_OUT | EVENT_HUP))
 			return false;
 
-		if (!m_ch->read_sync(msg))
+		if (!m_ch->read_sync(msg, false))
 			return false;
 
 		return false;
@@ -202,14 +202,14 @@ bool channel::read(void)
 	return true;
 }
 
-bool channel::read_sync(message &msg)
+bool channel::read_sync(message &msg, bool select)
 {
 	message_header header;
 	ssize_t size = 0;
 	char buf[MAX_MSG_CAPACITY];
 
 	/* header */
-	size = m_socket->recv(&header, sizeof(message_header), true);
+	size = m_socket->recv(&header, sizeof(message_header), select);
 	retv_if(size <= 0, false);
 
 	/* check error from header */
@@ -221,7 +221,7 @@ bool channel::read_sync(message &msg)
 
 	/* body */
 	if (header.length > 0) {
-		size = m_socket->recv(&buf, header.length, true);
+		size = m_socket->recv(&buf, header.length, select);
 		retv_if(size <= 0, false);
 	}
 

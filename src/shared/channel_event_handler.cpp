@@ -51,7 +51,7 @@ bool channel_event_handler::handle(int fd, event_condition condition)
 		return false;
 	}
 
-	if (!m_ch->read_sync(msg)) {
+	if (!m_ch->read_sync(msg, false)) {
 		m_ch->disconnect();
 		delete m_ch;
 		m_ch = NULL;
