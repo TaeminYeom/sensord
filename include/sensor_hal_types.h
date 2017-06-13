@@ -126,7 +126,6 @@ typedef enum {
 	SENSOR_DEVICE_GSR,
 	SENSOR_DEVICE_SIMSENSE,
 	SENSOR_DEVICE_PPG,
-
 } sensor_device_type;
 
 /*
