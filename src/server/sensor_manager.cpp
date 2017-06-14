@@ -257,7 +257,6 @@ void sensor_manager::create_physical_sensors(device_sensor_registry_t &devices,
 			m_sensors[sinfo.get_uri()] = psensor;
 		}
 	}
-
 }
 
 void sensor_manager::create_fusion_sensors(fusion_sensor_registry_t &fsensors)

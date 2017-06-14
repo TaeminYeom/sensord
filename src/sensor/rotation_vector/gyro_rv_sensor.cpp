@@ -87,16 +87,14 @@ int gyro_rv_sensor::update(uint32_t id, sensor_data_t *data, int len)
 	else if (id == SRC_ID_GYRO)
 		m_fusion.push_gyro(*data);
 
-	if (m_accuracy > data->accuracy)
-		m_accuracy = data->accuracy;
-
 	if (!m_fusion.get_rv(timestamp, m_w, m_x, m_y, m_z))
 		return OP_ERROR;
 
-	if(timestamp == m_time)
+	if (timestamp == m_time)
 		return OP_ERROR;
 
 	m_time = timestamp;
+	m_accuracy = data->accuracy;
 
 	_D("[rotation_vector] : [%10f] [%10f] [%10f] [%10f]", m_x, m_y, m_z, m_w);
 	return OP_SUCCESS;

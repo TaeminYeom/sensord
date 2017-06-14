@@ -34,7 +34,6 @@ public:
 private:
 	ssize_t on_send(const void *buffer, size_t size) const;
 	ssize_t on_recv(void *buffer, size_t size) const;
-
 };
 
 }
