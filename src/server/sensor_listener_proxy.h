@@ -52,6 +52,9 @@ public:
 	std::string get_required_privileges(void);
 
 private:
+	void update_event(ipc::message *msg);
+	void update_accuracy(ipc::message *msg);
+
 	uint32_t m_id;
 	std::string m_uri;
 
@@ -61,6 +64,7 @@ private:
 	bool m_passive;
 	int m_pause_policy;
 	int m_axis_orientation;
+	int m_last_accuracy;
 };
 
 }

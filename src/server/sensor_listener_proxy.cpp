@@ -38,6 +38,7 @@ sensor_listener_proxy::sensor_listener_proxy(uint32_t id,
 , m_passive(false)
 , m_pause_policy(SENSORD_PAUSE_ALL)
 , m_axis_orientation(SENSORD_AXIS_DISPLAY_ORIENTED)
+, m_last_accuracy(SENSOR_ACCURACY_UNDEFINED)
 {
 }
 
@@ -55,13 +56,41 @@ int sensor_listener_proxy::update(const char *uri, ipc::message *msg)
 {
 	retv_if(!m_ch || !m_ch->is_connected(), OP_CONTINUE);
 
+	update_event(msg);
+	update_accuracy(msg);
+
+	return OP_CONTINUE;
+}
+
+void sensor_listener_proxy::update_event(ipc::message *msg)
+{
 	/* TODO: check axis orientation */
 	msg->header()->type = CMD_LISTENER_EVENT;
 	msg->header()->err = OP_SUCCESS;
 
 	m_ch->send(msg);
+}
 
-	return OP_CONTINUE;
+void sensor_listener_proxy::update_accuracy(ipc::message *msg)
+{
+	sensor_data_t *data = reinterpret_cast<sensor_data_t *>(msg->body());
+
+	if (data->accuracy == m_last_accuracy)
+		return;
+
+	m_last_accuracy = data->accuracy;
+
+	sensor_data_t acc_data;
+	acc_data.accuracy = m_last_accuracy;
+
+	ipc::message *acc_msg = new(std::nothrow) ipc::message();
+	retm_if(!acc_msg, "Failed to allocate memory");
+
+	acc_msg->header()->type = CMD_LISTENER_ACC_EVENT;
+	acc_msg->header()->err = OP_SUCCESS;
+	acc_msg->enclose(&acc_data, sizeof(acc_data));
+
+	m_ch->send(acc_msg);
 }
 
 int sensor_listener_proxy::start(void)
