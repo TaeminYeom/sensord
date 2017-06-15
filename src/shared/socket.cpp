@@ -422,7 +422,7 @@ bool socket::has_connected(void)
 	}
 
 	if (so_error) {
-		_E("Failed to connect[%d]: %d", so_error);
+		_E("Failed to connect[%d] : %d", m_sock_fd, so_error);
 		return false;
 	}
 

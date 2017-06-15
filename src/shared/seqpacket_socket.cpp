@@ -54,7 +54,7 @@ ssize_t seqpacket_socket::on_send(const void *buffer, size_t size) const
 	} while (err == EINTR);
 
 	if (err) {
-		_ERRNO(errno, _E, "Failed to send(%d, %#x, %d) = %d",
+		_ERRNO(errno, _E, "Failed to send(%d, %p, %u) = %d",
 			socket::get_fd(), buffer, size, len);
 	}
 
@@ -74,7 +74,7 @@ ssize_t seqpacket_socket::on_recv(void *buffer, size_t size) const
 		if (len > 0) {
 			err = 0;
 		} else if (len == 0) {
-			_E("Failed to recv(%d, %#p , %d) = %d, because the peer performed shutdown!",
+			_E("Failed to recv(%d, %p , %u) = %d, because the peer performed shutdown!",
 				socket::get_fd(), buffer, size, len);
 			err = 1;
 		} else {
@@ -86,7 +86,7 @@ ssize_t seqpacket_socket::on_recv(void *buffer, size_t size) const
 		return 0;
 
 	if (err) {
-		_ERRNO(errno, _E, "Failed to recv(%d, %#x, %d) = %d",
+		_ERRNO(errno, _E, "Failed to recv(%d, %p, %u) = %d",
 			socket::get_fd(), buffer, size, len);
 	}
 

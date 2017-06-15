@@ -115,10 +115,10 @@ API int sensord_get_default_sensor(sensor_type_t type, sensor_t *sensor)
 
 API bool sensord_get_type(sensor_t sensor, sensor_type_t *type)
 {
-	retvm_if(!type, false, "Invalid parameter[%#x]", type);
+	retvm_if(!type, false, "Invalid type");
 	retvm_if(!manager.connect(), false, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), false,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	*type = static_cast<sensor_info *>(sensor)->get_type();
 
@@ -129,7 +129,7 @@ API const char* sensord_get_uri(sensor_t sensor)
 {
 	retvm_if(!manager.connect(), NULL, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), NULL,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	return static_cast<sensor_info *>(sensor)->get_uri().c_str();
 }
@@ -138,7 +138,7 @@ API const char* sensord_get_name(sensor_t sensor)
 {
 	retvm_if(!manager.connect(), NULL, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), NULL,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	return static_cast<sensor_info *>(sensor)->get_model().c_str();
 }
@@ -147,17 +147,17 @@ API const char* sensord_get_vendor(sensor_t sensor)
 {
 	retvm_if(!manager.connect(), NULL, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), NULL,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	return static_cast<sensor_info *>(sensor)->get_vendor().c_str();
 }
 
 API bool sensord_get_min_range(sensor_t sensor, float *min_range)
 {
-	retvm_if(!min_range, false, "Invalid parameter[%#x]", min_range);
+	retvm_if(!min_range, false, "Invalid paramter");
 	retvm_if(!manager.connect(), false, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), false,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	*min_range = static_cast<sensor_info *>(sensor)->get_min_range();
 
@@ -166,10 +166,10 @@ API bool sensord_get_min_range(sensor_t sensor, float *min_range)
 
 API bool sensord_get_max_range(sensor_t sensor, float *max_range)
 {
-	retvm_if(!max_range, false, "Invalid parameter[%#x]", max_range);
+	retvm_if(!max_range, false, "Invalid parameter");
 	retvm_if(!manager.connect(), false, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), false,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	*max_range = static_cast<sensor_info *>(sensor)->get_max_range();
 
@@ -178,10 +178,10 @@ API bool sensord_get_max_range(sensor_t sensor, float *max_range)
 
 API bool sensord_get_resolution(sensor_t sensor, float *resolution)
 {
-	retvm_if(!resolution, false, "Invalid parameter[%#x]", resolution);
+	retvm_if(!resolution, false, "Invalid parameter");
 	retvm_if(!manager.connect(), false, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), false,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	*resolution = static_cast<sensor_info *>(sensor)->get_resolution();
 
@@ -190,10 +190,10 @@ API bool sensord_get_resolution(sensor_t sensor, float *resolution)
 
 API bool sensord_get_min_interval(sensor_t sensor, int *min_interval)
 {
-	retvm_if(!min_interval, false, "Invalid parameter[%#x]", min_interval);
+	retvm_if(!min_interval, false, "Invalid parameter");
 	retvm_if(!manager.connect(), false, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), false,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	*min_interval = static_cast<sensor_info *>(sensor)->get_min_interval();
 
@@ -202,10 +202,10 @@ API bool sensord_get_min_interval(sensor_t sensor, int *min_interval)
 
 API bool sensord_get_fifo_count(sensor_t sensor, int *fifo_count)
 {
-	retvm_if(!fifo_count, false, "Invalid parameter[%#x]", fifo_count);
+	retvm_if(!fifo_count, false, "Invalid parameter");
 	retvm_if(!manager.connect(), false, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), false,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	*fifo_count = 0;
 
@@ -214,10 +214,10 @@ API bool sensord_get_fifo_count(sensor_t sensor, int *fifo_count)
 
 API bool sensord_get_max_batch_count(sensor_t sensor, int *max_batch_count)
 {
-	retvm_if(!max_batch_count, false, "Invalid parameter[%#x]", max_batch_count);
+	retvm_if(!max_batch_count, false, "Invalid parameter");
 	retvm_if(!manager.connect(), false, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), false,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	*max_batch_count = static_cast<sensor_info *>(sensor)->get_max_batch_count();
 
@@ -228,7 +228,7 @@ API bool sensord_is_wakeup_supported(sensor_t sensor)
 {
 	retvm_if(!manager.connect(), false, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), false,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	return static_cast<sensor_info *>(sensor)->is_wakeup_supported();
 }
@@ -237,7 +237,7 @@ API int sensord_connect(sensor_t sensor)
 {
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), -EINVAL,
-			"Invalid sensor[%#x]", sensor);
+			"Invalid sensor[%p]", sensor);
 
 	sensor::sensor_listener *listener;
 
