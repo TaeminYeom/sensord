@@ -83,7 +83,7 @@ int sensor_manager::get_sensors(const char *uri, sensor_t **list, int *count)
 
 bool sensor_manager::is_supported(sensor_t sensor)
 {
-	retvm_if(!sensor, false, "Invalid parameter[%#x]", sensor);
+	retvm_if(!sensor, false, "Invalid sensor");
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
 		if (&*it == sensor)

@@ -58,7 +58,7 @@ ssize_t stream_socket::on_send(const void *buffer, size_t size) const
 				continue;
 			}
 
-			_ERRNO(errno, _E, "Failed to send(%d, %#p, %x, %d) = %d",
+			_ERRNO(errno, _E, "Failed to send(%d, %p, %u, %u) = %d",
 					get_fd(), buffer, total_size, size - total_size, len);
 			return -errno;
 		}
@@ -81,7 +81,7 @@ ssize_t stream_socket::on_recv(void *buffer, size_t size) const
 				socket::get_mode());
 
 		if (len == 0) {
-			_E("Failed to recv(%d, %#p + %x, %d) = %d, because the peer performed shutdown",
+			_E("Failed to recv(%d, %p + %x, %u) = %d, because the peer performed shutdown",
 				get_fd(), buffer, total_size, size - total_size, len);
 			return -1;
 		}
@@ -92,7 +92,7 @@ ssize_t stream_socket::on_recv(void *buffer, size_t size) const
 				continue;
 			}
 
-			_ERRNO(errno, _E, "Failed to recv(%d, %#p, %x, %d) = %d",
+			_ERRNO(errno, _E, "Failed to recv(%d, %p, %u, %u) = %d",
 					get_fd(), buffer, total_size, size - total_size, len);
 			return -errno;
 		}
