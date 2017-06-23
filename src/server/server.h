@@ -46,7 +46,6 @@ private:
 
 	void init_calibration(void);
 	void init_server(void);
-	void init_termination(void);
 
 	ipc::ipc_server *m_server;
 	sensor_manager *m_manager;

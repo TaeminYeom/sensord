@@ -33,7 +33,6 @@
 #define SET_CAL 1
 //#define CAL_NODE_PATH "/sys/class/sensors/ssp_sensor/set_cal_data"
 
-#define TIMEOUT_TERM 10
 #define MAX_CONNECTION 1000
 
 using namespace sensor;
@@ -87,7 +86,6 @@ bool server::init(void)
 
 	init_calibration();
 	init_server();
-	init_termination();
 
 	is_running.store(true);
 	sd_notify(0, "READY=1");
@@ -147,22 +145,4 @@ void server::init_server(void)
 	m_server->set_option("max_connection", MAX_CONNECTION);
 	m_server->set_option(SO_TYPE, SOCK_STREAM);
 	m_server->bind(m_handler, &m_loop);
-}
-
-static gboolean terminate(gpointer data)
-{
-	sensor_manager *mgr = reinterpret_cast<sensor_manager *>(data);
-	std::vector<sensor_handler *> sensors = mgr->get_sensors();
-
-	if (sensors.size() <= 0) {
-		_I("Terminating.. because there is no sensors");
-		server::stop();
-	}
-
-	return FALSE;
-}
-
-void server::init_termination(void)
-{
-	g_timeout_add_seconds(TIMEOUT_TERM, terminate, m_manager);
 }
