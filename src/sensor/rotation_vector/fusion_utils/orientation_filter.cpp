@@ -40,7 +40,7 @@
 #define ZIGMA_W		(0.05 * DEG2RAD)
 #define TAU_W		1000
 #define QWB_CONST	((2 * (ZIGMA_W * ZIGMA_W)) / TAU_W)
-#define F_CONST		(-1 / TAU_W)
+#define F_CONST		(-1.0 / TAU_W)
 #define SQUARE(T)	(T * T)
 
 #define NEGLIGIBLE_VAL 0.0000001
