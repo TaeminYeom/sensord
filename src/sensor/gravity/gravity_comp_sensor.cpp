@@ -229,6 +229,7 @@ int gravity_comp_sensor::get_data(sensor_data_t **data, int *len)
 {
 	sensor_data_t *sensor_data;
 	sensor_data = (sensor_data_t *)malloc(sizeof(sensor_data_t));
+	retvm_if(!sensor_data, -ENOMEM, "Failed to allocate memory");
 
 	sensor_data->accuracy = m_accuracy;
 	sensor_data->timestamp = m_time;

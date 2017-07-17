@@ -111,6 +111,7 @@ int auto_rotation_sensor::get_data(sensor_data_t **data, int *length)
 {
 	sensor_data_t *sensor_data;
 	sensor_data = (sensor_data_t *)malloc(sizeof(sensor_data_t));
+	retvm_if(!sensor_data, -ENOMEM, "Failed to allocate memory");
 
 	sensor_data->accuracy = SENSOR_ACCURACY_GOOD;
 	sensor_data->timestamp = m_rotation_time;
