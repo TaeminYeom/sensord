@@ -211,31 +211,6 @@ unsigned long long sensor::utils::get_timestamp(timeval *t)
 	return ((unsigned long long)(t->tv_sec)*1000000LL +t->tv_usec);
 }
 
-#ifdef _DEBUG
-bool sensor::utils::get_proc_name(pid_t pid, char *process_name)
-{
-	FILE *fp;
-	char buf[NAME_MAX];
-	char filename[PATH_MAX];
-
-	sprintf(filename, "/proc/%d/stat", pid);
-	fp = fopen(filename, "r");
-
-	if (fp == NULL)
-		return false;
-
-	if (fscanf(fp, "%*s (%[^)]", buf) < 1) {
-		fclose(fp);
-		return false;
-	}
-
-	strncpy(process_name, buf, NAME_MAX-1);
-	process_name[NAME_MAX-1] = '\0';
-	fclose(fp);
-
-	return true;
-}
-#else
 bool sensor::utils::get_proc_name(pid_t pid, char *process_name)
 {
 	char buf[NAME_MAX];
@@ -249,7 +224,6 @@ bool sensor::utils::get_proc_name(pid_t pid, char *process_name)
 
 	return true;
 }
-#endif
 
 const char* sensor::utils::get_client_name(void)
 {
