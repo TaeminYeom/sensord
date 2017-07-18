@@ -119,10 +119,7 @@ void face_down_sensor::synthesize(const sensor_event_t & event)
 	int data_length;
 
 	face_down_event = (sensor_event_t *)malloc(sizeof(sensor_event_t));
-	if (!face_down_event) {
-		_E("Failed to allocate memory");
-		return;
-	}
+	retm_if(!face_down_event, "Failed to allocate memory");
 
 	get_data(&face_down_data, &data_length);
 	face_down_event->sensor_id = get_id();
@@ -139,6 +136,7 @@ int face_down_sensor::get_data(sensor_data_t ** data, int *length)
 {
 	sensor_data_t *sensor_data;
 	sensor_data = (sensor_data_t *)malloc(sizeof(sensor_data_t));
+	retvm_if(!sensor_data, -ENOMEM, "Failed to allocate memory");
 
 	sensor_data->accuracy = SENSOR_ACCURACY_GOOD;
 	sensor_data->timestamp = m_time;
