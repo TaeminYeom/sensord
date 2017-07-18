@@ -20,6 +20,7 @@
 #include "server.h"
 
 #include <unistd.h>
+#include <sys/stat.h>
 #include <systemd/sd-daemon.h>
 #include <sensor_log.h>
 #include <command_types.h>
@@ -112,6 +113,14 @@ void server::deinit(void)
 
 static void set_cal_data(const char *path)
 {
+	struct stat file_stat;
+
+	if (lstat(path, &file_stat) != 0)
+		return;
+
+	if (!S_ISREG(file_stat.st_mode))
+		return;
+
 	FILE *fp = fopen(path, "w");
 	retm_if(!fp, "There is no calibration file[%s]", path);
 
