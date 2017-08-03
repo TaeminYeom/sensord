@@ -155,9 +155,8 @@ bool channel::send(message *msg)
 {
 	retv_if(!m_loop, false);
 
-	/* TODO: check buffer size(is there any linux api for this?) */
 	int cur_buffer_size = m_socket->get_current_buffer_size();
-	retvm_if(cur_buffer_size > SYSTEMD_SOCK_BUF_SIZE, false, "Failed to send data");
+	retv_if(cur_buffer_size > SYSTEMD_SOCK_BUF_SIZE, false);
 
 	send_event_handler *handler = new(std::nothrow) send_event_handler(this, msg);
 	retvm_if(!handler, false, "Failed to allocate memory");
