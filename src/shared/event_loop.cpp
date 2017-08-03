@@ -238,12 +238,7 @@ void event_loop::stop(void)
 {
 	ret_if(!is_running() || m_terminating.load());
 
-	uint64_t term = 1;
-	ssize_t size;
-	m_terminating.store(true);
-	size = write(m_term_fd, &term, sizeof(uint64_t));
-
-	retm_if(size != sizeof(ssize_t), "Failed to write[%d]", m_term_fd);
+	terminate();
 }
 
 void event_loop::terminate(void)
