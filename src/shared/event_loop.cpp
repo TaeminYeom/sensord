@@ -43,7 +43,7 @@ static gboolean g_io_handler(GIOChannel *ch, GIOCondition condition, gpointer da
 	cond = (unsigned int)condition;
 
 	if (cond & (G_IO_HUP))
-		cond &= ~(G_IO_IN & G_IO_OUT);
+		cond &= ~(G_IO_IN | G_IO_OUT);
 
 	handler_info *info = (handler_info *)data;
 	id = info->id;
