@@ -37,6 +37,9 @@
 #ifdef ENABLE_ORIENTATION
 #include "orientation/orientation_sensor.h"
 #endif
+#ifdef ENABLE_PEDOMETER
+#include "pedometer/pedometer_sensor.h"
+#endif
 
 static std::vector<fusion_sensor_t> sensors;
 
@@ -80,6 +83,10 @@ extern "C" int create(fusion_sensor_t **fsensors)
 
 #ifdef ENABLE_ORIENTATION
 	create_sensor<orientation_sensor>("Orientation Sensor");
+#endif
+
+#ifdef ENABLE_PEDOMETER
+	create_sensor<pedometer_sensor>("Pedometer");
 #endif
 
 	*fsensors = &sensors[0];

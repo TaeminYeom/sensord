@@ -96,8 +96,8 @@ bool server::init(void)
 
 void server::deinit(void)
 {
-	m_manager->deinit();
 	m_server->close();
+	m_manager->deinit();
 
 	delete m_server;
 	m_server = NULL;

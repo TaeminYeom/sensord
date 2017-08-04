@@ -43,7 +43,7 @@ static gboolean g_io_handler(GIOChannel *ch, GIOCondition condition, gpointer da
 	cond = (unsigned int)condition;
 
 	if (cond & (G_IO_HUP))
-		cond &= ~(G_IO_IN & G_IO_OUT);
+		cond &= ~(G_IO_IN | G_IO_OUT);
 
 	handler_info *info = (handler_info *)data;
 	id = info->id;
@@ -238,12 +238,7 @@ void event_loop::stop(void)
 {
 	ret_if(!is_running() || m_terminating.load());
 
-	uint64_t term = 1;
-	ssize_t size;
-	m_terminating.store(true);
-	size = write(m_term_fd, &term, sizeof(uint64_t));
-
-	retm_if(size != sizeof(ssize_t), "Failed to write[%d]", m_term_fd);
+	terminate();
 }
 
 void event_loop::terminate(void)

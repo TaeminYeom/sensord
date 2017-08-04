@@ -29,6 +29,8 @@
 
 #include "sensor_log.h"
 
+#define SOCK_TIMEOUT 3
+
 using namespace ipc;
 
 static bool set_close_on_exec(int fd)
@@ -136,7 +138,6 @@ socket::~socket()
 
 bool socket::connect(void)
 {
-	const int TIMEOUT = 3;
 	sockaddr_un addr;
 	fd_set write_fds;
 	FD_ZERO(&write_fds);
@@ -157,7 +158,7 @@ bool socket::connect(void)
 		return false;
 	}
 
-	if (!select_fds(m_sock_fd, NULL, &write_fds, TIMEOUT)) {
+	if (!select_fds(m_sock_fd, NULL, &write_fds, SOCK_TIMEOUT)) {
 		_E("Failed to select for socket[%d]", m_sock_fd);
 		close();
 		return false;
@@ -294,12 +295,11 @@ bool socket::create(const std::string &path)
 ssize_t socket::send(const void *buffer, size_t size, bool select) const
 {
 	if (select) {
-		const int TIMEOUT = 1;
 		fd_set write_fds;
 		FD_ZERO(&write_fds);
 		FD_SET(m_sock_fd, &write_fds);
 
-		if (!select_fds(m_sock_fd, NULL, &write_fds, TIMEOUT)) {
+		if (!select_fds(m_sock_fd, NULL, &write_fds, SOCK_TIMEOUT)) {
 			_E("Failed to send message(timeout)");
 			return 0;
 		}
@@ -311,12 +311,11 @@ ssize_t socket::send(const void *buffer, size_t size, bool select) const
 ssize_t socket::recv(void* buffer, size_t size, bool select) const
 {
 	if (select) {
-		const int TIMEOUT = 1;
 		fd_set read_fds;
 		FD_ZERO(&read_fds);
 		FD_SET(m_sock_fd, &read_fds);
 
-		if (!select_fds(m_sock_fd, &read_fds, NULL, TIMEOUT)) {
+		if (!select_fds(m_sock_fd, &read_fds, NULL, SOCK_TIMEOUT)) {
 			_E("Failed to receive message(timeout)");
 			return 0;
 		}
