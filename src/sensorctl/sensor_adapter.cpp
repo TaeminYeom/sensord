@@ -30,12 +30,12 @@
 bool sensor_adapter::is_supported(sensor_type_t type)
 {
 	sensor_t sensor;
-	int ret;
 
-	ret = sensord_get_default_sensor(type, &sensor);
-	ASSERT_TRUE(ret);
+	int ret = sensord_get_default_sensor(type, &sensor);
+	if (ret == 0)
+		return true;
 
-	return true;
+	return false;
 }
 
 int sensor_adapter::get_count(sensor_type_t type)
