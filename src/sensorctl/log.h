@@ -39,12 +39,17 @@ do { \
 
 #define _E(fmt, args...) \
 do { \
-	g_print("\x1B[31m" fmt "\033[0m", ##args); \
+	g_print(_RED fmt _RST, ##args); \
 } while (0)
 
 #define _I(fmt, args...) \
 do { \
-	g_print("\x1B[32m" fmt "\033[0m", ##args); \
+	g_print(_GRN fmt _RST, ##args); \
+} while (0)
+
+#define _W(fmt, args...) \
+do { \
+	g_print(_YEL fmt _RST, ##args); \
 } while (0)
 
 #define WARN_IF(expr, fmt, arg...) \
