@@ -36,9 +36,6 @@ static bool called = false;
 
 static void event_cb(sensor_t sensor, unsigned int event_type, sensor_data_t *data, void *user_data)
 {
-	if (test_option::full_log == false) {
-		while (true) {}
-	}
 	_I("[%llu] %f %f %f\n", data->timestamp, data->values[0], data->values[1], data->values[2]);
 }
 
@@ -107,7 +104,7 @@ static void removed_cb(const char *uri, void *user_data)
 		mainloop::stop();
 }
 
-TESTCASE(sensor_api_provider_uri, provider_check_uri)
+TESTCASE(sensor_provider, check_uri)
 {
 	int err;
 	sensord_provider_h provider;
@@ -139,7 +136,27 @@ TESTCASE(sensor_api_provider_uri, provider_check_uri)
 }
 
 /* TODO: change it from manual test to auto-test */
-TESTCASE(sensor_api_provider_mysensor, provider_p_1)
+TESTCASE(skip_sensor_provider, mysensor_added_removed_cb_p_1)
+{
+	int ret = sensord_add_sensor_added_cb(added_cb, NULL);
+	ASSERT_EQ(ret, 0);
+	ret = sensord_add_sensor_removed_cb(removed_cb, NULL);
+	ASSERT_EQ(ret, 0);
+
+	add_mysensor();
+
+	mainloop::run();
+
+	ret = sensord_remove_sensor_added_cb(added_cb);
+	ASSERT_EQ(ret, 0);
+	ret = sensord_remove_sensor_removed_cb(removed_cb);
+	ASSERT_EQ(ret, 0);
+
+	return true;
+}
+
+/* TODO: change it from manual test to auto-test */
+TESTCASE(skip_sensor_provider, mysensor_p)
 {
 	int err = 0;
 	sensor_t sensor;
@@ -181,7 +198,8 @@ TESTCASE(sensor_api_provider_mysensor, provider_p_1)
 	return true;
 }
 
-TESTCASE(sensor_api_listener_mysensor, listener_p_1)
+/* TODO: change it from manual test to auto-test */
+TESTCASE(skip_sensor_provider, mysensor_with_listener_p_1)
 {
 	int err;
 	bool ret;
@@ -219,23 +237,3 @@ TESTCASE(sensor_api_listener_mysensor, listener_p_1)
 	return true;
 }
 
-TESTCASE(sensor_api_provider_cb, mysensor_cb_p_1)
-{
-	int ret;
-
-	ret = sensord_add_sensor_added_cb(added_cb, NULL);
-	ASSERT_EQ(ret, 0);
-	ret = sensord_add_sensor_removed_cb(removed_cb, NULL);
-	ASSERT_EQ(ret, 0);
-
-	add_mysensor();
-
-	mainloop::run();
-
-	ret = sensord_remove_sensor_added_cb(added_cb);
-	ASSERT_EQ(ret, 0);
-	ret = sensord_remove_sensor_removed_cb(removed_cb);
-	ASSERT_EQ(ret, 0);
-
-	return true;
-}

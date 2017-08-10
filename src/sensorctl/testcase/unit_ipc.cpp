@@ -102,7 +102,7 @@ public:
 };
 
 /* IPC Client Sleep Test(4096Kb * 1024) */
-static bool run_ipc_client_sleep_10s(const char *str, int size, int count)
+static bool run_ipc_client_sleep_1s(const char *str, int size, int count)
 {
 	ipc_client client(TEST_PATH);
 	test_client_handler_30_1M client_handler;
@@ -355,9 +355,9 @@ static bool run_ipc_client(const char *str, int size, int count)
 }
 
 /**
- * @brief   Test 3 client + 1 client which sleeps 10 seconds
+ * @brief   Test 3 client + 1 client which sleeps 1 seconds
  */
-TESTCASE(sensor_ipc_client_sleep_1s, sleep_1s_p)
+TESTCASE(sensor_ipc, 3_client_with_1s_sleep_client_p)
 {
 	pid_t pid = run_process(run_ipc_server_echo, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
@@ -369,7 +369,7 @@ TESTCASE(sensor_ipc_client_sleep_1s, sleep_1s_p)
 		EXPECT_GE(pid, 0);
 	}
 
-	bool ret = run_ipc_client_sleep_10s(NULL, 0, 0);
+	bool ret = run_ipc_client_sleep_1s(NULL, 0, 0);
 	ASSERT_TRUE(ret);
 
 	SLEEP_1S;
@@ -378,9 +378,9 @@ TESTCASE(sensor_ipc_client_sleep_1s, sleep_1s_p)
 }
 
 /**
- * @brief   Test 3 client + 1 client which has small recv buffer
+ * @brief   Test 3 client + 1 client which has small recv buffer(2240)
  */
-TESTCASE(sensor_ipc_client_small_2240, ipc_client_small_2240_p)
+TESTCASE(sensor_ipc, 3_client_with_small_buffer_client_p)
 {
 	pid_t pid = run_process(run_ipc_server_echo, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
@@ -403,7 +403,7 @@ TESTCASE(sensor_ipc_client_small_2240, ipc_client_small_2240_p)
 /**
  * @brief   Test 30 ipc_client with 1M message
  */
-TESTCASE(sensor_ipc_30_client_1M, ipc_client_p_30_1M)
+TESTCASE(sensor_ipc, 30_client_with_1M_message_p)
 {
 	pid_t pid = run_process(run_ipc_server_echo, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
@@ -426,7 +426,7 @@ TESTCASE(sensor_ipc_30_client_1M, ipc_client_p_30_1M)
 /**
  * @brief   Test 2 channel of 1 client with message
  */
-TESTCASE(sensor_ipc_client_2_channel_message, 2_channel_message_p)
+TESTCASE(sensor_ipc, 1_client_with_2_channel_message_p)
 {
 	pid_t pid = run_process(run_ipc_server, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
@@ -444,7 +444,7 @@ TESTCASE(sensor_ipc_client_2_channel_message, 2_channel_message_p)
 /**
  * @brief   Test 2 channel of 1 client
  */
-TESTCASE(sensor_ipc_client_2_channel, 2_channel_p)
+TESTCASE(sensor_ipc, 1_client_2_channel_simple_p)
 {
 	pid_t pid = run_process(run_ipc_server, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
@@ -462,7 +462,7 @@ TESTCASE(sensor_ipc_client_2_channel, 2_channel_p)
 /**
  * @brief   Test 100 ipc_client
  */
-TESTCASE(sensor_ipc_100_client, ipc_client_p_100)
+TESTCASE(sensor_ipc, 100_client_p)
 {
 	pid_t pid = run_process(run_ipc_server, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
@@ -485,7 +485,7 @@ TESTCASE(sensor_ipc_100_client, ipc_client_p_100)
 /**
  * @brief   Test 2 ipc_client
  */
-TESTCASE(sensor_ipc_2_client, ipc_client_p_2)
+TESTCASE(sensor_ipc, 2_client_p)
 {
 	pid_t pid = run_process(run_ipc_server, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
@@ -509,7 +509,7 @@ TESTCASE(sensor_ipc_2_client, ipc_client_p_2)
  *          2. send "TEST" message from client to server
  *          3. check that message in server handler
  */
-TESTCASE(sensor_ipc_client_0, ipc_client_p_0)
+TESTCASE(sensor_ipc, server_client_basic_p)
 {
 	pid_t pid = run_process(run_ipc_server, NULL, 0, 0);
 	EXPECT_GE(pid, 0);
