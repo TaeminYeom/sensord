@@ -61,6 +61,8 @@ int application_sensor_handler::start(sensor_observer *ob)
 	m_ch->send_sync(&msg);
 	m_started.store(true);
 
+	_I("Started[%s]", m_info.get_uri().c_str());
+
 	return OP_SUCCESS;
 }
 
@@ -75,6 +77,8 @@ int application_sensor_handler::stop(sensor_observer *ob)
 	msg.set_type(CMD_PROVIDER_STOP);
 	m_ch->send_sync(&msg);
 	m_started.store(false);
+
+	_I("Stopped[%s]", m_info.get_uri().c_str());
 
 	return OP_SUCCESS;
 }
@@ -118,6 +122,8 @@ int application_sensor_handler::set_interval(sensor_observer *ob, int32_t interv
 	m_ch->send_sync(&msg);
 
 	m_prev_interval = cur_interval;
+
+	_I("Set interval[%d] to sensor[%s]", cur_interval, m_info.get_uri().c_str());
 
 	return OP_SUCCESS;
 }

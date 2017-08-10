@@ -100,6 +100,8 @@ int external_sensor_handler::start(sensor_observer *ob)
 
 	add_observer(ob);
 
+	_I("Started[%s]", m_info.get_uri().c_str());
+
 	return OP_SUCCESS;
 }
 
@@ -111,6 +113,8 @@ int external_sensor_handler::stop(sensor_observer *ob)
 	retv_if(policy <= OP_ERROR, policy);
 
 	remove_observer(ob);
+
+	_I("Stopped[%s]", m_info.get_uri().c_str());
 
 	return OP_SUCCESS;
 }
@@ -152,6 +156,8 @@ int external_sensor_handler::set_interval(sensor_observer *ob, int32_t interval)
 		_interval = get_min_interval();
 		return m_sensor->set_interval(ob, _interval);
 	}
+
+	_I("Set interval[%d] to sensor[%s]", _interval, m_info.get_uri().c_str());
 
 	return OP_SUCCESS;
 }

@@ -83,6 +83,8 @@ int fusion_sensor_handler::start(sensor_observer *ob)
 			return OP_SUCCESS;
 	}
 
+	_I("Started[%s]", m_info.get_uri().c_str());
+
 	return start_internal();
 }
 
@@ -101,6 +103,8 @@ int fusion_sensor_handler::stop(sensor_observer *ob)
 		if (observer_count() >= 1)
 			return OP_SUCCESS; /* already started */
 	}
+
+	_I("Stopped[%s]", m_info.get_uri().c_str());
 
 	return stop_internal();
 }
@@ -139,6 +143,8 @@ int fusion_sensor_handler::set_interval(sensor_observer *ob, int32_t interval)
 
 	if (policy == OP_DEFAULT)
 		_interval = get_min_interval();
+
+	_I("Set interval[%d] to sensor[%s]", _interval, m_info.get_uri().c_str());
 
 	return set_interval_internal(_interval);
 }
