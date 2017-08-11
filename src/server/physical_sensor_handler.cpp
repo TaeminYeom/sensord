@@ -104,6 +104,8 @@ int physical_sensor_handler::start(sensor_observer *ob)
 			return OP_SUCCESS; /* already started */
 	}
 
+	_I("Started[%s]", m_info.get_uri().c_str());
+
 	return m_device->enable(m_hal_id);
 }
 
@@ -124,6 +126,8 @@ int physical_sensor_handler::stop(sensor_observer *ob)
 		if (observer_count() >= 1)
 			return OP_SUCCESS; /* already stopped */
 	}
+
+	_I("Stopped[%s]", m_info.get_uri().c_str());
 
 	return m_device->disable(m_hal_id);
 }
@@ -171,6 +175,8 @@ int physical_sensor_handler::set_interval(sensor_observer *ob, int32_t interval)
 	ret = m_device->set_interval(m_hal_id, cur_interval);
 
 	m_prev_interval = cur_interval;
+
+	_I("Set interval[%d] to sensor[%s]", cur_interval, m_info.get_uri().c_str());
 
 	return (ret ? OP_SUCCESS : OP_ERROR);
 }

@@ -119,6 +119,8 @@ int sensor_manager::add_sensor(sensor_info &info)
 
 	m_sensors.push_back(info);
 
+	_I("Added sensor[%s]", info.get_uri().c_str());
+
 	return OP_SUCCESS;
 }
 
@@ -133,6 +135,8 @@ int sensor_manager::remove_sensor(const char *uri)
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
 		if ((*it).get_uri() == uri) {
 			m_sensors.erase(it);
+			_I("Removed sensor[%s]", (*it).get_uri().c_str());
+
 			return OP_SUCCESS;
 		}
 	}
@@ -320,6 +324,8 @@ bool sensor_manager::has_privilege(std::string &uri)
 
 	if (reply.header()->err == OP_SUCCESS)
 		return true;
+
+	_W("This client doesn't have the privilege for sensor[%s]", uri.c_str());
 
 	return false;
 }

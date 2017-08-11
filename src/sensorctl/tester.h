@@ -25,8 +25,30 @@
 
 #include "sensor_manager.h"
 
+#define TESTER_ARGC 3 /* e.g. {sensorctl, test, accelerometer} */
+
+#define REGISTER_TESTER(name, tester_type) \
+static tester_type tester(name);
+
+class tester {
+public:
+	tester(const char *name);
+	virtual ~tester() {}
+
+	virtual bool setup(sensor_type_t type, int argc, char *argv[]) { return true; }
+	virtual bool teardown(void) { return true; }
+	virtual bool run(int argc, char *argv[]) = 0;
+
+	const std::string& name() const { return m_name; }
+
+private:
+	std::string m_name;
+};
+
 class tester_manager : public sensor_manager {
 public:
+	static void register_tester(tester *test);
+
 	tester_manager();
 	virtual ~tester_manager();
 
@@ -34,10 +56,8 @@ public:
 	void stop(void);
 
 private:
-	bool setup(int argc, char *argv[]);
-	bool setup_auto(int argc, char *argv[]);
-	bool setup_manual(int argc, char *argv[]);
+	static std::vector<tester *> testers;
 
+	tester *get_tester(const char *type);
 	void usage(void);
 };
-

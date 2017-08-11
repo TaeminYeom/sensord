@@ -25,7 +25,6 @@
 
 #include "sensor_manager.h"
 
-#define NAME_MAX_TEST 32
 #define INJECTOR_ARGC 4 /* e.g. {sensorctl, inject, wristup, conf} */
 
 #define REGISTER_INJECTOR(sensor_type, event_name, injector_type) \
@@ -51,9 +50,8 @@ private:
 
 class injector_manager : public sensor_manager {
 public:
-	static void register_injector(injector *injector);
+	static void register_injector(injector *inject);
 
-public:
 	injector_manager();
 	virtual ~injector_manager();
 

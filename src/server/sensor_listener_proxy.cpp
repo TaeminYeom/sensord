@@ -98,6 +98,8 @@ int sensor_listener_proxy::start(void)
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
+	_D("Listener[%d] try to start", get_id());
+
 	/* TODO: listen pause policy */
 	return sensor->start(this);
 }
@@ -108,9 +110,10 @@ int sensor_listener_proxy::stop(void)
 	retv_if(!sensor, -EINVAL);
 
 	/* TODO: listen pause policy */
-	int ret;
 
-	ret = sensor->stop(this);
+	_D("Listener[%d] try to stop", get_id());
+
+	int ret = sensor->stop(this);
 	retv_if(ret < 0, OP_ERROR);
 
 	/* unset attributes */
@@ -125,6 +128,8 @@ int sensor_listener_proxy::set_interval(unsigned int interval)
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
+	_D("Listener[%d] try to set interval[%d]", get_id(), interval);
+
 	return sensor->set_interval(this, interval);
 }
 
@@ -132,6 +137,8 @@ int sensor_listener_proxy::set_max_batch_latency(unsigned int max_batch_latency)
 {
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
+
+	_D("Listener[%d] try to set max batch latency[%d]", get_id(), max_batch_latency);
 
 	return sensor->set_batch_latency(this, max_batch_latency);
 }
@@ -148,6 +155,8 @@ int sensor_listener_proxy::set_attribute(int attribute, int value)
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
+	_D("Listener[%d] try to set attribute[%d, %d]", get_id(), attribute, value);
+
 	if (attribute == SENSORD_ATTRIBUTE_PAUSE_POLICY) {
 		m_pause_policy = value;
 		return OP_SUCCESS;
@@ -163,6 +172,8 @@ int sensor_listener_proxy::set_attribute(int attribute, const char *value, int l
 {
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
+
+	_D("Listener[%d] try to set attribute[%d, %s]", get_id(), attribute, value);
 
 	return sensor->set_attribute(this, attribute, value, len);
 }

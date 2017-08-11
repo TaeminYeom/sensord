@@ -27,10 +27,10 @@
 #include "log.h"
 #include "test_bench.h"
 
-using namespace ipc;
-
 #define MAX_BUF_SIZE 4096
 #define TEST_PATH "/run/.sensord_test.socket"
+
+using namespace ipc;
 
 typedef bool (*process_func_t)(const char *msg, int size, int count);
 
@@ -67,7 +67,9 @@ static bool run_socket_echo_server(const char *msg, int size, int count)
 	accept_sock.set_blocking_mode(true);
 	accept_sock.bind();
 	accept_sock.listen(10);
-	accept_sock.accept(client_sock);
+
+	while (!ret)
+		ret = accept_sock.accept(client_sock);
 
 	/* receive message */
 	while (recv_count++ < count) {
@@ -129,7 +131,6 @@ static bool run_socket_client(const char *msg, int size, int count)
 	ASSERT_EQ(ret, 0);
 
 	sock.close();
-
 	return true;
 }
 
@@ -140,7 +141,7 @@ static bool run_socket_client(const char *msg, int size, int count)
  *          3. check "TEST" message
  * @remarks we can test only regular socket, not systemd-based socket.
  */
-TESTCASE(sensor_ipc_socket, socket_p_0)
+TESTCASE(ipc_socket, socket_simple_message_p)
 {
 	const char *msg = "TEST";
 	int size = 4;
@@ -162,7 +163,7 @@ TESTCASE(sensor_ipc_socket, socket_p_0)
  *          3. check total size
  * @remarks we can test only regular socket, not systemd-based socket.
  */
-TESTCASE(sensor_ipc_socket, socket_p_10)
+TESTCASE(ipc_socket, socket_40K_message_p)
 {
 	const char msg[MAX_BUF_SIZE] = {1, };
 	int size = MAX_BUF_SIZE;
@@ -184,7 +185,7 @@ TESTCASE(sensor_ipc_socket, socket_p_10)
  *          3. check total size
  * @remarks we can test only regular socket, not systemd-based socket.
  */
-TESTCASE(sensor_ipc_socket, socket_p_1000)
+TESTCASE(ipc_socket, socket_4M_message_p)
 {
 	const char msg[MAX_BUF_SIZE] = {1, };
 	int size = MAX_BUF_SIZE;

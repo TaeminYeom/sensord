@@ -146,7 +146,8 @@ int server_channel_handler::listener_connect(channel *ch, message &msg)
 				buf.sensor, m_manager, ch);
 	retvm_if(!listener, OP_ERROR, "Failed to allocate memory");
 	retvm_if(!has_privileges(ch->get_fd(), listener->get_required_privileges()),
-			-EACCES, "Permission denied");
+			-EACCES, "Permission denied[%d, %s]",
+			listener_id, m_listeners[listener_id]->get_required_privileges().c_str());
 
 	buf.listener_id = listener_id;
 
@@ -174,10 +175,11 @@ int server_channel_handler::listener_start(channel *ch, message &msg)
 	auto it = m_listeners.find(id);
 	retv_if(it == m_listeners.end(), -EINVAL);
 	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
-			-EACCES, "Permission denied");
+			-EACCES, "Permission denied[%d, %s]",
+			id, m_listeners[id]->get_required_privileges().c_str());
 
 	int ret = m_listeners[id]->start();
-	retv_if(ret < 0, ret);
+	retvm_if(ret < 0, ret, "Failed to start listener[%d]", id);
 
 	return send_reply(ch, OP_SUCCESS);
 }
@@ -191,10 +193,11 @@ int server_channel_handler::listener_stop(channel *ch, message &msg)
 	auto it = m_listeners.find(id);
 	retv_if(it == m_listeners.end(), -EINVAL);
 	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
-			-EACCES, "Permission denied");
+			-EACCES, "Permission denied[%d, %s]",
+			id, m_listeners[id]->get_required_privileges().c_str());
 
 	int ret = m_listeners[id]->stop();
-	retv_if(ret < 0, ret);
+	retvm_if(ret < 0, ret, "Failed to stop listener[%d]", id);
 
 	return send_reply(ch, OP_SUCCESS);
 }
@@ -210,7 +213,8 @@ int server_channel_handler::listener_attr_int(channel *ch, message &msg)
 	auto it = m_listeners.find(id);
 	retv_if(it == m_listeners.end(), -EINVAL);
 	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
-			-EACCES, "Permission denied");
+			-EACCES, "Permission denied[%d, %s]",
+			id, m_listeners[id]->get_required_privileges().c_str());
 
 	switch (buf.attribute) {
 	case SENSORD_ATTRIBUTE_INTERVAL:
@@ -240,7 +244,8 @@ int server_channel_handler::listener_attr_str(channel *ch, message &msg)
 	auto it = m_listeners.find(id);
 	retv_if(it == m_listeners.end(), -EINVAL);
 	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
-			-EACCES, "Permission denied");
+			-EACCES, "Permission denied[%d, %s]",
+			id, m_listeners[id]->get_required_privileges().c_str());
 
 	int ret = m_listeners[id]->set_attribute(buf.attribute, buf.value, buf.len);
 	retv_if(ret < 0, ret);
@@ -262,7 +267,8 @@ int server_channel_handler::listener_get_data(channel *ch, message &msg)
 	auto it = m_listeners.find(id);
 	retv_if(it == m_listeners.end(), -EINVAL);
 	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
-			-EACCES, "Permission denied");
+			-EACCES, "Permission denied[%d, %s]",
+			id, m_listeners[id]->get_required_privileges().c_str());
 
 	int ret = m_listeners[id]->get_data(&data, &len);
 	retv_if(ret < 0, ret);

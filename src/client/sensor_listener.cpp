@@ -36,6 +36,7 @@ public:
 	void connected(ipc::channel *ch) {}
 	void disconnected(ipc::channel *ch)
 	{
+		_D("Disconnected");
 		/* If channel->disconnect() is not explicitly called,
 		 * listener will be restored */
 		m_listener->restore();
@@ -172,7 +173,7 @@ bool sensor_listener::connect(void)
 
 	m_evt_channel->bind();
 
-	_D("Listener ID[%d]", get_id());
+	_I("Connected listener[%d] with sensor[%s]", get_id(), m_sensor->get_uri().c_str());
 
 	return true;
 }
@@ -245,10 +246,14 @@ int sensor_listener::start(void)
 	m_cmd_channel->send_sync(&msg);
 	m_cmd_channel->read_sync(reply);
 
-	if (reply.header()->err < 0)
+	if (reply.header()->err < 0) {
+		_E("Failed to start listener[%d], sensor[%s]", get_id(), m_sensor->get_uri().c_str());
 		return reply.header()->err;
+	}
 
 	m_started.store(true);
+
+	_I("Listener[%d] started", get_id());
 
 	return OP_SUCCESS;
 }
@@ -269,10 +274,14 @@ int sensor_listener::stop(void)
 	m_cmd_channel->send_sync(&msg);
 	m_cmd_channel->read_sync(reply);
 
-	if (reply.header()->err < 0)
+	if (reply.header()->err < 0) {
+		_E("Failed to stop listener[%d], sensor[%s]", get_id(), m_sensor->get_uri().c_str());
 		return reply.header()->err;
+	}
 
 	m_started.store(false);
+
+	_I("Listener[%d] stopped", get_id());
 
 	return OP_SUCCESS;
 }
@@ -321,21 +330,29 @@ int sensor_listener::set_interval(unsigned int interval)
 	else
 		_interval = interval;
 
+	_I("Listener[%d] set interval[%u]", get_id(), _interval);
+
 	return set_attribute(SENSORD_ATTRIBUTE_INTERVAL, _interval);
 }
 
 int sensor_listener::set_max_batch_latency(unsigned int max_batch_latency)
 {
+	_I("Listener[%d] set max batch latency[%u]", get_id(), max_batch_latency);
+
 	return set_attribute(SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY, max_batch_latency);
 }
 
 int sensor_listener::set_passive_mode(bool passive)
 {
+	_I("Listener[%d] set passive mode[%d]", get_id(), passive);
+
 	return set_attribute(SENSORD_ATTRIBUTE_PASSIVE_MODE, passive);
 }
 
 int sensor_listener::flush(void)
 {
+	_I("Listener[%d] flushes", get_id());
+
 	return set_attribute(SENSORD_ATTRIBUTE_FLUSH, 1);
 }
 
@@ -412,6 +429,8 @@ int sensor_listener::get_sensor_data(sensor_data_t *data)
 	}
 
 	memcpy(data, &buf.data, buf.len);
+
+	_D("Listener[%d] read sensor data", get_id());
 
 	return OP_SUCCESS;
 }

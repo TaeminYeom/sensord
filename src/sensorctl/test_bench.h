@@ -38,7 +38,7 @@ do { \
 
 #define PASS(left, comp, right) \
 do { \
-	if (test_option::full_log) { \
+	if (test_option::verbose) { \
 		_I("[   PASS   ] "); \
 		std::ostringstream os; \
 		os << __FUNCTION__ << "(" << __LINE__ << ") : " \
@@ -96,32 +96,37 @@ do { \
 } while (0)
 
 #define TESTCASE(group, name) \
-class test_case_##group_##name : public test_case { \
+class test_case_##group##_##name : public test_case { \
 public: \
-	test_case_##group_##name() \
+	test_case_##group##_##name() \
 	: test_case(#group, #name) \
 	{ \
-		register_func(static_cast<test_case::test_func>(&test_case_##group_##name::test)); \
+		register_func(static_cast<test_case::test_func>(&test_case_##group##_##name::test)); \
 	} \
 	bool test(void); \
-} test_case_##group_##name##_instance; \
-bool test_case_##group_##name::test(void)
+} test_case_##group##_##name##_instance; \
+bool test_case_##group##_##name::test(void)
 
 /*
  * Declaration of test_option
  */
 class test_option {
 public:
-	static bool full_log;
-	static std::string group;
+	static bool verbose;
+	static bool shuffle; /* TODO */
+	static bool show_list;
+	static int repeat; /* TODO */
+	static std::string filter;
+	static std::string output; /* TODO */
+	static int interval;
+	static int latency;
+	static int powersave;
 
-	static void show_full_log(bool show);
-	static void set_group(const char *gname);
-	static void set_options(int argc, char *argv[]);
+	static bool set_options(int argc, char *argv[]);
 };
 
 /*
- * Decloaration of test_result
+ * Declaration of test_result
  */
 class test_result {
 public:
@@ -146,18 +151,19 @@ public:
 
 	const std::string& group() const { return m_group; }
 	const std::string& name() const { return m_name; }
+	const std::string& fullname() const { return m_fullname; }
 
 protected:
 	typedef bool (test_case::*test_func)();
 
 	void started(void);
-	void stopped(void);
-	void show(bool result);
+	void stopped(bool result);
 	void register_func(test_func func);
 
 private:
 	const std::string m_group;
 	const std::string m_name;
+	const std::string m_fullname;
 	test_func m_func;
 };
 
@@ -171,10 +177,12 @@ public:
 	, m_stop(false)
 	{}
 
+	static void show_testcases(void);
+
 	static void register_testcase(const std::string &group, test_case *testcase);
 
-	static void run_all_testcase(void);
-	static void stop_all_testcase(void);
+	static void run_all_testcases(void);
+	static void stop_all_testcases(void);
 
 	static void push_failure(const std::string &function, long line, const std::string &msg);
 
@@ -188,11 +196,14 @@ private:
 	void show_failures(void);
 
 	void add_testcase(const std::string &group, test_case *testcase);
+
+	bool filter(const std::string &name);
 	void run(void);
 	void stop(void);
 
-	unsigned int count(std::string &group);
-	unsigned int count_by_key(const char *key);
+	void show(void);
+
+	unsigned int count(void);
 
 	std::multimap<const std::string, test_case *> testcases;
 	std::vector<test_result> results;

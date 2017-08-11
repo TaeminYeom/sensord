@@ -24,7 +24,7 @@
 #include "test_bench.h"
 #include "sensor_adapter.h"
 
-static void basic_cb(sensor_t sensor, unsigned int event_type, sensor_data_t *data, void *user_data)
+static void test_cb(sensor_t sensor, unsigned int event_type, sensor_data_t *data, void *user_data)
 {
 	EXPECT_GT(data->timestamp, 0);
 	EXPECT_NEAR(data->values[0], 0, 19.6);
@@ -34,13 +34,16 @@ static void basic_cb(sensor_t sensor, unsigned int event_type, sensor_data_t *da
 	mainloop::stop();
 }
 
-TESTCASE(accelerometer_basic, start_stop_p)
+TESTCASE(accelerometer_test, start_stop_p)
 {
 	bool ret;
 	int handle;
 
+	if (!sensor_adapter::is_supported(ACCELEROMETER_SENSOR))
+		return true; /* Not Supported */
+
 	sensor_info info(ACCELEROMETER_SENSOR, 0,
-			100, 1000, SENSOR_OPTION_ALWAYS_ON, basic_cb, NULL);
+			100, 1000, SENSOR_OPTION_ALWAYS_ON, test_cb, NULL);
 
 	ret = sensor_adapter::start(info, handle);
 	ASSERT_TRUE(ret);
@@ -58,11 +61,14 @@ static void get_data_cb(sensor_t sensor, unsigned int event_type, sensor_data_t 
 	mainloop::stop();
 }
 
-TESTCASE(accelerometer_basic, get_data_p)
+TESTCASE(accelerometer_test, get_data_p)
 {
 	bool ret;
 	int handle;
 	sensor_data_t data;
+
+	if (!sensor_adapter::is_supported(ACCELEROMETER_SENSOR))
+		return true; /* Not Supported */
 
 	sensor_info info(ACCELEROMETER_SENSOR, 0,
 			100, 1000, SENSOR_OPTION_ALWAYS_ON, get_data_cb, NULL);
@@ -81,79 +87,39 @@ TESTCASE(accelerometer_basic, get_data_p)
 	return true;
 }
 
-static unsigned long long prev_prev_ts;
-static unsigned long long prev_ts;
+static unsigned long long time_first;
+static unsigned long long time_last;
 static int event_count;
-
-static void accel_regular_interval_cb(sensor_t sensor, unsigned int event_type, sensor_data_t *data, void *user_data)
-{
-	int prev_gap;
-	int current_gap;
-	if (prev_prev_ts == 0) {
-		prev_prev_ts = data->timestamp;
-		return;
-	}
-
-	if (prev_ts == 0) {
-		prev_ts = data->timestamp;
-		return;
-	}
-
-	prev_gap = prev_ts - prev_prev_ts;
-	current_gap = data->timestamp - prev_ts;
-
-	EXPECT_NEAR(current_gap, prev_gap, 10000);
-	prev_prev_ts = prev_ts;
-	prev_ts = data->timestamp;
-
-	if (event_count++ > 3)
-		mainloop::stop();
-}
-
-TESTCASE(accelerometer_interval, regular_interval_p)
-{
-	bool ret;
-	int handle;
-	prev_prev_ts = 0;
-	prev_ts = 0;
-	event_count = 0;
-
-	sensor_info info(ACCELEROMETER_SENSOR, 0,
-			100, 1000, SENSOR_OPTION_ALWAYS_ON, accel_regular_interval_cb, NULL);
-
-	ret = sensor_adapter::start(info, handle);
-	ASSERT_TRUE(ret);
-
-	mainloop::run();
-
-	ret = sensor_adapter::stop(info, handle);
-	ASSERT_TRUE(ret);
-
-	return true;
-}
 
 static void accel_interval_100ms_cb(sensor_t sensor, unsigned int event_type, sensor_data_t *data, void *user_data)
 {
-	if (prev_ts == 0) {
-		prev_ts = data->timestamp;
+	if (event_count == 0) {
+		time_first = data->timestamp;
+		event_count++;
 		return;
 	}
 
-	/* 100ms + 20ms(error) */
-	EXPECT_LE(data->timestamp - prev_ts, 120000);
-	prev_ts = data->timestamp;
-
-	if (event_count++ > 3)
+	if (event_count == 10) {
+		/* 100ms + 20ms(error) */
+		EXPECT_LE((data->timestamp - time_first) / 10, 120000);
 		mainloop::stop();
+		return;
+	}
+
+	event_count++;
 }
 
-TESTCASE(accelerometer_interval, 100ms_interval_p)
+TESTCASE(accelscope_test, 100ms_interval_p)
 {
 	bool ret;
 	int handle;
 
-	prev_ts = 0;
+	time_first = 0;
+	time_last = 0;
 	event_count = 0;
+
+	if (!sensor_adapter::is_supported(ACCELEROMETER_SENSOR))
+		return true; /* Not Supported */
 
 	sensor_info info(ACCELEROMETER_SENSOR, 0,
 			100, 1000, SENSOR_OPTION_ALWAYS_ON, accel_interval_100ms_cb, NULL);
