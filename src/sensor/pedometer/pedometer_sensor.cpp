@@ -28,8 +28,6 @@
 #define SRC_ID_ACC   0x1
 #define SRC_STR_ACC  "http://tizen.org/sensor/general/accelerometer"
 
-#define NORM(x, y, z) sqrt((x)*(x) + (y)*(y) + (z)*(z))
-
 #define US_TO_NS(x) (x * 1000)
 
 /* Sensor information */
@@ -82,9 +80,9 @@ int pedometer_sensor::get_required_sensors(const required_sensor_s **sensors)
 int pedometer_sensor::update(uint32_t id, sensor_data_t *data, int len)
 {
 	pedometer_info info;
-	double acc = NORM(data->values[0], data->values[1], data->values[2]);
+	double acc[] = {data->values[0], data->values[1], data->values[2]};
 
-	if (!m_pedometer.get_pedometer(US_TO_NS(data->timestamp), acc, &info))
+	if (!m_pedometer.get_pedometer(&info, US_TO_NS(data->timestamp), acc))
 		return OP_ERROR;
 
 	m_step_count = info.step_count;

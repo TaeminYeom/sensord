@@ -21,6 +21,7 @@
 #include "step_detection.h"
 #include "pedometer_info.h"
 #include "pedometer_speed_filter.h"
+#include "sensor_frequency_compensator.h"
 
 /************************************************************************
  * stores pedometer engine state.
@@ -48,12 +49,12 @@ public:
 	 * @param timestamp
 	 *            timestamp of acceleration event in ns.
 	 * @param acc
-	 *            vertical component of global acceleration.
+	 *            global acceleration.
 	 *
 	 * @result
 	 *            true if new step event was detected.
 	 */
-	bool get_pedometer(timestamp_t timestamp, double acc, pedometer_info *info);
+	bool get_pedometer(pedometer_info *info, timestamp_t timestamp, double acc[]);
 
 private:
 	/** detects step and estimates step length. */
@@ -70,6 +71,9 @@ private:
 
 	/** some non zero speed was detected. */
 	bool m_some_speed;
+
+	sensor_frequency_compensator m_acceleration_compensator;
+
 };
 
 #endif /* __PEDOMETER_H__ */
