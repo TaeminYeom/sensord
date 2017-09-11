@@ -112,7 +112,7 @@ static bool run_ipc_client_sleep_1s(const char *str, int size, int count)
 
 	message msg;
 	message reply;
-	char buf[MAX_BUF_SIZE] = {'1', '1', '1',};
+	char buf[MAX_BUF_SIZE] = {'1', '1', '1', };
 
 	msg.enclose(buf, MAX_BUF_SIZE);
 
@@ -147,7 +147,7 @@ static bool run_ipc_client_small_buffer(const char *str, int size, int count)
 	int ret;
 	message msg;
 	message reply;
-	char buf[MAX_BUF_SIZE] = {'1', '1', '1',};
+	char buf[MAX_BUF_SIZE] = {'1', '1', '1', };
 
 	msg.enclose(buf, MAX_BUF_SIZE);
 
@@ -190,7 +190,7 @@ static bool run_ipc_client_1M(const char *str, int size, int count)
 	int ret;
 	message msg;
 	message reply;
-	char buf[MAX_BUF_SIZE] = {'1', '1', '1',};
+	char buf[MAX_BUF_SIZE] = {'1', '1', '1', };
 
 	msg.enclose(buf, MAX_BUF_SIZE);
 

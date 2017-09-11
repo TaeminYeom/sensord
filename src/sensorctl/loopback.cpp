@@ -58,7 +58,7 @@ bool loopback_manager::run(int argc, char *argv[])
 		 *  sensorhub (bytes) command [0~1] delaytime [2~5] data[6~83]
 		 *      shell (argv)  command [0~2] delaytime [3]   data[4~81]
 		 */
-		char test_data[MAX_DATA_SIZE] = {SHUB_INST_LIB_ADD, SHUB_LOOP_BACK_LIB,};
+		char test_data[MAX_DATA_SIZE] = {SHUB_INST_LIB_ADD, SHUB_LOOP_BACK_LIB, };
 		int_to_bytes(atoi(argv[3]), sizeof(int), &(test_data[2]));
 
 		for (int i = 4; i < argc; i++)
@@ -75,7 +75,7 @@ bool loopback_manager::run(int argc, char *argv[])
 		sensor = sensord_get_sensor(CONTEXT_SENSOR);
 		handle = sensord_connect(sensor);
 
-		char test_data[4] = {SHUB_INST_LIB_REMOVE, SHUB_LOOP_BACK_LIB,};
+		char test_data[4] = {SHUB_INST_LIB_REMOVE, SHUB_LOOP_BACK_LIB, };
 
 		sensord_set_attribute_str(handle, 0, test_data, sizeof(test_data));
 		sensord_disconnect(handle);

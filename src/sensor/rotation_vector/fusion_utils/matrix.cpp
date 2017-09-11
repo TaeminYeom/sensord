@@ -156,17 +156,15 @@ T_R_C matrix<T, R, C> operator /(const matrix<T, R, C> m1, const T val)
 
 T_R1_C1_R2_C2 bool operator ==(const matrix<T, R1, C1> m1, const matrix<T, R2, C2> m2)
 {
-	if ((R1 == R2) && (C1 == C2))
-	{
+	if ((R1 == R2) && (C1 == C2)) {
 		for (int i = 0; i < R1; i++)
 			for (int j = 0; j < C2; j++)
 				if (m1.m_mat[i][j] != m2.m_mat[i][j])
 					return false;
+		return true;
 	}
-	else
-		return false;
 
-	return true;
+	return false;
 }
 
 T_R1_C1_R2_C2 bool operator !=(const matrix<T, R1, C1> m1, const matrix<T, R2, C2> m2)

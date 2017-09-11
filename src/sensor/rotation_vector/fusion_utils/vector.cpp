@@ -155,16 +155,14 @@ T_S vect<T, S> operator /(const vect<T, S> v, const T val)
 
 T_S1_S2 bool operator ==(const vect<T, S1> v1, const vect<T, S2> v2)
 {
-	if (S1 == S2)
-	{
+	if (S1 == S2) {
 		for (int i = 0; i < S1; i++)
 			if (v1.m_vec[i] != v2.m_vec[i])
 				return false;
+		return true;
 	}
-	else
-		return false;
 
-	return true;
+	return false;
 }
 
 T_S1_S2 bool operator !=(const vect<T, S1> v1, const vect<T, S2> v2)
