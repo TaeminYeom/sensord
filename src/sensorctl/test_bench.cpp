@@ -237,7 +237,6 @@ void test_bench::show(void)
 
 	for (auto it = testcases.begin(); it != testcases.end();
 			it = testcases.upper_bound(it->first)) {
-
 		auto range = testcases.equal_range(it->first);
 		_I("[%s]\n", it->first.c_str());
 

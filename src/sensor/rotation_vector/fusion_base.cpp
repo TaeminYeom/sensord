@@ -80,7 +80,6 @@ void fusion_base::push_mag(sensor_data_t &data)
 	m_enable_magnetic = true;
 	if (get_orientation())
 		store_orientation();
-
 }
 
 bool fusion_base::get_rv(unsigned long long &timestamp, float &x, float &y, float &z, float &w)

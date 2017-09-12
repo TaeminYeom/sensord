@@ -38,7 +38,6 @@ private:
 	void remove_old_up_time(void);
 	unsigned long long is_facing_down();
 	unsigned long long was_facing_up();
-
 };
 
 #endif /* __FACE_DOWN_ALG_IMPL_H__ */

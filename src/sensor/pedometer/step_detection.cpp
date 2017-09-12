@@ -189,6 +189,7 @@ bool step_detection::add_acc_sensor_values_savitzky(
 		timestamp_t timestamp, double acc, step_event* step)
 {
 	double acceleration = m_zc_filter.filter(acc - m_average_gfilter.filter(acc));
+	double amplitude = 0;
 	bool n_zero_up = m_zero_crossing_up.detect_step(timestamp, acceleration);
 	bool n_zero_down = m_zero_crossing_down.detect_step(timestamp, acceleration);
 
@@ -217,6 +218,7 @@ bool step_detection::add_acc_sensor_values_savitzky(
 	bool zup = m_zero_crossing_up.m_time_sum / 1E9 > 1.2;
 	if (n_zero_down) {
 		is_step_detected = false;
+		amplitude = abs(m_maximum_acceleration - m_minimum_acceleration);
 
 		if ((m_maximum_acceleration > 0.6 &&
 						m_minimum_acceleration < -0.852)
@@ -251,11 +253,15 @@ bool step_detection::add_acc_sensor_values_savitzky(
 		double time = (timestamp - m_last_step_timestamp) / 1E9;
 
 		m_last_step_timestamp = timestamp;
+		if (time > 1.0 || amplitude < 3) {
+			is_step_detected = false;
+		}
 		m_zero_crossing_up.m_time_sum = 0;
-		step->m_timestamp = timestamp;
-		step->m_step_length = cal_step_length(time, sqrt4peak_valley_diff);
-
-		return true;
+		if (is_step_detected) {
+			step->m_timestamp = timestamp;
+			step->m_step_length = cal_step_length(time, sqrt4peak_valley_diff);
+			return true;
+		}
 	}
 
 	return false;
