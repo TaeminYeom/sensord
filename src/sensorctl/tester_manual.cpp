@@ -32,7 +32,7 @@
 
 #define TEST_MANUAL "manual"
 
-static sensor_type_t type;
+static sensor_type_t stype;
 static int interval;
 static int latency;
 static int powersave;
@@ -61,6 +61,7 @@ tester_manual::~tester_manual()
 
 bool tester_manual::setup(sensor_type_t type, int argc, char *argv[])
 {
+	stype = type;
 	interval = TEST_DEFAULT_INTERVAL;
 	latency = TEST_DEFAULT_LATENCY;
 	powersave = TEST_DEFAULT_POWERSAVE_OPTION;
@@ -127,18 +128,18 @@ TESTCASE(manual_test, sensor)
 	int index = 0;
 	sensor_data_t data;
 
-	if (sensor_adapter::get_count(type) > 1) {
+	if (sensor_adapter::get_count(stype) > 1) {
 		_N("There are more than 2 sensors. please enter the index : ");
 		if (scanf("%d", &index) != 1)
 			return false;
 	}
 
-	sensor_info info(type, index, interval, latency, powersave, test_cb, NULL);
+	sensor_info info(stype, index, interval, latency, powersave, test_cb, NULL);
 
 	ret = sensor_adapter::start(info, handle);
 	ASSERT_TRUE(ret);
 
-	ret = sensor_adapter::get_data(handle, type, data);
+	ret = sensor_adapter::get_data(handle, stype, data);
 	EXPECT_TRUE(ret);
 
 	mainloop::run();
