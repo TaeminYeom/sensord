@@ -17,12 +17,13 @@
 #ifndef __AVERAGE_FILTER_H__
 #define __AVERAGE_FILTER_H__
 
-#include <memory>
-#include "common.h"
+#include "timestamp.h"
 
 class average_filter {
 public:
+
 	average_filter(int size);
+
 	~average_filter();
 
 	/************************************************************************

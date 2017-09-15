@@ -17,14 +17,16 @@
 #ifndef __ZERO_CROSSING_STEP_DETECTION_H__
 #define __ZERO_CROSSING_STEP_DETECTION_H__
 
-#include "common.h"
+#include "timestamp.h"
 
 /************************************************************************
  * zero crossing detection engine state.
  */
 class zero_crossing_step_detection {
 public:
+
 	zero_crossing_step_detection(bool up);
+
 	~zero_crossing_step_detection();
 
 	/************************************************************************
@@ -35,7 +37,13 @@ public:
 	 */
 	void reset(void);
 
-	timestamp_t m_time_sum;
+	/************************************************************************
+	 */
+	void clr_time_sum();
+
+	/************************************************************************
+	 */
+	double get_time_sum();
 
 private:
 	/**
@@ -46,11 +54,13 @@ private:
 	/** acceleration in previous detect step. */
 	double m_last_acceleration;
 
-	/** timestamp of last acc event. unknown time if no one. */
+	/** timestamp of last acc event in [ns]. unknown time if no one. */
 	timestamp_t m_last_timestamp;
 
-	/** timestamp of last detected zero crossing. unknown time if not yet detected. */
+	/** timestamp of last detected zero crossing in [ns]. unknown time if not yet detected. */
 	timestamp_t m_last_zero_crossing_time;
+
+	timestamp_t m_time_sum;
 };
 
 #endif /* __ZERO_CROSSING_STEP_DETECTION_H__ */

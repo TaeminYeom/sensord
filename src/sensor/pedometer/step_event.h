@@ -17,7 +17,7 @@
 #ifndef __STEP_EVENT_H__
 #define __STEP_EVENT_H__
 
-#include "common.h"
+#include "timestamp.h"
 
 class step_event {
 public:
@@ -26,7 +26,10 @@ public:
 	, m_step_length(0)
 	{}
 
+	/** step timestamp in [ns]. */
 	timestamp_t m_timestamp;
+
+	/** estimated step length in [m]. */
 	double m_step_length;
 };
 

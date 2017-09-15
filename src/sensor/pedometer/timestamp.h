@@ -17,9 +17,8 @@
 #ifndef __PEDOMETER_COMMON_H__
 #define __PEDOMETER_COMMON_H__
 
-#include <stdio.h>
-
 typedef long long timestamp_t;
-#define UNKNOWN_TIMESTAMP ((long long)0x8000000000000000)
+
+static const timestamp_t UNKNOWN_TIMESTAMP = (timestamp_t) 0x8000000000000000;
 
 #endif /* __PEDOMETER_COMMON_H__ */

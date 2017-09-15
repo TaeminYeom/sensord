@@ -21,14 +21,16 @@
 #include "zero_crossing_step_detection.h"
 #include "savitzky_golay_filter15.h"
 #include "step_event.h"
-#include "common.h"
+#include "timestamp.h"
 
 /************************************************************************
  * step detection engine state.
  */
 class step_detection {
 public:
+
 	step_detection();
+
 	~step_detection();
 
 	/************************************************************************
@@ -41,21 +43,7 @@ public:
 
 	/************************************************************************
 	 */
-	bool is_slow_step(void);
-
-	/************************************************************************
-	 */
-	bool add_acc_sensor_values_average(
-			timestamp_t timestamp, double acc, step_event* step);
-
-	/************************************************************************
-	 */
-	bool add_acc_sensor_values_savitzky(
-			timestamp_t timestamp, double acc, step_event* step);
-
-	/************************************************************************
-	 */
-	bool get_step(timestamp_t timestamp, double acc, step_event* step);
+	bool new_acceleration(timestamp_t timestamp, double acc, step_event* step);
 
 	/************************************************************************
 	 * resets step_detection object to initial state.
@@ -77,6 +65,21 @@ private:
 	double m_minimum_acceleration;
 	double m_maximum_acceleration;
 	bool m_is_slow_step_detected;
+
+	/************************************************************************
+	 */
+	bool add_acc_sensor_values_average(
+			timestamp_t timestamp, double acc, step_event* step);
+
+	/************************************************************************
+	 */
+	bool add_acc_sensor_values_savitzky(
+			timestamp_t timestamp, double acc, step_event* step);
+
+	/************************************************************************
+	 */
+	bool is_slow_step(void);
+
 };
 
 #endif /* __STEP_DETECTION_H__ */

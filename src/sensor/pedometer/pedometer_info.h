@@ -17,14 +17,14 @@
 #ifndef __PEDOMETER_INFO_H__
 #define __PEDOMETER_INFO_H__
 
-#include "common.h"
+#include "timestamp.h"
 
 /************************************************************************
  * stores information about pedometer event detected.
  */
 class pedometer_info {
 public:
-	/** timestamp this event was detected in ns. */
+	/** timestamp this event was detected in [ns]. */
 	timestamp_t timestamp;
 
 	/** is step detected. */
@@ -33,13 +33,13 @@ public:
 	/** step count from scanner start. */
 	long long step_count;
 
-	/** step length in meters. */
+	/** step length in [m]. */
 	double step_length;
 
-	/** total length of all steps detected from scanner start in meters. */
+	/** total length of all steps detected from scanner start in [m]. */
 	double total_step_length;
 
-	/** current mean speed in m/s. */
+	/** current mean speed in [m/s]. */
 	double step_speed;
 };
 

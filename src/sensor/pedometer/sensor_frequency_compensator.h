@@ -14,10 +14,10 @@
  *  limitations under the License.
  */
 
-#ifndef __SENSOR_FREQUENCY_COMPENSATOR_H_
-#define __SENSOR_FREQUENCY_COMPENSATOR_H_
+#ifndef __SENSOR_FREQUENCY_COMPENSATOR_H__
+#define __SENSOR_FREQUENCY_COMPENSATOR_H__
 
-#include "common.h"
+#include "timestamp.h"
 
 #include <memory>
 
@@ -26,7 +26,9 @@
  */
 class sensor_frequency_compensator {
 public:
+
 	sensor_frequency_compensator(double desired_rate);
+
 	~sensor_frequency_compensator();
 
 	/************************************************************************
@@ -52,7 +54,9 @@ public:
 	void get_next(double *value);
 
 private:
-	long long m_desired_frequency;
+
+	/** desired sensor rate in [ns]. */
+	long long m_desired_rate;
 
 	timestamp_t m_t1;
 
@@ -65,4 +69,4 @@ private:
 	timestamp_t m_timestamp;
 };
 
-#endif /* __SENSOR_FREQUENCY_COMPENSATOR_H_ */
+#endif /* __SENSOR_FREQUENCY_COMPENSATOR_H__ */

@@ -25,11 +25,11 @@ static bool detect_zero_crossing(double last_accel, double new_accel, bool up)
 }
 
 zero_crossing_step_detection::zero_crossing_step_detection(bool up)
-: m_time_sum(0)
-, m_up(up)
+: m_up(up)
 , m_last_acceleration(0)
 , m_last_timestamp(UNKNOWN_TIMESTAMP)
 , m_last_zero_crossing_time(UNKNOWN_TIMESTAMP)
+, m_time_sum(0)
 {
 }
 
@@ -54,6 +54,14 @@ bool zero_crossing_step_detection::detect_step(timestamp_t timestamp, double acc
 	}
 	m_last_acceleration = acceleration;
 	return step_detected;
+}
+
+void zero_crossing_step_detection::clr_time_sum() {
+	m_time_sum = 0.0;
+}
+
+double zero_crossing_step_detection::get_time_sum() {
+	return m_time_sum / 1E9;
 }
 
 void zero_crossing_step_detection::reset(void)

@@ -23,12 +23,12 @@
 /************************************************************************
  */
 sensor_frequency_compensator::sensor_frequency_compensator(double desired_rate)
-: m_desired_frequency(desired_rate)
-, m_t1(0)
+: m_desired_rate(desired_rate)
+, m_t1(UNKNOWN_TIMESTAMP)
 , m_v1{0.0, 0.0, 0.0}
-, m_t2(0)
+, m_t2(UNKNOWN_TIMESTAMP)
 , m_v2{0.0, 0.0, 0.0}
-, m_timestamp(0)
+, m_timestamp(UNKNOWN_TIMESTAMP)
 {
 }
 
@@ -64,7 +64,7 @@ bool sensor_frequency_compensator::has_next() {
 	if (m_t1 == UNKNOWN_TIMESTAMP || m_t2 == UNKNOWN_TIMESTAMP) {
 		return false;
 	}
-	return m_timestamp + m_desired_frequency < m_t2;
+	return m_timestamp + m_desired_rate < m_t2;
 }
 
 /************************************************************************
@@ -74,10 +74,9 @@ void sensor_frequency_compensator::get_next(double *v) {
 	if (t3 < m_t1) {
 		t3 = m_t1;
 	}
-	m_timestamp += m_desired_frequency;
-	double t = (t3 - m_t1) / ((double) (m_t2 - m_t1));
-	int i;
-	for (i = 0; i < 3; i++) {
+	m_timestamp += m_desired_rate;
+	double t = ((double) (t3 - m_t1)) / (m_t2 - m_t1);
+	for (int i = 0; i < 3; i++) {
 		v[i] = (1.0 - t) * m_v1[i] + t * m_v2[i];
 	}
 }

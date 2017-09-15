@@ -16,8 +16,8 @@
 
 #include "pedometer_speed_filter.h"
 
-/** default for maximum step duration in ns. currently 2s. */
-#define STEP_MAX_DURATION 2000000000L
+/** default for maximum step duration in [ns]. currently 2s. */
+static const long long STEP_MAX_DURATION = 2000000000L;
 
 pedometer_speed_filter::pedometer_speed_filter()
 : m_last_timestamp(UNKNOWN_TIMESTAMP)
@@ -43,12 +43,12 @@ void pedometer_speed_filter::clear_speed(void)
 }
 
 /************************************************************************
- * sets new maximum step duration in ns.
+ * sets new maximum step duration in [ns].
  * if there is no new speed during this time current speed is cleared.
  * 0 disables this feature.
  *
  * @param step_max_duration
- *            maximum step duration in ns.
+ *            maximum step duration in [ns].
  *            0 to disable step duration checking.
  */
 void pedometer_speed_filter::set_step_max_duration(long long step_max_duration)
@@ -60,11 +60,11 @@ void pedometer_speed_filter::set_step_max_duration(long long step_max_duration)
  * called when new step detection event occurs.
  *
  * @param timestamp
- *            timestamp of step detection event in ns.
+ *            timestamp of step detection event in [ns].
  * @param steplength
- *            length of detected step in m.
+ *            length of detected step in [m].
  */
-void pedometer_speed_filter::get_step(timestamp_t timestamp, double step_length)
+void pedometer_speed_filter::new_step(timestamp_t timestamp, double step_length)
 {
 	if (m_last_timestamp == UNKNOWN_TIMESTAMP || timestamp == UNKNOWN_TIMESTAMP) {
 		clear_speed();
@@ -86,9 +86,9 @@ void pedometer_speed_filter::get_step(timestamp_t timestamp, double step_length)
  * reports new speed.
  *
  * @param timestamp
- *            timestamp of speed event.
+ *            timestamp of speed event in [ns].
  * @param speed
- *            current speed in m/s.
+ *            current speed in [m/s].
  */
 void pedometer_speed_filter::new_speed(timestamp_t timestamp, double speed)
 {
@@ -106,7 +106,7 @@ void pedometer_speed_filter::new_speed(timestamp_t timestamp, double speed)
  *
  * @param timestamp
  *            timestamp for which speed should be calculated.
- * @return speed for given timestamp in m/s.
+ * @return speed for given timestamp in [m/s].
  */
 double pedometer_speed_filter::get_speed(timestamp_t timestamp)
 {
@@ -122,7 +122,7 @@ double pedometer_speed_filter::get_speed(timestamp_t timestamp)
  * changes current speed.
  *
  * @param speed
- *            current speed in m/s.
+ *            current speed in [m/s].
  */
 void pedometer_speed_filter::set_current_speed(double speed)
 {
@@ -130,7 +130,7 @@ void pedometer_speed_filter::set_current_speed(double speed)
 }
 
 /************************************************************************
- * @return estimated current speed in m/s.
+ * @return estimated current speed in [m/s].
  */
 double pedometer_speed_filter::get_current_speed(void)
 {

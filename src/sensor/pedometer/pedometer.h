@@ -17,11 +17,11 @@
 #ifndef __PEDOMETER_H__
 #define __PEDOMETER_H__
 
-#include "common.h"
 #include "step_detection.h"
 #include "pedometer_info.h"
 #include "pedometer_speed_filter.h"
 #include "sensor_frequency_compensator.h"
+#include "timestamp.h"
 
 /************************************************************************
  * stores pedometer engine state.
@@ -32,7 +32,7 @@ public:
 	~pedometer();
 
 	/************************************************************************
-	 * enables/disables savitzky filter.
+	 * enables/disables Savitzky filter.
 	 */
 	void set_savitzky_filter(bool enable);
 
@@ -47,20 +47,20 @@ public:
 	 * @param info
 	 *            result of pedometer algorithm. valid only it method returns true.
 	 * @param timestamp
-	 *            timestamp of acceleration event in ns.
+	 *            timestamp of acceleration event in [ns].
 	 * @param acc
-	 *            global acceleration.
+	 *            global acceleration vector in [m/s^2].
 	 *
 	 * @result
 	 *            true if new step event was detected.
 	 */
-	bool get_pedometer(pedometer_info *info, timestamp_t timestamp, double acc[]);
+	bool new_acceleration(pedometer_info *info, timestamp_t timestamp, double acc[]);
 
 private:
 	/** detects step and estimates step length. */
 	step_detection m_step_detection;
 
-	/** sum of lengths all steps from start. */
+	/** sum of lengths all steps from start in [m]. */
 	double m_total_length;
 
 	/** number of steps from start. */
@@ -73,6 +73,7 @@ private:
 	bool m_some_speed;
 
 	sensor_frequency_compensator m_acceleration_compensator;
+
 };
 
 #endif /* __PEDOMETER_H__ */
