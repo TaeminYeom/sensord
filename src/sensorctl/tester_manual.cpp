@@ -17,6 +17,7 @@
  *
  */
 
+#include <iostream>
 #include <getopt.h>
 
 #include "tester.h"
@@ -130,8 +131,7 @@ TESTCASE(manual_test, sensor)
 
 	if (sensor_adapter::get_count(stype) > 1) {
 		_N("There are more than 2 sensors. please enter the index : ");
-		if (scanf("%d", &index) != 1)
-			return false;
+		std::cin >> index;
 	}
 
 	sensor_info info(stype, index, interval, latency, powersave, test_cb, NULL);
