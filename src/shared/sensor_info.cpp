@@ -22,10 +22,14 @@
 #include <sensor_types.h>
 #include <sensor_types_private.h>
 #include <sensor_log.h>
+#include <cfloat>
 #include <algorithm>
 #include <string>
 
 #include "sensor_utils.h"
+
+#define MIN_RANGE -FLT_MAX
+#define MAX_RANGE FLT_MAX
 
 using namespace sensor;
 
@@ -176,11 +180,21 @@ void sensor_info::set_vendor(const char *vendor)
 void sensor_info::set_min_range(float min_range)
 {
 	m_min_range = min_range;
+
+	if (m_min_range < MIN_RANGE)
+		m_min_range = MIN_RANGE;
+	if (m_min_range > MAX_RANGE)
+		m_min_range = MAX_RANGE;
 }
 
 void sensor_info::set_max_range(float max_range)
 {
 	m_max_range = max_range;
+
+	if (m_max_range < MIN_RANGE)
+		m_max_range = MIN_RANGE;
+	if (m_max_range > MAX_RANGE)
+		m_max_range = MAX_RANGE;
 }
 
 void sensor_info::set_resolution(float resolution)
