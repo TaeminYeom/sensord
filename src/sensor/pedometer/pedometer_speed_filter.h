@@ -17,14 +17,16 @@
 #ifndef __PEDOMETER_SPEED_FILTER_H__
 #define __PEDOMETER_SPEED_FILTER_H__
 
-#include "common.h"
+#include "timestamp.h"
 
 /************************************************************************
  * stores pedometer speed filter state.
  */
 class pedometer_speed_filter {
 public:
+
 	pedometer_speed_filter();
+
 	~pedometer_speed_filter();
 
 	void clear_speed(void);
@@ -44,19 +46,19 @@ public:
 	 * called when new step detection event occurs.
 	 *
 	 * @param timestamp
-	 *            timestamp of step detection event in ns.
+	 *            timestamp of step detection event in [ns].
 	 * @param steplength
-	 *            length of detected step in m.
+	 *            length of detected step in [m].
 	 */
-	void get_step(timestamp_t timestamp, double step_length);
+	void new_step(timestamp_t timestamp, double step_length);
 
 	/************************************************************************
 	 * reports new speed.
 	 *
 	 * @param timestamp
-	 *            timestamp of speed event.
+	 *            timestamp of speed event in [ns].
 	 * @param speed
-	 *            current speed in m/s.
+	 *            current speed in [m/s].
 	 */
 	void new_speed(timestamp_t timestamp, double speed);
 
@@ -64,8 +66,8 @@ public:
 	 * returns current speed.
 	 *
 	 * @param timestamp
-	 *            timestamp for which speed should be calculated.
-	 * @return speed for given timestamp in m/s.
+	 *            timestamp for which speed should be calculated in [ns].
+	 * @return speed for given timestamp in [m/s].
 	 */
 	double get_speed(timestamp_t timestamp);
 
@@ -73,12 +75,12 @@ public:
 	 * changes current speed.
 	 *
 	 * @param speed
-	 *            current speed in m/s.
+	 *            current speed in [m/s].
 	 */
 	void set_current_speed(double speed);
 
 	/************************************************************************
-	 * @return estimated current speed in m/s.
+	 * @return estimated current speed in [m/s].
 	 */
 	double get_current_speed(void);
 
@@ -87,7 +89,7 @@ public:
 	bool is_known_timestamp(void);
 
 	/************************************************************************
-	 * @return timestamp of last step detection event in ns.
+	 * @return timestamp of last step detection event in [ns].
 	 */
 	timestamp_t get_timestamp(void);
 
@@ -97,19 +99,19 @@ public:
 	void reset(void);
 
 private:
-	/** timestamp of last step detection event in ns. */
+	/** timestamp of last step detection event in [ns]. */
 	timestamp_t m_last_timestamp;
 
-	/** estimated current speed in m/s. */
+	/** estimated current speed in [m/s]. */
 	double m_current_speed;
 
-	/** length of last step in m. */
+	/** length of last step in [m]. */
 	double m_last_step_length;
 
-	/** duration of last step in s. */
+	/** duration of last step in [s]. */
 	double m_last_step_duration;
 
-	/** maximum step duration in ns. 0 to disable step duration checking. */
+	/** maximum step duration in [ns]. 0 to disable step duration checking. */
 	long long m_step_max_duration;
 };
 

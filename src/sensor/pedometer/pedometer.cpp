@@ -51,7 +51,7 @@ void pedometer::reset(void)
 	m_acceleration_compensator.reset();
 }
 
-bool pedometer::get_pedometer(pedometer_info *info, timestamp_t timestamp, double acc[])
+bool pedometer::new_acceleration(pedometer_info *info, timestamp_t timestamp, double acc[])
 {
 	bool result = false;
 	m_acceleration_compensator.add(timestamp, acc);
@@ -60,7 +60,7 @@ bool pedometer::get_pedometer(pedometer_info *info, timestamp_t timestamp, doubl
 	while (m_acceleration_compensator.has_next()) {
 		double acceleration[3];
 		m_acceleration_compensator.get_next(acceleration);
-		if (m_step_detection.get_step(timestamp,
+		if (m_step_detection.new_acceleration(timestamp,
 				sqrt(acceleration[0] * acceleration[0]
 					+ acceleration[1] * acceleration[1]
 					+ acceleration[2] * acceleration[2]),
@@ -68,7 +68,7 @@ bool pedometer::get_pedometer(pedometer_info *info, timestamp_t timestamp, doubl
 			if (event.m_timestamp != UNKNOWN_TIMESTAMP) {
 				m_step_count++;
 				m_total_length += event.m_step_length;
-				m_pedometer_filter.get_step(timestamp, event.m_step_length);
+				m_pedometer_filter.new_step(timestamp, event.m_step_length);
 				double speed = m_pedometer_filter.get_speed(timestamp);
 				info->timestamp = timestamp;
 				info->is_step_detected = true;

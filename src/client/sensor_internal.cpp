@@ -32,6 +32,7 @@
 #include <regex>
 
 #define CONVERT_OPTION_PAUSE_POLICY(option) ((option) ^ 0b11)
+#define MAX_LISTENER 100
 
 using namespace sensor;
 
@@ -238,6 +239,7 @@ API int sensord_connect(sensor_t sensor)
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), -EINVAL,
 			"Invalid sensor[%p]", sensor);
+	retvm_if(listeners.size() > MAX_LISTENER, -EPERM, "Exceeded the maximum listener");
 
 	sensor::sensor_listener *listener;
 

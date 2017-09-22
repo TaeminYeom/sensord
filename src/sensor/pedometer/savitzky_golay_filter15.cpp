@@ -16,6 +16,7 @@
 
 #include "savitzky_golay_filter15.h"
 
+#include <memory>
 #include <stdlib.h>
 
 /* length of filter. changing it requires changing coef_array! */

@@ -82,7 +82,7 @@ int pedometer_sensor::update(uint32_t id, sensor_data_t *data, int len)
 	pedometer_info info;
 	double acc[] = {data->values[0], data->values[1], data->values[2]};
 
-	if (!m_pedometer.get_pedometer(&info, US_TO_NS(data->timestamp), acc))
+	if (!m_pedometer.new_acceleration(&info, US_TO_NS(data->timestamp), acc))
 		return OP_ERROR;
 
 	m_step_count = info.step_count;

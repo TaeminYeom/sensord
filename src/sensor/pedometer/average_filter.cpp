@@ -16,6 +16,7 @@
 
 #include "average_filter.h"
 
+#include <memory>
 #include <stdlib.h>
 
 static double mean(double *array, int size)

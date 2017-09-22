@@ -26,8 +26,11 @@
 #include <sensor_utils.h>
 #include <ipc_client.h>
 #include <command_types.h>
+#include <cfloat>
 
 #include "sensor_provider_channel_handler.h"
+
+#define DEFAULT_RESOLUTION 0.1
 
 using namespace sensor;
 
@@ -57,9 +60,9 @@ bool sensor_provider::init(const char *uri)
 	}
 
 	m_sensor.set_uri(uri);
-	m_sensor.set_min_range(0);
-	m_sensor.set_max_range(1);
-	m_sensor.set_resolution(1);
+	m_sensor.set_min_range(-FLT_MAX);
+	m_sensor.set_max_range(FLT_MAX);
+	m_sensor.set_resolution(DEFAULT_RESOLUTION);
 	/* TODO: temporary walkaround */
 	const char *priv = sensor::utils::get_privilege(uri);
 	m_sensor.set_privilege(priv);
@@ -166,6 +169,14 @@ void sensor_provider::restore(void)
 
 int sensor_provider::publish(sensor_data_t *data, int len)
 {
+	for (int i = 0; i < data->value_count; ++i) {
+		if (data->values[i] < m_sensor.get_min_range() ||
+		    data->values[i] > m_sensor.get_max_range()) {
+			_E("Out of range");
+			return OP_ERROR;
+		}
+	}
+
 	ipc::message msg;
 	msg.set_type(CMD_PROVIDER_PUBLISH);
 	msg.enclose((const char *)data, len);

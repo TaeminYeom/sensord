@@ -17,7 +17,6 @@
 #include "step_detection.h"
 
 #include <math.h>
-#include <sensor_log.h>
 
 /* Size of average filter. */
 #define AV_FILTER_SIZE 7
@@ -41,7 +40,7 @@ step_detection::step_detection()
 , m_zero_crossing_down(false)
 , m_zc_filter()
 , m_peak_threshold(FAST_PEAK_THRESHOLD)
-, m_use_savitzky(false)
+, m_use_savitzky(true)
 , m_last_step_timestamp(UNKNOWN_TIMESTAMP)
 , m_zero_crossing_up_detected(false)
 , m_zero_crossing_down_detected(false)
@@ -147,7 +146,7 @@ bool step_detection::add_acc_sensor_values_average(
 	}
 
 	double peak_threshold;
-	if (m_zero_crossing_up.m_time_sum / 1E9 < 1.2) {
+	if (m_zero_crossing_up.get_time_sum() < 1.2) {
 		peak_threshold = m_peak_threshold;
 		m_is_slow_step_detected = false;
 	} else {
@@ -165,7 +164,7 @@ bool step_detection::add_acc_sensor_values_average(
 		}
 	}
 
-	if (m_zero_crossing_up.m_time_sum / 1E9 < 0.3)
+	if (m_zero_crossing_up.get_time_sum() < 0.3)
 		is_step_detected = false;
 
 	if (is_step_detected) {
@@ -174,7 +173,7 @@ bool step_detection::add_acc_sensor_values_average(
 
 		double time = (timestamp - m_last_step_timestamp) / 1E9;
 		m_last_step_timestamp = timestamp;
-		m_zero_crossing_up.m_time_sum = 0;
+		m_zero_crossing_up.clr_time_sum();
 		step->m_timestamp = timestamp;
 		step->m_step_length = cal_step_length(time, sqrt4peak_valley_diff);
 
@@ -215,7 +214,7 @@ bool step_detection::add_acc_sensor_values_savitzky(
 		}
 	}
 
-	bool zup = m_zero_crossing_up.m_time_sum / 1E9 > 1.2;
+	bool zup = m_zero_crossing_up.get_time_sum() > 1.2;
 	if (n_zero_down) {
 		is_step_detected = false;
 		amplitude = abs(m_maximum_acceleration - m_minimum_acceleration);
@@ -243,7 +242,7 @@ bool step_detection::add_acc_sensor_values_savitzky(
 		}
 	}
 
-	if (m_zero_crossing_up.m_time_sum / 1E9 < 0.3)
+	if (m_zero_crossing_up.get_time_sum() < 0.3)
 		is_step_detected = false;
 
 	if (is_step_detected) {
@@ -256,7 +255,7 @@ bool step_detection::add_acc_sensor_values_savitzky(
 		if (time > 1.0 || amplitude < 3) {
 			is_step_detected = false;
 		}
-		m_zero_crossing_up.m_time_sum = 0;
+		m_zero_crossing_up.clr_time_sum();
 		if (is_step_detected) {
 			step->m_timestamp = timestamp;
 			step->m_step_length = cal_step_length(time, sqrt4peak_valley_diff);
@@ -269,7 +268,7 @@ bool step_detection::add_acc_sensor_values_savitzky(
 
 /************************************************************************
  */
-bool step_detection::get_step(timestamp_t timestamp, double acc, step_event* step)
+bool step_detection::new_acceleration(timestamp_t timestamp, double acc, step_event* step)
 {
 	return m_use_savitzky
 			? add_acc_sensor_values_savitzky(timestamp, acc, step)

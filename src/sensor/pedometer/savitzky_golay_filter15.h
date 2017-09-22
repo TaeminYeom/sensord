@@ -17,15 +17,16 @@
 #ifndef __SAVITZKYGOLAYFILTER15_H__
 #define __SAVITZKYGOLAYFILTER15_H__
 
-#include <memory>
-#include "common.h"
+#include "timestamp.h"
 
 /************************************************************************
- * stores savitzky-golay filter state.
+ * stores Savitzky-Golay filter state.
  */
 class savitzky_golay_filter15 {
 public:
+
 	savitzky_golay_filter15();
+
 	~savitzky_golay_filter15();
 
 	/************************************************************************
@@ -38,7 +39,7 @@ public:
 	double filter(double value);
 
 	/************************************************************************
-	 * resets savitzky-golay filter to initial state.
+	 * resets Savitzky-Golay filter to initial state.
 	 */
 	void reset(void);
 
