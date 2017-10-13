@@ -25,6 +25,7 @@
 #include <cfloat>
 #include <algorithm>
 #include <string>
+#include <cmath>
 
 #include "sensor_utils.h"
 
@@ -181,6 +182,8 @@ void sensor_info::set_min_range(float min_range)
 {
 	m_min_range = min_range;
 
+	if (std::isnan(m_min_range))
+		m_min_range = 0; /* set value to 0 when the value is NaN */
 	if (m_min_range < MIN_RANGE)
 		m_min_range = MIN_RANGE;
 	if (m_min_range > MAX_RANGE)
@@ -191,6 +194,8 @@ void sensor_info::set_max_range(float max_range)
 {
 	m_max_range = max_range;
 
+	if (std::isnan(m_max_range))
+		m_max_range = 1; /* set value to 1 when the value is NaN */
 	if (m_max_range < MIN_RANGE)
 		m_max_range = MIN_RANGE;
 	if (m_max_range > MAX_RANGE)

@@ -285,15 +285,9 @@ inline void orientation_filter<TYPE>::time_update_gaming_rv()
 	euler_aid = quat2euler(m_quat_aid);
 	euler_driv = quat2euler(m_quat_output);
 
-	if ((SQUARE(m_accel.m_data.m_vec[1]) < ACCEL_THRESHOLD) && (SQUARE(m_gyro.m_data.m_vec[0]) < GYRO_THRESHOLD)) {
-		if ((SQUARE(m_accel.m_data.m_vec[0]) < ACCEL_THRESHOLD) && (SQUARE(m_gyro.m_data.m_vec[1]) < GYRO_THRESHOLD)) {
-			if (SQUARE(m_gyro.m_data.m_vec[2]) < GYRO_THRESHOLD) {
-				euler_angles<TYPE> euler_gaming_rv(euler_aid.m_ang.m_vec[0], euler_aid.m_ang.m_vec[1],
-						euler_driv.m_ang.m_vec[2]);
-				m_quat_gaming_rv = euler2quat(euler_gaming_rv);
-			}
-		}
-	}
+	euler_angles<TYPE> euler_gaming_rv(euler_aid.m_ang.m_vec[0], euler_aid.m_ang.m_vec[1],
+			euler_driv.m_ang.m_vec[2]);
+	m_quat_gaming_rv = euler2quat(euler_gaming_rv);
 
 	if (is_initialized(m_state_new)) {
 		m_state_error.m_vec[0] = m_euler_error.m_ang.m_vec[0];
