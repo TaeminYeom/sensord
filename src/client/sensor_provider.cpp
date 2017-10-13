@@ -27,6 +27,7 @@
 #include <ipc_client.h>
 #include <command_types.h>
 #include <cfloat>
+#include <cmath>
 
 #include "sensor_provider_channel_handler.h"
 
@@ -170,7 +171,10 @@ void sensor_provider::restore(void)
 int sensor_provider::publish(sensor_data_t *data, int len)
 {
 	for (int i = 0; i < data->value_count; ++i) {
-		if (data->values[i] < m_sensor.get_min_range() ||
+		if (std::isnan(data->values[i]) ||
+		    std::isnan(m_sensor.get_min_range()) ||
+		    std::isnan(m_sensor.get_max_range()) ||
+		    data->values[i] < m_sensor.get_min_range() ||
 		    data->values[i] > m_sensor.get_max_range()) {
 			_E("Out of range");
 			return OP_ERROR;
