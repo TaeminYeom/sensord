@@ -52,11 +52,17 @@ public:
 	virtual int flush(sensor_observer *ob) = 0;
 	virtual int get_data(sensor_data_t **data, int *len) = 0;
 
+	void set_cache(sensor_data_t *data, int size);
+	int get_cache(sensor_data_t **data, int *len);
+
 protected:
 	sensor_info m_info;
 
 private:
 	std::list<sensor_observer *> m_observers;
+
+	sensor_data_t *m_last_data;
+	int m_last_data_size;
 };
 
 }

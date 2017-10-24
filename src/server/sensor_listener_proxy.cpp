@@ -191,8 +191,7 @@ int sensor_listener_proxy::get_data(sensor_data_t **data, int *len)
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
-	/* TODO : caching the last data & retry logic if there is no data */
-	return sensor->get_data(data, len);
+	return sensor->get_cache(data, len);
 }
 
 std::string sensor_listener_proxy::get_required_privileges(void)
