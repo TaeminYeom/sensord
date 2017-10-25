@@ -28,6 +28,8 @@ using namespace sensor;
 
 sensor_handler::sensor_handler(const sensor_info &info)
 : m_info(info)
+, m_last_data(NULL)
+, m_last_data_size(0)
 {
 	const char *priv = sensor::utils::get_privilege(m_info.get_uri());
 	m_info.set_privilege(priv);
@@ -84,10 +86,36 @@ int sensor_handler::notify(const char *uri, sensor_data_t *data, int len)
 	if (msg->ref_count() == 0)
 		msg->unref();
 
+	set_cache(data, len);
+
 	return OP_SUCCESS;
 }
 
 uint32_t sensor_handler::observer_count(void)
 {
 	return m_observers.size();
+}
+
+void sensor_handler::set_cache(sensor_data_t *data, int size)
+{
+	if (m_last_data == NULL) {
+		m_last_data = (sensor_data_t*)malloc(size);
+		retm_if(m_last_data == NULL, "Memory allocation failed");
+	}
+
+	m_last_data_size = size;
+	memcpy(m_last_data, data, size);
+}
+
+int sensor_handler::get_cache(sensor_data_t **data, int *len)
+{
+	retv_if(m_last_data == NULL, -ENODATA);
+
+	*data = (sensor_data_t *)malloc(m_last_data_size);
+	retvm_if(*data == NULL, -ENOMEM, "Memory allocation failed");
+
+	memcpy(*data, m_last_data, m_last_data_size);
+	*len = m_last_data_size;
+
+	return 0;
 }
