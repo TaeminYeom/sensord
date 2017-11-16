@@ -128,7 +128,7 @@ const char *sensor::utils::get_uri(sensor_type_t type)
 {
 	auto it = types.find(type);
 	if (it == types.end())
-		return "Unknown Type";
+		return types[UNKNOWN_SENSOR];
 	return it->second;
 }
 
