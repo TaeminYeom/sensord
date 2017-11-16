@@ -23,7 +23,7 @@
 #include <stdlib.h> /* size_t */
 #include <atomic>
 
-#define MAX_MSG_CAPACITY 4096
+#define MAX_MSG_CAPACITY 10240
 #define MAX_HEADER_RESERVED 3
 
 namespace ipc {

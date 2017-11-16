@@ -24,7 +24,7 @@
 #include "sensor_info.h"
 
 #define SENSOR_CHANNEL_PATH		"/run/.sensord.socket"
-#define MAX_BUF_SIZE 4096
+#define MAX_BUF_SIZE 10240
 
 /* TODO: OOP - create serializer interface */
 enum cmd_type_e {
