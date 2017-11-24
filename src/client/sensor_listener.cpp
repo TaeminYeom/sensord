@@ -362,7 +362,7 @@ int sensor_listener::set_attribute(int attribute, int value)
 	ipc::message reply;
 	cmd_listener_attr_int_t buf;
 
-	retvm_if(!m_cmd_channel, false, "Failed to connect to server");
+	retvm_if(!m_cmd_channel, -EIO, "Failed to connect to server");
 
 	buf.listener_id = m_id;
 	buf.attribute = attribute;
@@ -387,7 +387,7 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 	ipc::message reply;
 	cmd_listener_attr_str_t buf;
 
-	retvm_if(!m_cmd_channel, false, "Failed to connect to server");
+	retvm_if(!m_cmd_channel, -EIO, "Failed to connect to server");
 
 	msg.set_type(CMD_LISTENER_ATTR_STR);
 	buf.listener_id = m_id;
@@ -413,7 +413,7 @@ int sensor_listener::get_sensor_data(sensor_data_t *data)
 	ipc::message reply;
 	cmd_listener_get_data_t buf;
 
-	retvm_if(!m_cmd_channel, false, "Failed to connect to server");
+	retvm_if(!m_cmd_channel, -EIO, "Failed to connect to server");
 
 	buf.listener_id = m_id;
 	msg.set_type(CMD_LISTENER_GET_DATA);
