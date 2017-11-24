@@ -392,6 +392,10 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 	msg.set_type(CMD_LISTENER_ATTR_STR);
 	buf.listener_id = m_id;
 	buf.attribute = attribute;
+
+	buf.value = new(std::nothrow) char[len];
+	retvm_if(!buf.value, -ENOMEM, "Failed to allocate memory");
+
 	memcpy(buf.value, value, len);
 	buf.len = len;
 
