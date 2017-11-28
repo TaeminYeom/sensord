@@ -197,7 +197,10 @@ private:
 
 	void add_testcase(const std::string &group, test_case *testcase);
 
-	bool filter(const std::string &name);
+	bool filter(const std::string &name, const std::string &filter);
+	bool filter_name(const std::string &name);
+	bool filter_group(const std::string &group);
+
 	void run(void);
 	void stop(void);
 

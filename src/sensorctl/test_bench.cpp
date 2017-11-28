@@ -216,13 +216,13 @@ void test_bench::add_failure(const std::string &function, long line, const std::
 void test_bench::started(void)
 {
 	_I("[==========] ");
-	_N("Running %d testcases\n", count());
+	_N("Running %d testcase(s)\n", count());
 }
 
 void test_bench::stopped(void)
 {
 	_I("[==========] ");
-	_N("%d testcases ran\n", count());
+	_N("%d testcase(s) ran\n", count());
 }
 
 void test_bench::show(void)
@@ -265,16 +265,39 @@ void test_bench::show_failures(void)
 	}
 }
 
-bool test_bench::filter(const std::string &name)
+bool test_bench::filter(const std::string &name, const std::string &filter_str)
 {
-	static std::regex filter(test_option::filter.c_str(), std::regex::optimize);
-	if (!std::regex_match(name, filter)) {
-		//_W("Not Matched : %s(%s)\n", name.c_str(), test_option::filter.c_str());
-		return false;
+	try {
+		std::regex filter(filter_str.c_str(), std::regex::optimize);
+		if (!std::regex_match(name, filter))
+			return false;
+	} catch (std::regex_error &e) {
 	}
 
-	//_I("Matched : %s(%s)\n", name.c_str(), test_option::filter.c_str());
 	return true;
+}
+
+bool test_bench::filter_name(const std::string &name)
+{
+	std::size_t gindex = test_option::filter.find(".");
+	if (gindex == std::string::npos)
+		return true;
+
+	std::size_t size = test_option::filter.size();
+	std::string filter_name = test_option::filter.substr(gindex + 1, size);
+
+	return filter(name, filter_name);
+}
+
+bool test_bench::filter_group(const std::string &group)
+{
+	std::size_t gindex = test_option::filter.find(".");
+	if (gindex == std::string::npos)
+		gindex = test_option::filter.size();
+
+	std::string filter_group = test_option::filter.substr(0, gindex);
+
+	return filter(group, filter_group);
 }
 
 void test_bench::run(void)
@@ -287,7 +310,7 @@ void test_bench::run(void)
 	for (auto it = testcases.begin(); it != testcases.end();
 			it = testcases.upper_bound(it->first)) {
 		if (m_stop) break;
-		if (!filter(it->second->fullname())) continue;
+		if (!filter_group(it->second->group())) continue;
 
 		auto range = testcases.equal_range(it->first);
 
@@ -297,6 +320,8 @@ void test_bench::run(void)
 		_I("[----------] %d tests from %s\n", testcases.count(it->first), it->first.c_str());
 		for (auto testcase = range.first; testcase != range.second; ++testcase) {
 			if (m_stop) break;
+			if (!filter_name(testcase->second->name())) continue;
+
 			testcase->second->run_testcase();
 		}
 
@@ -316,10 +341,16 @@ void test_bench::stop(void)
 
 unsigned int test_bench::count(void)
 {
-	int count = 0;
+	static int count = -1;
+	if (count != -1)
+		return count;
 
+	count = 0;
 	for (auto it = testcases.begin(); it != testcases.end(); ++it) {
-		if (!filter(it->second->fullname()))
+		if (!filter_group(it->second->group()))
+			continue;
+
+		if (!filter_name(it->second->name()))
 			continue;
 
 		count++;

@@ -93,7 +93,7 @@ bool tester_manual::teardown(void)
 
 bool tester_manual::run(int argc, char *argv[])
 {
-	test_option::filter = "^manual[\\w\\.]+";
+	test_option::filter = "manual_test.sensor";
 	test_bench::run_all_testcases();
 
 	return true;
