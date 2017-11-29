@@ -385,24 +385,29 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 {
 	ipc::message msg;
 	ipc::message reply;
-	cmd_listener_attr_str_t buf;
+	cmd_listener_attr_str_t *buf;
+	size_t size;
 
 	retvm_if(!m_cmd_channel, -EIO, "Failed to connect to server");
 
+	size = sizeof(cmd_listener_attr_str_t) + len;
+
+	buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[size];
+	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
+
 	msg.set_type(CMD_LISTENER_ATTR_STR);
-	buf.listener_id = m_id;
-	buf.attribute = attribute;
+	buf->listener_id = m_id;
+	buf->attribute = attribute;
 
-	buf.value = new(std::nothrow) char[len];
-	retvm_if(!buf.value, -ENOMEM, "Failed to allocate memory");
+	memcpy(buf->value, value, len);
+	buf->len = len;
 
-	memcpy(buf.value, value, len);
-	buf.len = len;
-
-	msg.enclose((char *)&buf, sizeof(buf) + len);
+	msg.enclose((char *)buf, size);
 
 	m_cmd_channel->send_sync(&msg);
 	m_cmd_channel->read_sync(reply);
+
+	delete [] buf;
 
 	return reply.header()->err;
 }

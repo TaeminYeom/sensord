@@ -223,3 +223,26 @@ TESTCASE(sensor_listener, bad_disconnect_p_2)
 
 	return true;
 }
+
+#define TEST_STRING "TESTTESTTEST"
+#define TEST_STRING_LEN 12
+
+TESTCASE(sensor_listener, attribute_string_1)
+{
+	int err;
+	bool ret;
+	int handle;
+	sensor_t sensor;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	err = sensord_set_attribute_str(handle, 1, TEST_STRING, TEST_STRING_LEN);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}

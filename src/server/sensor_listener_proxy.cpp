@@ -173,7 +173,7 @@ int sensor_listener_proxy::set_attribute(int attribute, const char *value, int l
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
-	_D("Listener[%d] try to set attribute[%d, %s]", get_id(), attribute, value);
+	_D("Listener[%d] try to set string attribute[%d], len[%d]", get_id(), attribute, len);
 
 	return sensor->set_attribute(this, attribute, value, len);
 }

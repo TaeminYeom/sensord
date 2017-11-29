@@ -237,19 +237,34 @@ int server_channel_handler::listener_attr_int(channel *ch, message &msg)
 
 int server_channel_handler::listener_attr_str(channel *ch, message &msg)
 {
-	cmd_listener_attr_str_t buf;
-	msg.disclose((char *)&buf);
-	uint32_t id = buf.listener_id;
+	uint32_t id;
+	cmd_listener_attr_str_t *buf;
 
+	buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[msg.size()];
+	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
+
+	msg.disclose((char *)buf);
+
+	id = buf->listener_id;
 	auto it = m_listeners.find(id);
-	retv_if(it == m_listeners.end(), -EINVAL);
-	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
-			-EACCES, "Permission denied[%d, %s]",
-			id, m_listeners[id]->get_required_privileges().c_str());
+	if (it == m_listeners.end()) {
+		delete [] buf;
+		return -EINVAL;
+	}
 
-	int ret = m_listeners[id]->set_attribute(buf.attribute, buf.value, buf.len);
-	retv_if(ret < 0, ret);
+	if (!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges())) {
+		_E("Permission denied[%d, %s]", id, m_listeners[id]->get_required_privileges().c_str());
+		delete [] buf;
+		return -EACCES;
+	}
 
+	int ret = m_listeners[id]->set_attribute(buf->attribute, buf->value, buf->len);
+	if (ret < 0) {
+		delete [] buf;
+		return ret;
+	}
+
+	delete [] buf;
 	return send_reply(ch, OP_SUCCESS);
 }
 
