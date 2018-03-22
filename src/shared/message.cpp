@@ -38,6 +38,9 @@ message::message(size_t capacity)
 	m_header.type = UNDEFINED_TYPE;
 	m_header.length = m_size;
 	m_header.err = 0;
+
+	for (int i = 0; i < MAX_HEADER_RESERVED; ++i)
+		m_header.ancillary[i] = NULL;
 }
 
 message::message(const void *msg, size_t sz)
@@ -50,6 +53,9 @@ message::message(const void *msg, size_t sz)
 	m_header.type = UNDEFINED_TYPE;
 	m_header.length = m_size;
 	m_header.err = 0;
+
+	for (int i = 0; i < MAX_HEADER_RESERVED; ++i)
+		m_header.ancillary[i] = NULL;
 }
 
 message::message(const message &msg)
@@ -72,6 +78,9 @@ message::message(int error)
 	m_header.type = UNDEFINED_TYPE;
 	m_header.length = 0;
 	m_header.err = error;
+
+	for (int i = 0; i < MAX_HEADER_RESERVED; ++i)
+		m_header.ancillary[i] = NULL;
 }
 
 message::~message()

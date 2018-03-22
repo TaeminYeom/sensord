@@ -86,8 +86,8 @@ static void add_mysensor(void)
 	sensord_provider_set_resolution(provider, 0.01f);
 
 	sensord_add_provider(provider);
-
 	sensord_remove_provider(provider);
+
 	sensord_destroy_provider(provider);
 }
 

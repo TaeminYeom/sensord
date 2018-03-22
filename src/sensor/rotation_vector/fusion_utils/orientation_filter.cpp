@@ -65,6 +65,7 @@ orientation_filter<TYPE>::orientation_filter()
 	m_var_azimuth = vec;
 
 	m_gyro.m_time_stamp = 0;
+	m_gyro_dt = 0;
 }
 
 template <typename TYPE>

@@ -20,6 +20,7 @@
 #include "info.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <glib.h>
 #include <sensor_internal.h>
 
@@ -44,7 +45,10 @@ bool info_manager::run(int argc, char *argv[])
 	sensord_get_sensor_list(type, &sensors, &count);
 	show_info(sensors, count);
 
-	delete sensors;
+	if (sensors) {
+		free(sensors);
+		sensors = NULL;
+	}
 	return true;
 }
 

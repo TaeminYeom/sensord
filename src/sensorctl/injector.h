@@ -39,7 +39,7 @@ public:
 	virtual bool teardown(void) { return true; }
 
 	const std::string& name() const { return m_name; }
-	const sensor_type_t type() const { return m_type; }
+	sensor_type_t type() { return m_type; }
 
 	virtual bool inject(int argc, char *argv[]) = 0;
 

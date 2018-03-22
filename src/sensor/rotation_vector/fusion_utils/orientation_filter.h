@@ -89,6 +89,4 @@ public:
 			const sensor_data<TYPE> *gyro, const sensor_data<TYPE> *magnetic);
 };
 
-#include "orientation_filter.cpp"
-
 #endif /* _ORIENTATION_FILTER_H_ */
