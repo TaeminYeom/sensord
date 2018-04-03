@@ -59,6 +59,7 @@ TESTCASE(sensor_listener, get_sensors_p_1)
 
 	err = sensord_get_sensors(ACCELEROMETER_SENSOR, &sensors, &count);
 	ASSERT_EQ(err, 0);
+	ASSERT_FREE((count < 0), sensors);
 	ASSERT_GT(count, 0);
 
 	free(sensors);

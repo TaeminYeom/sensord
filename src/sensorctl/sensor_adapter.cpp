@@ -53,13 +53,17 @@ bool sensor_adapter::get_handle(sensor_info info, int &handle)
 {
 	int err;
 	int count;
-	sensor_t *sensors;
+	sensor_t *sensors = NULL;
 
 	err = sensord_get_sensors(info.type, &sensors, &count);
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensors[info.index]);
+	ASSERT_FREE((handle < 0), sensors);
 	ASSERT_GE(handle, 0);
+
+	free(sensors);
+	sensors = NULL;
 
 	return true;
 }
