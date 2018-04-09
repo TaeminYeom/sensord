@@ -35,7 +35,7 @@ sensor_event_handler::sensor_event_handler(physical_sensor_handler *sensor)
 bool sensor_event_handler::handle(int fd, ipc::event_condition condition)
 {
 	sensor_info info;
-	sensor_data_t *data;
+	sensor_data_t *data = NULL;
 	int length = 0;
 	int remains = 1;
 
@@ -56,14 +56,18 @@ bool sensor_event_handler::handle(int fd, ipc::event_condition condition)
 
 		if (m_sensor->on_event(data, length, remains) < 0) {
 			free(data);
+			data = NULL;
 			continue;
 		}
 
 		info = m_sensor->get_sensor_info();
 
 		//_I("[Data] allocate %p", data);
-		if (m_sensor->notify(info.get_uri().c_str(), data, length) < 0) {
-			free(data);
+		if (data) {
+			if (m_sensor->notify(info.get_uri().c_str(), data, length) < 0) {
+				free(data);
+				data = NULL;
+			}
 		}
 		info.clear();
 	}
