@@ -134,8 +134,8 @@ int sensor_manager::remove_sensor(const char *uri)
 {
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
 		if ((*it).get_uri() == uri) {
+			_I("Removing sensor[%s]", (*it).get_uri().c_str());
 			m_sensors.erase(it);
-			_I("Removed sensor[%s]", (*it).get_uri().c_str());
 
 			return OP_SUCCESS;
 		}
