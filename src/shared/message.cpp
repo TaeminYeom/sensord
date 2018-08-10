@@ -147,7 +147,7 @@ void message::unref(void)
 	if (ref_cnt > 0 || !m_msg)
 		return;
 
-	free(m_msg);
+	delete [] m_msg;
 	m_msg = NULL;
 	delete this;
 }
