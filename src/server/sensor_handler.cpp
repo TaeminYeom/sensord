@@ -98,12 +98,15 @@ uint32_t sensor_handler::observer_count(void)
 
 void sensor_handler::set_cache(sensor_data_t *data, int size)
 {
-	if (m_last_data == NULL) {
-		m_last_data = (sensor_data_t*)malloc(size);
+	retm_if(data == NULL, "Nothing to copy from as source is NULL");
+	retm_if(size <= 0, "data is of size 0");
+
+	if (m_last_data_size != size) {
+		m_last_data = (sensor_data_t*)realloc(m_last_data, size);
 		retm_if(m_last_data == NULL, "Memory allocation failed");
+		m_last_data_size = size;
 	}
 
-	m_last_data_size = size;
 	memcpy(m_last_data, data, size);
 }
 
