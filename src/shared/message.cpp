@@ -33,7 +33,7 @@ static std::atomic<uint64_t> sequence(0);
 message::message(size_t capacity)
 : m_size(0)
 , m_capacity(capacity)
-, m_msg(new(std::nothrow) char[sizeof(char) *capacity])
+, m_msg(new(std::nothrow) char[sizeof(char) * capacity])
 , ref_cnt(0)
 {
 	m_header.id = sequence++;
@@ -48,14 +48,14 @@ message::message(size_t capacity)
 message::message(const void *msg, size_t sz)
 : m_size(sz)
 , m_capacity(sz)
-, m_msg((char *)msg)
+, m_msg(new(std::nothrow) char[sizeof(char) * sz])
 , ref_cnt(0)
 {
 	m_header.id = sequence++;
 	m_header.type = UNDEFINED_TYPE;
 	m_header.length = m_size;
 	m_header.err = 0;
-
+	::memcpy(m_msg, msg, sz);
 	for (int i = 0; i < MAX_HEADER_RESERVED; ++i)
 		m_header.ancillary[i] = NULL;
 }
