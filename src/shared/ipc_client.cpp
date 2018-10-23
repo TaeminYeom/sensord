@@ -56,6 +56,9 @@ channel *ipc_client::connect(channel_handler *handler, event_loop *loop, bool bi
 	channel *ch;
 	channel_event_handler *ev_handler;
 
+	retvm_if(access(m_path.c_str(), F_OK), NULL,
+			"Failed to access to %s", m_path.c_str());
+
 	sock = new(std::nothrow) stream_socket();
 	retvm_if(!sock, NULL, "Failed to allocate memory");
 
