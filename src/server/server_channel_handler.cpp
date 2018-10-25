@@ -265,7 +265,7 @@ int server_channel_handler::listener_attr_str(channel *ch, message &msg)
 		return -EACCES;
 	}
 
-	int ret = m_listeners[id]->set_attribute(buf->attribute, buf->value, buf->len);
+	int ret = m_listeners[id]->set_attribute(buf->attribute, (char *)&buf->value, buf->len);
 	if (ret < 0) {
 		delete [] buf;
 		return ret;

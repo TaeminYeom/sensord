@@ -88,7 +88,7 @@ typedef struct  {
 	int listener_id;
 	int attribute;
 	int len;
-	char *value;
+	char value[0];
 } cmd_listener_attr_str_t;
 
 typedef struct {
