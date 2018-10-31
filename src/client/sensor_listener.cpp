@@ -399,7 +399,7 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 	buf->listener_id = m_id;
 	buf->attribute = attribute;
 
-	memcpy(buf->value, value, len);
+	memcpy(&buf->value, value, len);
 	buf->len = len;
 
 	msg.enclose((char *)buf, size);
