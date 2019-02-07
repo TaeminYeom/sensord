@@ -179,6 +179,7 @@ void event_loop::release_info(handler_info *info)
 
 	g_source_destroy(info->g_src);
 	g_source_unref(info->g_src);
+	info->g_src = NULL;
 
 	g_io_channel_unref(info->g_ch);
 	info->g_ch = NULL;
@@ -187,6 +188,7 @@ void event_loop::release_info(handler_info *info)
 	info->handler = NULL;
 
 	delete info;
+	info = NULL;
 }
 
 class terminator : public event_handler
