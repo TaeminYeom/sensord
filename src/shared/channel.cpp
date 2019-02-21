@@ -49,8 +49,13 @@ public:
 		if (!m_ch->send_sync(m_msg))
 			return false;
 
-		if (m_msg)
+		if (m_msg) {
 			m_msg->unref();
+			if(m_msg->ref_count() <= 0) {
+				delete m_msg;
+				m_msg = NULL;
+			}
+		}
 
 		return false;
 	}

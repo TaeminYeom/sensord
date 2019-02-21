@@ -83,8 +83,10 @@ int sensor_handler::notify(const char *uri, sensor_data_t *data, int len)
 	for (auto it = m_observers.begin(); it != m_observers.end(); ++it)
 		(*it)->update(uri, msg);
 
-	if (msg->ref_count() == 0)
-		msg->unref();
+	if (msg->ref_count() == 0) {
+		delete msg;
+		msg = NULL;
+	}
 
 	set_cache(data, len);
 

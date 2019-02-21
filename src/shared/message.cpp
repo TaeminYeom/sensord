@@ -87,7 +87,7 @@ message::message(int error)
 
 message::~message()
 {
-	if (m_msg && ref_cnt == 0) {
+	if (m_msg) {
 		delete [] m_msg;
 		m_msg = NULL;
 	}
@@ -146,12 +146,12 @@ void message::unref(void)
 {
 	ref_cnt--;
 
-	if (ref_cnt > 0 || !m_msg)
+	/*if (ref_cnt > 0 || !m_msg)
 		return;
 
 	delete [] m_msg;
 	m_msg = NULL;
-	delete this;
+	delete this;*/
 }
 
 int message::ref_count(void)
