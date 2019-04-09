@@ -38,6 +38,9 @@ static gboolean g_io_handler(GIOChannel *ch, GIOCondition condition, gpointer da
 	uint64_t id;
 	int fd;
 	bool term;
+	bool ret;
+	event_loop *loop;
+	event_handler *handler;
 	unsigned int cond;
 
 	cond = (unsigned int)condition;
@@ -46,17 +49,21 @@ static gboolean g_io_handler(GIOChannel *ch, GIOCondition condition, gpointer da
 		cond &= ~(G_IO_IN | G_IO_OUT);
 
 	handler_info *info = (handler_info *)data;
+	loop = info->loop;
+	handler = info->handler;
+	retvm_if(!loop || !handler, FALSE, "Invalid event info");
+
 	id = info->id;
 	fd = info->fd;
-	term = info->loop->is_terminator(fd);
+	term = loop->is_terminator(fd);
 
 	if (cond & G_IO_NVAL)
 		return FALSE;
 
-	bool ret = info->handler->handle(fd, (event_condition)cond);
+	ret = handler->handle(fd, (event_condition)cond);
 
 	if (!ret && !term) {
-		info->loop->remove_event(id);
+		loop->remove_event(id);
 		return FALSE;
 	}
 
