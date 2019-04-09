@@ -46,13 +46,11 @@ bool channel_event_handler::handle(int fd, event_condition condition)
 
 	if (condition & (EVENT_HUP)) {
 		m_ch->disconnect();
-		m_ch = NULL;
 		return false;
 	}
 
 	if (!m_ch->read_sync(msg, false)) {
 		m_ch->disconnect();
-		m_ch = NULL;
 		return false;
 	}
 
