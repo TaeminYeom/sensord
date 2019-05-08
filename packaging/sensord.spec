@@ -110,6 +110,7 @@ echo "You need to reinstall %{name}-dummy to keep using the APIs after uninstall
 %{_unitdir}/sensord.service
 %{_unitdir}/sensord.socket
 %{_unitdir}/multi-user.target.wants/sensord.service
+%{_sysconfdir}/dbus-1/system.d/sensor.conf
 %{_unitdir}/sockets.target.wants/sensord.socket
 %license LICENSE.APLv2
 
