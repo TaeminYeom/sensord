@@ -45,7 +45,10 @@ bool sensor_event_handler::handle(int fd, ipc::event_condition condition)
 	auto result = std::find(std::begin(ids), std::end(ids), m_sensor->get_hal_id());
 
 	if (result == std::end(ids))
+	{
+		ids.clear();
 		return true;
+	}
 
 	while (remains > 0) {
 		remains = m_sensor->get_data(&data, &length);
@@ -71,6 +74,8 @@ bool sensor_event_handler::handle(int fd, ipc::event_condition condition)
 		}
 		info.clear();
 	}
+
+	ids.clear();
 
 	return true;
 }
