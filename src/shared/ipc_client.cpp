@@ -52,10 +52,10 @@ channel *ipc_client::connect(channel_handler *handler)
 
 channel *ipc_client::connect(channel_handler *handler, event_loop *loop, bool bind)
 {
-	socket *sock;
-	channel *ch;
-	channel_event_handler *ev_handler;
-
+	socket *sock = NULL;
+	channel *ch = NULL;
+	channel_event_handler *ev_handler = NULL;
+	bool ret = false;
 	retvm_if(access(m_path.c_str(), F_OK), NULL,
 			"Failed to access to %s", m_path.c_str());
 
@@ -82,7 +82,14 @@ channel *ipc_client::connect(channel_handler *handler, event_loop *loop, bool bi
 		return NULL;
 	}
 
-	ch->connect(ev_handler, loop);
+	ret = ch->connect(ev_handler, loop);
+	if(ret == false) {
+		delete ch;
+		delete sock;
+		delete ev_handler;
+		_E("Faield to connect");
+		return NULL;
+	}
 
 	if (loop && bind) {
 		uint64_t id = loop->add_event(sock->get_fd(),
