@@ -9,4 +9,3 @@ SocketMode=0777
 PassCredentials=yes
 SmackLabelIPIn=*
 SmackLabelIPOut=@
-Service=sensord.service
