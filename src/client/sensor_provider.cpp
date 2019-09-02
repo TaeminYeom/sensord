@@ -123,8 +123,6 @@ int sensor_provider::send_sensor_info(sensor_info *info)
 
 	m_channel->send_sync(&msg);
 
-	delete []bytes;
-
 	return OP_SUCCESS;
 }
 
