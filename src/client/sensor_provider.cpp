@@ -117,12 +117,12 @@ int sensor_provider::send_sensor_info(sensor_info *info)
 	int size;
 
 	size = serialize(info, &bytes);
-
+	retvm_if(size == -ENOMEM, -ENOMEM, "Failed to serialize");
 	ipc::message msg((const char *)bytes, size);
 	msg.set_type(CMD_PROVIDER_CONNECT);
 
 	m_channel->send_sync(&msg);
-
+	delete []bytes;
 	return OP_SUCCESS;
 }
 

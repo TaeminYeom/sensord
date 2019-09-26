@@ -138,11 +138,13 @@ void sensor_manager::send_added_msg(sensor_info *info)
 	int size;
 
 	size = serialize(info, &bytes);
+	retm_if(size == -ENOMEM, "Failed to serialize");
 
 	ipc::message msg((const char *)bytes, size);
 	msg.set_type(CMD_MANAGER_SENSOR_ADDED);
 
 	send(msg);
+	delete []bytes;
 }
 
 void sensor_manager::send_removed_msg(const std::string &uri)
