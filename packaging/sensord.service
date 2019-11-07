@@ -8,6 +8,8 @@ Type=notify
 SmackProcessLabel=System
 ExecStart=/usr/bin/sensord
 MemoryLimit=20M
+Sockets=sensord.socket
+Nice=-5
 
 [Install]
 WantedBy=multi-user.target

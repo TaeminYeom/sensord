@@ -72,7 +72,11 @@ bool auto_rotation_sensor::init(void)
 
 void auto_rotation_sensor::deinit(void)
 {
+	if (!m_alg)
+		return;
+
 	delete m_alg;
+	m_alg = NULL;
 }
 
 int auto_rotation_sensor::get_sensor_info(const sensor_info2_t **info)
@@ -121,7 +125,7 @@ int auto_rotation_sensor::get_data(sensor_data_t **data, int *length)
 	*data = sensor_data;
 	*length = sizeof(sensor_data_t);
 
-	return 1;
+	return 0;
 }
 
 int auto_rotation_sensor::start(observer_h ob)

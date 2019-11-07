@@ -95,17 +95,19 @@ event_loop::event_loop(GMainLoop *mainloop)
 , m_sequence(1)
 , m_term_fd(-1)
 {
-	if (m_mainloop) {
-		g_main_loop_quit(m_mainloop);
-		g_main_loop_unref(m_mainloop);
-	}
-
 	m_mainloop = mainloop;
 }
 
 event_loop::~event_loop()
 {
-	remove_all_events();
+	_D("Destoryed");
+}
+
+void event_loop::set_mainloop(GMainLoop *mainloop)
+{
+	retm_if(!mainloop, "Invalid mainloop");
+
+	m_mainloop = mainloop;
 }
 
 uint64_t event_loop::add_event(const int fd, const event_condition cond, event_handler *handler)
@@ -136,7 +138,7 @@ uint64_t event_loop::add_event(const int fd, const event_condition cond, event_h
 
 	m_handlers[id] = info;
 
-	/* _D("Added[%llu](fd:%d)", id, fd); */
+	/* _D("Added event[%llu], fd[%d]", id, fd); */
 	return id;
 }
 
@@ -144,16 +146,16 @@ uint64_t event_loop::add_idle_event(unsigned int priority, idle_handler *handler
 {
 	GSource *src;
 
-	retvm_if(m_terminating.load(), false,
+	retvm_if(m_terminating.load(), 0,
 			"Failed to remove event, because event_loop is terminated");
 
 	src = g_idle_source_new();
-	retvm_if(!src, false, "Failed to allocate memory");
+	retvm_if(!src, 0, "Failed to allocate memory");
 
 	g_source_unref(src);
 
 	/* Not Supported yet */
-	return false;
+	return 0;
 }
 
 bool event_loop::remove_event(uint64_t id, bool close_channel)
@@ -165,9 +167,9 @@ bool event_loop::remove_event(uint64_t id, bool close_channel)
 		g_io_channel_shutdown(it->second->g_ch, TRUE, NULL);
 
 	release_info(it->second);
-	m_handlers.erase(it);
+	m_handlers.erase(id);
 
-	/* _D("Removed[%llu]", id); */
+	/* _D("Removed event[%llu]", id); */
 	return true;
 }
 
@@ -182,11 +184,11 @@ void event_loop::remove_all_events(void)
 
 void event_loop::release_info(handler_info *info)
 {
-	ret_if(!info->g_ch || info->id == 0);
+	retm_if(!info->g_ch || info->id == 0, "Invalid handler information");
+	/* _D("Releasing event..[%llu]", info->id); */
 
 	g_source_destroy(info->g_src);
 	g_source_unref(info->g_src);
-	info->g_src = NULL;
 
 	g_io_channel_unref(info->g_ch);
 	info->g_ch = NULL;
@@ -195,7 +197,8 @@ void event_loop::release_info(handler_info *info)
 	info->handler = NULL;
 
 	delete info;
-	info = NULL;
+
+	/* _D("Released event[%llu]", info->id); */
 }
 
 class terminator : public event_handler
@@ -218,7 +221,7 @@ private:
 bool event_loop::run(int timeout)
 {
 	retvm_if(!m_mainloop, false, "Invalid GMainLoop");
-	retv_if(is_running(), false);
+	retvm_if(is_running(), false, "Already started");
 
 	if (timeout > 0) {
 		GSource *src = g_timeout_source_new(timeout);

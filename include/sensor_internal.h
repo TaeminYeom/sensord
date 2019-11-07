@@ -423,6 +423,9 @@ int sensord_provider_set_stop_cb(sensord_provider_h provider, sensord_provider_s
 typedef void (*sensord_provider_interval_changed_cb)(sensord_provider_h provider, unsigned int interval_ms, void *user_data);
 int sensord_provider_set_interval_changed_cb(sensord_provider_h provider, sensord_provider_interval_changed_cb callback, void *user_data);
 
+typedef void (*sensord_provider_attribute_str_cb)(sensord_provider_h provider, int attribute, const char *value, int count, void *user_data);
+int sensord_provider_set_attribute_str_cb(sensord_provider_h provider, sensord_provider_attribute_str_cb callback, void *user_data);
+
 int sensord_provider_publish(sensord_provider_h provider, sensor_data_t data);
 
 /* Deprecated */

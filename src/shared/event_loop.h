@@ -46,7 +46,7 @@ class event_loop;
 
 class handler_info {
 public:
-	handler_info(int64_t _id, int _fd, GIOChannel *_ch, GSource *_src, event_handler *_handler, event_loop *_loop)
+	handler_info(uint64_t _id, int _fd, GIOChannel *_ch, GSource *_src, event_handler *_handler, event_loop *_loop)
 	: id(_id)
 	, fd(_fd)
 	, g_ch(_ch)
@@ -71,6 +71,8 @@ public:
 	event_loop();
 	event_loop(GMainLoop *mainloop);
 	~event_loop();
+
+	void set_mainloop(GMainLoop *mainloop);
 
 	uint64_t add_event(const int fd, const event_condition cond, event_handler *handler);
 	uint64_t add_idle_event(unsigned int priority, idle_handler *handler);

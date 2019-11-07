@@ -26,6 +26,7 @@
 #include <sensor_types.h>
 
 #include "sensor_handler.h"
+#include "sensor_policy_monitor.h"
 
 using namespace sensor;
 
@@ -35,15 +36,18 @@ sensor_listener_proxy::sensor_listener_proxy(uint32_t id,
 , m_uri(uri)
 , m_manager(manager)
 , m_ch(ch)
+, m_started(false)
 , m_passive(false)
 , m_pause_policy(SENSORD_PAUSE_ALL)
 , m_axis_orientation(SENSORD_AXIS_DISPLAY_ORIENTED)
 , m_last_accuracy(SENSOR_ACCURACY_UNDEFINED)
 {
+	sensor_policy_monitor::get_instance().add_listener(this);
 }
 
 sensor_listener_proxy::~sensor_listener_proxy()
 {
+	sensor_policy_monitor::get_instance().remove_listener(this);
 	stop();
 }
 
@@ -93,33 +97,48 @@ void sensor_listener_proxy::update_accuracy(ipc::message *msg)
 	m_ch->send(acc_msg);
 }
 
-int sensor_listener_proxy::start(void)
+int sensor_listener_proxy::start(bool policy)
 {
+	int ret;
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
+	retvm_if(m_started && !policy, OP_SUCCESS, "Sensor is already started");
 
 	_D("Listener[%d] try to start", get_id());
 
-	/* TODO: listen pause policy */
-	return sensor->start(this);
+	ret = sensor->start(this);
+	retv_if (ret < 0, OP_ERROR);
+
+	/* m_started is changed only when it is explicitly called by user,
+	 * not automatically determined by any pause policy. */
+	if (policy)
+		return OP_SUCCESS;
+
+	m_started = true;
+	return OP_SUCCESS;
 }
 
-int sensor_listener_proxy::stop(void)
+int sensor_listener_proxy::stop(bool policy)
 {
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
-
-	/* TODO: listen pause policy */
+	retvm_if(!m_started && !policy, OP_SUCCESS, "Sensor is already stopped");
 
 	_D("Listener[%d] try to stop", get_id());
 
 	int ret = sensor->stop(this);
 	retv_if(ret < 0, OP_ERROR);
 
-	/* unset attributes */
-	set_interval(POLL_1HZ_MS);
-	set_max_batch_latency(0);
+	/* attributes and m_started are changed only when it is explicitly called by user,
+	 * not automatically determined by any policy. */
+	if (policy)
+		return OP_SUCCESS;
 
+	/* unset attributes */
+	set_interval(POLL_MAX_HZ_MS);
+	delete_batch_latency();
+
+	m_started = false;
 	return OP_SUCCESS;
 }
 
@@ -143,6 +162,16 @@ int sensor_listener_proxy::set_max_batch_latency(unsigned int max_batch_latency)
 	return sensor->set_batch_latency(this, max_batch_latency);
 }
 
+int sensor_listener_proxy::delete_batch_latency(void)
+{
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
+	_I("Listener[%d] try to delete batch latency", get_id());
+
+	return sensor->delete_batch_latency(this);
+}
+
 int sensor_listener_proxy::set_passive_mode(bool passive)
 {
 	/* TODO: passive mode */
@@ -163,6 +192,8 @@ int sensor_listener_proxy::set_attribute(int attribute, int value)
 	} else if (attribute == SENSORD_ATTRIBUTE_AXIS_ORIENTATION) {
 		m_axis_orientation = value;
 		return OP_SUCCESS;
+	} else if (attribute == SENSORD_ATTRIBUTE_FLUSH) {
+		return flush();
 	}
 
 	return sensor->set_attribute(this, attribute, value);
@@ -201,4 +232,19 @@ std::string sensor_listener_proxy::get_required_privileges(void)
 
 	sensor_info info = sensor->get_sensor_info();
 	return info.get_privilege();
+}
+
+void sensor_listener_proxy::on_policy_changed(int policy, int value)
+{
+	ret_if(m_started == false);
+	ret_if(policy != SENSORD_ATTRIBUTE_PAUSE_POLICY);
+	ret_if(m_pause_policy == SENSORD_PAUSE_NONE);
+
+	_D("power_save_state[%d], listener[%d] pause policy[%d]",
+			value, get_id(), m_pause_policy);
+
+	if (value & m_pause_policy)
+		stop(true);
+	if (!(value & m_pause_policy))
+		start(true);
 }

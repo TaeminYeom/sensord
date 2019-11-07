@@ -24,7 +24,7 @@
 #include "sensor_info.h"
 
 #define SENSOR_CHANNEL_PATH		"/run/.sensord.socket"
-#define MAX_BUF_SIZE 10240
+#define MAX_BUF_SIZE (16*1024)
 
 /* TODO: OOP - create serializer interface */
 enum cmd_type_e {
@@ -53,6 +53,7 @@ enum cmd_type_e {
 	CMD_PROVIDER_STOP,
 	CMD_PROVIDER_ATTR_INT,
 	CMD_PROVIDER_PUBLISH,
+	CMD_PROVIDER_ATTR_STR,
 
 	/* Etc */
 	CMD_HAS_PRIVILEGE = 0x1000,
@@ -109,6 +110,12 @@ typedef struct  {
 	int attribute;
 	int value;
 } cmd_provider_attr_int_t;
+
+typedef struct  {
+	int attribute;
+	int len;
+	char value[0];
+} cmd_provider_attr_str_t;
 
 typedef struct {
 	char sensor[NAME_MAX];

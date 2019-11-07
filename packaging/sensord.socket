@@ -7,5 +7,7 @@ SocketGroup=input
 ListenStream=/run/.sensord.socket
 SocketMode=0777
 PassCredentials=yes
+Accept=false
 SmackLabelIPIn=*
 SmackLabelIPOut=@
+Service=sensord.service

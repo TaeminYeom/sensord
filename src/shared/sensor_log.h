@@ -67,4 +67,9 @@
 #define LOG_DUMP(fp, fmt, arg...) \
 	do { if (fp) fprintf(fp, fmt, ##arg); else _E(fmt, ##arg); } while (0)
 
+#define log_oom() ({ \
+	_E("Out of memory"); \
+	-ENOMEM;})
+
+
 #endif /* __SENSOR_LOG_H__ */

@@ -34,6 +34,7 @@ physical_sensor_handler::physical_sensor_handler(const sensor_info &info,
 , m_sensor(sensor)
 , m_hal_id(hal_id)
 , m_prev_interval(0)
+, m_prev_latency(0)
 {
 }
 
@@ -60,7 +61,6 @@ int physical_sensor_handler::get_poll_fd(void)
 
 int physical_sensor_handler::read_fd(std::vector<uint32_t> &ids)
 {
-	retv_if(observer_count() == 0, OP_ERROR);
 	retv_if(!m_device, -EINVAL);
 
 	int size;
@@ -90,14 +90,19 @@ int physical_sensor_handler::start(sensor_observer *ob)
 {
 	retv_if(!m_device, -EINVAL);
 
+	bool ret;
 	int policy = OP_DEFAULT;
+
+	ret = add_observer(ob);
+	retvm_if(!ret, OP_SUCCESS, "Listener is already added");
 
 	if (m_sensor) {
 		policy = m_sensor->start(ob);
-		retv_if(policy <= OP_ERROR, policy);
+		if (policy <= OP_ERROR) {
+			remove_observer(ob);
+			return policy;
+		}
 	}
-
-	add_observer(ob);
 
 	if (policy == OP_DEFAULT) {
 		if (observer_count() > 1)
@@ -187,11 +192,10 @@ int physical_sensor_handler::get_min_batch_latency(void)
 	std::vector<int> temp;
 
 	for (auto it = m_batch_latency_map.begin(); it != m_batch_latency_map.end(); ++it)
-		if (it->second > 0)
-		    temp.push_back(it->second);
+		temp.push_back(it->second);
 
 	if (temp.empty())
-		return 0;
+		return -1;
 
 	batch_latency = *std::min_element(temp.begin(), temp.end());
 
@@ -203,7 +207,7 @@ int physical_sensor_handler::set_batch_latency(sensor_observer *ob, int32_t late
 	retv_if(!m_device, -EINVAL);
 
 	bool ret = false;
-	int _latency = latency;
+	int32_t cur_latency = latency;
 	int policy = OP_DEFAULT;
 
 	if (m_sensor) {
@@ -211,12 +215,36 @@ int physical_sensor_handler::set_batch_latency(sensor_observer *ob, int32_t late
 		retv_if(policy <= OP_ERROR, policy);
 	}
 
-	m_batch_latency_map[ob] = _latency;
+	m_batch_latency_map[ob] = cur_latency;
 
-	if (_latency <= latency)
-		return OP_SUCCESS;
+	if (policy == OP_DEFAULT)
+		cur_latency = get_min_batch_latency();
 
-	ret = m_device->set_batch_latency(m_hal_id, _latency);
+	retv_if(m_prev_latency == cur_latency, OP_SUCCESS);
+
+	ret = m_device->set_batch_latency(m_hal_id, cur_latency);
+
+	m_prev_latency = cur_latency;
+
+	_I("Set batch latency[%d] to sensor[%s]", cur_latency, m_info.get_uri().c_str());
+
+	return (ret ? OP_SUCCESS : OP_ERROR);
+}
+
+int physical_sensor_handler::delete_batch_latency(sensor_observer *ob)
+{
+	bool ret = false;
+	int policy = OP_DEFAULT;
+	int32_t latency;
+
+	m_batch_latency_map.erase(ob);
+
+	latency = get_min_batch_latency();
+	retv_if(m_prev_latency == latency, OP_SUCCESS);
+
+	ret = m_device->set_batch_latency(m_hal_id, latency);
+
+	m_prev_latency = latency;
 
 	return (ret ? OP_SUCCESS : OP_ERROR);
 }

@@ -140,6 +140,26 @@ int application_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr,
 
 int application_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, const char *value, int len)
 {
+	ipc::message msg;
+	cmd_provider_attr_str_t *buf;
+	size_t size;
+
+	size = sizeof(cmd_provider_attr_str_t) + len;
+
+	buf = (cmd_provider_attr_str_t *) malloc(sizeof(char) * size);
+	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
+
+	msg.set_type(CMD_PROVIDER_ATTR_STR);
+	memcpy(buf->value, value, len);
+	buf->attribute = attr;
+	buf->len = len;
+
+	msg.enclose((char *)buf, size);
+
+	m_ch->send_sync(&msg);
+
+	_I("Set attribute[%d] to sensor[%s]", attr, m_info.get_uri().c_str());
+
 	return OP_SUCCESS;
 }
 

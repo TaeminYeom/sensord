@@ -21,6 +21,8 @@
 #define __SENSOR_EVENT_HANDLER__
 
 #include <event_handler.h>
+#include <set>
+
 #include "physical_sensor_handler.h"
 
 namespace sensor {
@@ -28,12 +30,15 @@ namespace sensor {
 class sensor_event_handler : public ipc::event_handler
 {
 public:
-	sensor_event_handler(physical_sensor_handler *sensor);
+	sensor_event_handler();
+
+	void add_sensor(physical_sensor_handler *sensor);
+	void remove_sensor(physical_sensor_handler *sensor);
 
 	bool handle(int fd, ipc::event_condition condition);
 
 private:
-	physical_sensor_handler *m_sensor;
+	std::set<physical_sensor_handler *> m_sensors;
 };
 
 }

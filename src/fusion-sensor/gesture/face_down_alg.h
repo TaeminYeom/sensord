@@ -17,18 +17,16 @@
  *
  */
 
-#ifndef _ACCEL_SENSOR_H_
-#define _ACCEL_SENSOR_H_
+#ifndef __FACE_DOWN_ALG_H__
+#define __FACE_DOWN_ALG_H__
 
-#include <physical_sensor.h>
+#include <sensor_types.h>
 
-class accel_sensor : public physical_sensor {
+class face_down_alg {
 public:
-	accel_sensor();
-	~accel_sensor();
-
-	sensor_type_t get_type(void);
+	virtual ~face_down_alg() {};
+	virtual void update(sensor_data_t *data) = 0;
+	virtual bool get_face_down(void) = 0;
 };
 
-#endif /* _ACCEL_SENSOR_H_ */
-
+#endif /* __FACE_DOWN_ALG_H __ */

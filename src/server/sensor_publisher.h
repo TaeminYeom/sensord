@@ -31,7 +31,7 @@ public:
 	virtual ~sensor_publisher() {}
 
 	virtual bool has_observer(sensor_observer *ob) = 0;
-	virtual void add_observer(sensor_observer *ob) = 0;
+	virtual bool add_observer(sensor_observer *ob) = 0;
 	virtual void remove_observer(sensor_observer *ob) = 0;
 	virtual int notify(const char *type, sensor_data_t *data, int len) = 0;
 };

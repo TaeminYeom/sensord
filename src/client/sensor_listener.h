@@ -34,6 +34,7 @@ namespace sensor {
 class sensor_listener {
 public:
 	sensor_listener(sensor_t sensor);
+	sensor_listener(sensor_t sensor, ipc::event_loop *loop);
 	virtual ~sensor_listener();
 
 	int get_id(void);
@@ -85,7 +86,7 @@ private:
 	ipc::channel_handler *m_handler;
 	ipc::channel_handler *m_evt_handler;
 	ipc::channel_handler *m_acc_handler;
-	ipc::event_loop m_loop;
+	ipc::event_loop *m_loop;
 	std::atomic<bool> m_connected;
 	std::atomic<bool> m_started;
 	std::map<int, int> m_attributes;

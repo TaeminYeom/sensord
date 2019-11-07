@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2016 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2013 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,26 @@
  *
  */
 
-#include <sensor_common.h>
-#include <sensor_log.h>
-#include <accel_sensor.h>
+#ifndef _CMUTEX_H_
+#define _CMUTEX_H_
 
-accel_sensor::accel_sensor()
-{
-	_I("accel_sensor is created : %#x", this);
-}
+#include "cbase_lock.h"
 
-accel_sensor::~accel_sensor()
-{
-}
+class cmutex : public cbase_lock {
+public:
+	cmutex();
+	virtual ~cmutex();
 
-sensor_type_t accel_sensor::get_type(void)
-{
-	return ACCELEROMETER_SENSOR;
-}
+	void lock(void);
+	void lock(const char* expr, const char *module, const char *func, int line);
+
+protected:
+	int lock_impl(void);
+	int try_lock_impl(void);
+	int unlock_impl(void);
+
+private:
+	pthread_mutex_t m_mutex;
+};
+
+#endif /* _CMUTEX_H_ */

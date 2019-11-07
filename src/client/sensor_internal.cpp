@@ -30,17 +30,67 @@
 #include <sensor_log.h>
 #include <unordered_map>
 #include <regex>
+#include <thread>
+#include <cmutex.h>
+
+#include "sensor_reader.h"
 
 #define CONVERT_OPTION_PAUSE_POLICY(option) ((option) ^ 0b11)
 #define MAX_LISTENER 100
 
 using namespace sensor;
 
+typedef struct {
+	int listener_id;
+	sensor_cb_t cb;
+	sensor_accuracy_changed_cb_t acc_cb;
+	sensor_info *sensor;
+	sensor_data_t *data;
+	void *user_data;
+} callback_info_s;
+
+static sensor::sensor_manager manager;
+static std::unordered_map<int, sensor::sensor_listener *> listeners;
+static cmutex lock;
+
+static gboolean callback_dispatcher(gpointer data)
+{
+	int event_type = 0;
+	callback_info_s *info = (callback_info_s *)data;
+
+	AUTOLOCK(lock);
+
+	if (info->sensor)
+		event_type = CONVERT_TYPE_EVENT(info->sensor->get_type());
+
+	if (info->cb && info->sensor && listeners.find(info->listener_id) != listeners.end())
+		info->cb(info->sensor, event_type, info->data, info->user_data);
+
+	delete [] info->data;
+	delete info;
+	return FALSE;
+}
+
+static gboolean accuracy_callback_dispatcher(gpointer data)
+{
+	callback_info_s *info = (callback_info_s *)data;
+
+	AUTOLOCK(lock);
+
+	if (info->acc_cb && info->sensor && listeners.find(info->listener_id) != listeners.end())
+		info->acc_cb(info->sensor, info->data->timestamp, info->data->accuracy, info->user_data);
+
+	delete [] info->data;
+	delete info;
+	return FALSE;
+}
+
 class sensor_event_handler : public ipc::channel_handler
 {
 public:
-	sensor_event_handler(sensor_t sensor, sensor_cb_t cb, void *user_data)
-	: m_sensor(reinterpret_cast<sensor_info *>(sensor))
+	sensor_event_handler(int id, sensor_t sensor, sensor_cb_t cb, void *user_data)
+	: m_listener_id(id)
+	, m_sensor(reinterpret_cast<sensor_info *>(sensor))
 	, m_cb(cb)
 	, m_user_data(user_data)
 	{}
@@ -49,19 +99,26 @@ public:
 	void disconnected(ipc::channel *ch) {}
 	void read(ipc::channel *ch, ipc::message &msg)
 	{
-		int event_type;
-		sensor_data_t *data;
+		callback_info_s *info;
+		sensor_data_t *data = (sensor_data_t *) new(std::nothrow) char[msg.size()];
 
-		data = reinterpret_cast<sensor_data_t *>(msg.body());
-		event_type = CONVERT_TYPE_EVENT(m_sensor->get_type());
+		memcpy(data, msg.body(), msg.size());
 
-		m_cb(m_sensor, event_type, data, m_user_data);
+		info = new(std::nothrow) callback_info_s();
+		info->listener_id = m_listener_id;
+		info->cb = m_cb;
+		info->sensor = m_sensor;
+		info->data = data;
+		info->user_data = m_user_data;
+
+		g_idle_add(callback_dispatcher, info);
 	}
 
 	void read_complete(ipc::channel *ch) {}
 	void error_caught(ipc::channel *ch, int error) {}
 
 private:
+	int m_listener_id;
 	sensor_info *m_sensor;
 	sensor_cb_t m_cb;
 	void *m_user_data;
@@ -70,8 +127,9 @@ private:
 class sensor_accuracy_handler : public ipc::channel_handler
 {
 public:
-	sensor_accuracy_handler(sensor_t sensor, sensor_accuracy_changed_cb_t cb, void *user_data)
-	: m_sensor(reinterpret_cast<sensor_info *>(sensor))
+	sensor_accuracy_handler(int id, sensor_t sensor, sensor_accuracy_changed_cb_t cb, void *user_data)
+	: m_listener_id(id)
+	, m_sensor(reinterpret_cast<sensor_info *>(sensor))
 	, m_cb(cb)
 	, m_user_data(user_data)
 	{}
@@ -80,23 +138,30 @@ public:
 	void disconnected(ipc::channel *ch) {}
 	void read(ipc::channel *ch, ipc::message &msg)
 	{
-		sensor_data_t *data;
-		data = reinterpret_cast<sensor_data_t *>(msg.body());
+		callback_info_s *info;
+		sensor_data_t *data = (sensor_data_t *) new(std::nothrow) char[msg.size()];
 
-		m_cb(m_sensor, data->timestamp, data->accuracy, m_user_data);
+		memcpy(data, msg.body(), msg.size());
+
+		info = new(std::nothrow) callback_info_s();
+		info->listener_id = m_listener_id;
+		info->acc_cb = m_cb;
+		info->sensor = m_sensor;
+		info->data = data;
+		info->user_data = m_user_data;
+
+		g_idle_add(accuracy_callback_dispatcher, info);
 	}
 
 	void read_complete(ipc::channel *ch) {}
 	void error_caught(ipc::channel *ch, int error) {}
 
 private:
+	int m_listener_id;
 	sensor_info *m_sensor;
 	sensor_accuracy_changed_cb_t m_cb;
 	void *m_user_data;
 };
-
-static sensor::sensor_manager manager;
-static std::unordered_map<int, sensor::sensor_listener *> listeners;
 
 /*
  * TO-DO-LIST:
@@ -236,17 +301,22 @@ API bool sensord_is_wakeup_supported(sensor_t sensor)
 
 API int sensord_connect(sensor_t sensor)
 {
+	AUTOLOCK(lock);
+
 	retvm_if(!manager.connect(), -EIO, "Failed to connect");
 	retvm_if(!manager.is_supported(sensor), -EINVAL,
 			"Invalid sensor[%p]", sensor);
 	retvm_if(listeners.size() > MAX_LISTENER, -EPERM, "Exceeded the maximum listener");
 
 	sensor::sensor_listener *listener;
+	static sensor_reader reader;
 
-	listener = new(std::nothrow) sensor::sensor_listener(sensor);
+	listener = new(std::nothrow) sensor::sensor_listener(sensor, reader.get_event_loop());
 	retvm_if(!listener, -ENOMEM, "Failed to allocate memory");
 
 	listeners[listener->get_id()] = listener;
+
+	_D("Connect[%d]", listener->get_id());
 
 	return listener->get_id();
 }
@@ -255,11 +325,15 @@ API bool sensord_disconnect(int handle)
 {
 	sensor::sensor_listener *listener;
 
+	AUTOLOCK(lock);
+
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
 
 	listener = it->second;
 	retvm_if(!listener, false, "Invalid handle[%d]", handle);
+
+	_D("Disconnect[%d]", listener->get_id());
 
 	delete listener;
 	listeners.erase(handle);
@@ -274,6 +348,8 @@ API bool sensord_register_event(int handle, unsigned int event_type,
 	int prev_interval;
 	int prev_max_batch_latency;
 	sensor_event_handler *handler;
+
+	AUTOLOCK(lock);
 
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
@@ -294,7 +370,7 @@ API bool sensord_register_event(int handle, unsigned int event_type,
 		return false;
 	}
 
-	handler = new(std::nothrow) sensor_event_handler(listener->get_sensor(), cb, user_data);
+	handler = new(std::nothrow) sensor_event_handler(handle, listener->get_sensor(), cb, user_data);
 	if (!handler) {
 		listener->set_max_batch_latency(prev_max_batch_latency);
 		listener->set_interval(prev_interval);
@@ -304,6 +380,8 @@ API bool sensord_register_event(int handle, unsigned int event_type,
 
 	listener->set_event_handler(handler);
 
+	_D("Register event[%d]", listener->get_id());
+
 	return true;
 }
 
@@ -311,12 +389,16 @@ API bool sensord_unregister_event(int handle, unsigned int event_type)
 {
 	sensor::sensor_listener *listener;
 
+	AUTOLOCK(lock);
+
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
 
 	listener = it->second;
 
 	listener->unset_event_handler();
+
+	_D("Unregister event[%d]", listener->get_id());
 
 	return true;
 }
@@ -326,12 +408,14 @@ API bool sensord_register_accuracy_cb(int handle, sensor_accuracy_changed_cb_t c
 	sensor::sensor_listener *listener;
 	sensor_accuracy_handler *handler;
 
+	AUTOLOCK(lock);
+
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
 
 	listener = it->second;
 
-	handler = new(std::nothrow) sensor_accuracy_handler(listener->get_sensor(), cb, user_data);
+	handler = new(std::nothrow) sensor_accuracy_handler(handle, listener->get_sensor(), cb, user_data);
 	retvm_if(!handler, false, "Failed to allocate memory");
 
 	listener->set_accuracy_handler(handler);
@@ -342,6 +426,8 @@ API bool sensord_register_accuracy_cb(int handle, sensor_accuracy_changed_cb_t c
 API bool sensord_unregister_accuracy_cb(int handle)
 {
 	sensor::sensor_listener *listener;
+
+	AUTOLOCK(lock);
 
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
@@ -358,6 +444,9 @@ API bool sensord_start(int handle, int option)
 	sensor::sensor_listener *listener;
 	int prev_pause;
 	int pause;
+	int interval, batch_latency;
+
+	AUTOLOCK(lock);
 
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
@@ -378,6 +467,16 @@ API bool sensord_start(int handle, int option)
 		return false;
 	}
 
+	interval = listener->get_interval();
+	if (interval > 0)
+		listener->set_interval(interval);
+
+	batch_latency = listener->get_max_batch_latency();
+	listener->set_max_batch_latency(batch_latency);
+
+	_D("Start[%d] with the interval[%d] batch_latency[%d]",
+		listener->get_id(), interval, batch_latency);
+
 	return true;
 }
 
@@ -385,6 +484,8 @@ API bool sensord_stop(int handle)
 {
 	int ret;
 	sensor::sensor_listener *listener;
+
+	AUTOLOCK(lock);
 
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
@@ -396,12 +497,16 @@ API bool sensord_stop(int handle)
 	if (ret == -EAGAIN || ret == OP_SUCCESS)
 		return true;
 
+	_D("Stop[%d]", listener->get_id());
+
 	return false;
 }
 
 API bool sensord_change_event_interval(int handle, unsigned int event_type, unsigned int interval)
 {
 	sensor::sensor_listener *listener;
+
+	AUTOLOCK(lock);
 
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
@@ -413,12 +518,16 @@ API bool sensord_change_event_interval(int handle, unsigned int event_type, unsi
 		return false;
 	}
 
+	_D("Set interval[%d, %d]", listener->get_id(), interval);
+
 	return true;
 }
 
 API bool sensord_change_event_max_batch_latency(int handle, unsigned int event_type, unsigned int max_batch_latency)
 {
 	sensor::sensor_listener *listener;
+
+	AUTOLOCK(lock);
 
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
@@ -430,6 +539,8 @@ API bool sensord_change_event_max_batch_latency(int handle, unsigned int event_t
 		return false;
 	}
 
+	_D("Set max batch latency[%d, %u]", listener->get_id(), max_batch_latency);
+
 	return true;
 }
 
@@ -437,6 +548,8 @@ API bool sensord_set_option(int handle, int option)
 {
 	sensor::sensor_listener *listener;
 	int pause;
+
+	AUTOLOCK(lock);
 
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
@@ -449,6 +562,8 @@ API bool sensord_set_option(int handle, int option)
 		_E("Failed to set option[%d(%d)] to listener", option, pause);
 		return false;
 	}
+
+	_D("Set pause option[%d, %d]", listener->get_id(), pause);
 
 	return true;
 }
@@ -466,6 +581,8 @@ API int sensord_set_attribute_int(int handle, int attribute, int value)
 		_E("Failed to set attribute[%d, %d]", attribute, value);
 		return -EIO;
 	}
+
+	_D("Set attribute[%d, %d, %d]", listener->get_id(), attribute, value);
 
 	return OP_SUCCESS;
 }
@@ -491,6 +608,8 @@ API bool sensord_get_data(int handle, unsigned int data_id, sensor_data_t* senso
 {
 	sensor::sensor_listener *listener;
 
+	AUTOLOCK(lock);
+
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
 
@@ -508,6 +627,8 @@ API bool sensord_flush(int handle)
 {
 	sensor::sensor_listener *listener;
 
+	AUTOLOCK(lock);
+
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
 
@@ -524,6 +645,8 @@ API bool sensord_flush(int handle)
 API bool sensord_set_passive_mode(int handle, bool passive)
 {
 	sensor::sensor_listener *listener;
+
+	AUTOLOCK(lock);
 
 	auto it = listeners.find(handle);
 	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
@@ -746,6 +869,18 @@ API int sensord_provider_set_interval_changed_cb(sensord_provider_h provider, se
 	return OP_SUCCESS;
 }
 
+API int sensord_provider_set_attribute_str_cb(sensord_provider_h provider, sensord_provider_attribute_str_cb callback, void *user_data)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+	retvm_if(!callback, -EINVAL, "Invalid paramter");
+
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	p->set_attribute_str_cb(callback, user_data);
+
+	return OP_SUCCESS;
+}
+
 API int sensord_provider_publish(sensord_provider_h provider, sensor_data_t data)
 {
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
@@ -820,6 +955,23 @@ API bool sensord_get_privilege(sensor_t sensor, sensor_privilege_t *privilege)
 	*privilege = SENSOR_PRIVILEGE_PUBLIC;
 
 	return true;
+}
+
+static std::unordered_map<int, sensord_provider_h> external_providers;
+static int provider_id = 0;
+
+typedef struct external_cb_info_s {
+	int id;
+	sensor_external_command_cb_t cb;
+	void *user_data;
+} external_cb_info_s;
+
+static void external_attr_cb(sensord_provider_h provider, int attribute, const char *data, int cnt, void *user_data)
+{
+	external_cb_info_s *info = (external_cb_info_s *)user_data;
+
+	if (info->cb)
+		info->cb(info->id, data, cnt, info->user_data);
 }
 
 /* deprecated */

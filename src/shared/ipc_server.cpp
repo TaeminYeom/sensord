@@ -57,7 +57,7 @@ void ipc_server::accept(ipc::socket &cli_sock)
 {
 	m_accept_sock.accept(cli_sock);
 
-	_I("Accepted[%d]", cli_sock.get_fd());
+	_D("Accepted[%d]", cli_sock.get_fd());
 }
 
 bool ipc_server::bind(channel_handler *handler, event_loop *loop)
@@ -70,7 +70,7 @@ bool ipc_server::bind(channel_handler *handler, event_loop *loop)
 
 	register_acceptor();
 
-	_I("Bound[%d]", m_accept_sock.get_fd());
+	_D("Bound[%d]", m_accept_sock.get_fd());
 	return true;
 }
 
@@ -79,12 +79,12 @@ void ipc_server::register_channel(int fd, channel *ch)
 	channel_event_handler *ev_handler = new(std::nothrow) channel_event_handler(ch, m_handler);
 	retm_if(!ev_handler, "Failed to allocate memory");
 
-	ch->bind(ev_handler, m_event_loop);
-	uint64_t id = m_event_loop->add_event(fd,
-			(event_condition)(EVENT_IN | EVENT_HUP | EVENT_NVAL), ev_handler);
+	uint64_t id = ch->bind(ev_handler, m_event_loop, true);
 
 	if (id == 0)
 		delete ev_handler;
+
+	_D("Registered event[%llu]", id);
 }
 
 void ipc_server::register_acceptor(void)
@@ -109,6 +109,5 @@ bool ipc_server::close(void)
 
 	m_handler = NULL;
 
-	_I("Closed");
 	return true;
 }

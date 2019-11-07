@@ -27,55 +27,73 @@ using namespace sensor;
 
 static std::vector<uint32_t> ids;
 
-sensor_event_handler::sensor_event_handler(physical_sensor_handler *sensor)
-: m_sensor(sensor)
+sensor_event_handler::sensor_event_handler()
 {
+}
+
+void sensor_event_handler::add_sensor(physical_sensor_handler *sensor)
+{
+	ret_if(!sensor);
+
+	m_sensors.insert(sensor);
+}
+
+void sensor_event_handler::remove_sensor(physical_sensor_handler *sensor)
+{
+	ret_if(!sensor);
+
+	m_sensors.erase(sensor);
 }
 
 bool sensor_event_handler::handle(int fd, ipc::event_condition condition)
 {
 	sensor_info info;
-	sensor_data_t *data = NULL;
+	sensor_data_t *data;
+	physical_sensor_handler *sensor;
 	int length = 0;
-	int remains = 1;
+	int remains;
 
-	if (m_sensor->read_fd(ids) < 0)
-		return true;
-
-	auto result = std::find(std::begin(ids), std::end(ids), m_sensor->get_hal_id());
-
-	if (result == std::end(ids))
-	{
-		ids.clear();
-		return true;
-	}
-
-	while (remains > 0) {
-		remains = m_sensor->get_data(&data, &length);
-		if (remains < 0) {
-			_E("Failed to get sensor data");
-			break;
-		}
-
-		if (m_sensor->on_event(data, length, remains) < 0) {
-			free(data);
-			data = NULL;
-			continue;
-		}
-
-		info = m_sensor->get_sensor_info();
-
-		//_I("[Data] allocate %p", data);
-		if (data) {
-			if (m_sensor->notify(info.get_uri().c_str(), data, length) < 0) {
-				free(data);
-				data = NULL;
-			}
-		}
-		info.clear();
-	}
+	retv_if(m_sensors.empty(), false);
 
 	ids.clear();
+
+	auto it = m_sensors.begin();
+
+	/* sensors using the same fd share read_fd in common.
+	 * so just call read_fd on the first sensor */
+	if ((*it)->read_fd(ids) < 0)
+		return true;
+
+	for (; it != m_sensors.end(); ++it) {
+		remains = 1;
+		sensor = *it;
+
+		/* check whether the id of this sensor is in id list(parameter) or not */
+		auto result = std::find(std::begin(ids), std::end(ids), sensor->get_hal_id());
+		if (result == std::end(ids))
+			continue;
+
+		while (remains > 0) {
+			remains = sensor->get_data(&data, &length);
+			if (remains < 0) {
+				_E("Failed to get sensor data");
+				break;
+			}
+
+			if (sensor->on_event(data, length, remains) < 0) {
+				free(data);
+				continue;
+			}
+
+			info = sensor->get_sensor_info();
+
+			//_I("[Data] allocate %p", data);
+			if (sensor->notify(info.get_uri().c_str(), data, length) < 0) {
+				free(data);
+			}
+			info.clear();
+		}
+	}
 
 	return true;
 }

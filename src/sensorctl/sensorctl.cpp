@@ -47,11 +47,11 @@ static sensor_manager *create_manager(char *command)
 
 	if (!strcmp(command, "test"))
 		manager = new(std::nothrow) tester_manager;
-	else if (!strcmp(command, "inject"))
+	if (!strcmp(command, "inject"))
 		manager = new(std::nothrow) injector_manager;
-	else if (!strcmp(command, "info"))
+	if (!strcmp(command, "info"))
 		manager = new(std::nothrow) info_manager;
-	else if (!strcmp(command, "loopback"))
+	if (!strcmp(command, "loopback"))
 		manager = new(std::nothrow) loopback_manager;
 
 	if (!manager) {

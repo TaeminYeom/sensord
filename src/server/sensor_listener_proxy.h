@@ -25,10 +25,11 @@
 
 #include "sensor_manager.h"
 #include "sensor_observer.h"
+#include "sensor_policy_listener.h"
 
 namespace sensor {
 
-class sensor_listener_proxy : public sensor_observer {
+class sensor_listener_proxy : public sensor_observer, sensor_policy_listener {
 public:
 	sensor_listener_proxy(uint32_t id,
 			std::string uri, sensor_manager *manager, ipc::channel *ch);
@@ -39,17 +40,21 @@ public:
 	/* sensor observer */
 	int update(const char *uri, ipc::message *msg);
 
-	int start(void);
-	int stop(void);
+	int start(bool policy = false);
+	int stop(bool policy = false);
 
 	int set_interval(unsigned int interval);
 	int set_max_batch_latency(unsigned int max_batch_latency);
+	int delete_batch_latency(void);
 	int set_passive_mode(bool passive);
 	int set_attribute(int attribute, int value);
 	int set_attribute(int attribute, const char *value, int len);
 	int flush(void);
 	int get_data(sensor_data_t **data, int *len);
 	std::string get_required_privileges(void);
+
+	/* sensor_policy_listener interface */
+	void on_policy_changed(int policy, int value);
 
 private:
 	void update_event(ipc::message *msg);
@@ -61,6 +66,7 @@ private:
 	sensor_manager *m_manager;
 	ipc::channel *m_ch;
 
+	bool m_started;
 	bool m_passive;
 	int m_pause_policy;
 	int m_axis_orientation;

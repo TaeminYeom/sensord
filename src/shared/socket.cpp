@@ -29,7 +29,7 @@
 
 #include "sensor_log.h"
 
-#define SOCK_TIMEOUT 3
+#define SOCK_TIMEOUT 10
 
 using namespace ipc;
 
@@ -169,8 +169,6 @@ bool socket::connect(void)
 		return false;
 	}
 
-	_D("Connected[%d]", m_sock_fd);
-
 	return true;
 }
 
@@ -205,8 +203,6 @@ bool socket::bind(void)
 		close();
 		return false;
 	}
-
-	_D("Bound to path[%d, %s]", m_sock_fd, m_path.c_str());
 
 	return true;
 }
@@ -245,8 +241,6 @@ bool socket::accept(socket &client_sock)
 	set_close_on_exec(fd);
 	client_sock.set_fd(fd);
 	/* TODO : socket type should be adjusted here */
-
-	_D("Accepted[%d, %d]", m_sock_fd, fd);
 
 	return true;
 }
@@ -327,12 +321,10 @@ ssize_t socket::recv(void* buffer, size_t size, bool select) const
 bool socket::create_by_type(const std::string &path, int type)
 {
 	m_sock_fd = ::create_systemd_socket(path, type);
-	if (m_sock_fd < 0) {
-		_D("Creating the UDS instead of systemd socket..");
+	if (m_sock_fd < 0)
 		m_sock_fd = create_unix_socket(type);
-	} else {
+	else
 		m_listening.store(true);
-	}
 
 	retvm_if((m_sock_fd < 0), false, "Failed to create socket");
 
@@ -342,8 +334,6 @@ bool socket::create_by_type(const std::string &path, int type)
 	retvm_if(!set_recv_timeout(1), false, "Failed to set timeout");
 	/* TODO */
 	/*retvm_if(!set_reuse_addr(), false, "Failed to reuse address"); */
-
-	_D("Created[%d]", m_sock_fd);
 
 	m_path = path;
 

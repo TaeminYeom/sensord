@@ -20,24 +20,26 @@
 #ifndef __FACE_DOWN_ALG_IMPL_H__
 #define __FACE_DOWN_ALG_IMPL_H__
 
-#include <sensor_common.h>
-#include <face_down_alg.h>
 #include <queue>
+
+#include "face_down_alg.h"
 
 class face_down_alg_impl : public virtual face_down_alg {
 public:
 	face_down_alg_impl();
 	~face_down_alg_impl();
-	void push_event(const sensor_event_t & event);
+	void update(sensor_data_t *data);
 	bool get_face_down(void);
+
 private:
+	void remove_old_up_time(void);
+	unsigned long long is_facing_down(void);
+	unsigned long long was_facing_up(void);
+
 	unsigned long long m_current_time;
 	unsigned long long m_last_event_time;
 	unsigned long long m_latest_down_time;
 	std::queue<unsigned long long> m_oldest_up_time;
-	void remove_old_up_time(void);
-	unsigned long long is_facing_down();
-	unsigned long long was_facing_up();
 };
 
 #endif /* __FACE_DOWN_ALG_IMPL_H__ */

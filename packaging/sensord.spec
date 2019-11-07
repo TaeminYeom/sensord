@@ -1,6 +1,6 @@
 Name:       sensord
 Summary:    Sensor daemon
-Version:    4.0.3
+Version:    4.0.54
 Release:    1
 Group:      System/Sensor Framework
 License:    Apache-2.0
@@ -14,6 +14,7 @@ BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(vconf)
 BuildRequires:  pkgconfig(libsystemd-daemon)
+BuildRequires:  pkgconfig(libtzplatform-config)
 BuildRequires:  pkgconfig(cynara-creds-socket)
 BuildRequires:  pkgconfig(cynara-client)
 BuildRequires:  pkgconfig(cynara-session)
@@ -67,7 +68,6 @@ Group:      System/Testing
 %description -n sensor-test
 Sensor functional testing
 
-
 %prep
 %setup -q
 
@@ -106,11 +106,11 @@ echo "You need to reinstall %{name}-dummy to keep using the APIs after uninstall
 %{_libdir}/libsensor-genuine.so.*
 %{_libdir}/libsensord-shared.so
 %{_libdir}/sensor/fusion/libsensor-fusion.so
+%{_libdir}/sensor/physical/libsensor-physical.so
 %{_bindir}/sensord
 %{_unitdir}/sensord.service
 %{_unitdir}/sensord.socket
 %{_unitdir}/multi-user.target.wants/sensord.service
-%{_sysconfdir}/dbus-1/system.d/sensor.conf
 %{_unitdir}/sockets.target.wants/sensord.socket
 %license LICENSE.APLv2
 

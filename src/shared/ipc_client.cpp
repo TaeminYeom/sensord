@@ -55,9 +55,6 @@ channel *ipc_client::connect(channel_handler *handler, event_loop *loop, bool bi
 	socket *sock = NULL;
 	channel *ch = NULL;
 	channel_event_handler *ev_handler = NULL;
-	bool ret = false;
-	retvm_if(access(m_path.c_str(), F_OK), NULL,
-			"Failed to access to %s", m_path.c_str());
 
 	sock = new(std::nothrow) stream_socket();
 	retvm_if(!sock, NULL, "Failed to allocate memory");
@@ -78,25 +75,13 @@ channel *ipc_client::connect(channel_handler *handler, event_loop *loop, bool bi
 	if (!ev_handler) {
 		delete ch;
 		delete sock;
-		_E("Faield to allocate memory");
+		_E("Failed to allocate memory");
 		return NULL;
 	}
 
-	ret = ch->connect(ev_handler, loop);
-	if(ret == false) {
-		delete ch;
-		delete sock;
-		delete ev_handler;
-		_E("Faield to connect");
-		return NULL;
-	}
+	uint64_t id = ch->connect(ev_handler, loop, bind);
 
-	if (loop && bind) {
-		uint64_t id = loop->add_event(sock->get_fd(),
-				(EVENT_IN | EVENT_HUP | EVENT_NVAL), ev_handler);
-		ch->set_event_id(id);
-	}
+	_D("Connected[%llu]", id);
 
-	_I("Connected");
 	return ch;
 }

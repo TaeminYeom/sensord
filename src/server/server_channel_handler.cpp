@@ -141,18 +141,13 @@ int server_channel_handler::listener_connect(channel *ch, message &msg)
 
 	msg.disclose((char *)&buf);
 
-	sensor_listener_proxy *listener = NULL;
+	sensor_listener_proxy *listener;
 	listener = new(std::nothrow) sensor_listener_proxy(listener_id,
 				buf.sensor, m_manager, ch);
 	retvm_if(!listener, OP_ERROR, "Failed to allocate memory");
-
-	if (!has_privileges(ch->get_fd(), listener->get_required_privileges())) {
-		delete listener;
-		listener = NULL;
-		_E("Permission denied[%d, %s]", listener_id,
-			m_listeners[listener_id]->get_required_privileges().c_str());
-		return -EACCES;
-	}
+	retvm_if(!has_privileges(ch->get_fd(), listener->get_required_privileges()),
+			-EACCES, "Permission denied[%d, %s]",
+			listener_id, m_listeners[listener_id]->get_required_privileges().c_str());
 
 	buf.listener_id = listener_id;
 
@@ -160,10 +155,8 @@ int server_channel_handler::listener_connect(channel *ch, message &msg)
 	reply.enclose((const char *)&buf, sizeof(buf));
 	reply.header()->err = OP_SUCCESS;
 
-	if (!ch->send_sync(&reply)) {
-		delete listener;
+	if (!ch->send_sync(&reply))
 		return OP_ERROR;
-	}
 
 	_I("Connected sensor_listener[fd(%d) -> id(%u)]", ch->get_fd(), listener_id);
 	m_listeners[listener_id] = listener;
@@ -237,7 +230,7 @@ int server_channel_handler::listener_attr_int(channel *ch, message &msg)
 	}
 	/* TODO : check return value */
 	if (ret < 0)
-		_W("Return : %d", ret);
+		_D("Return : %d", ret);
 
 	return send_reply(ch, OP_SUCCESS);
 }
@@ -265,7 +258,7 @@ int server_channel_handler::listener_attr_str(channel *ch, message &msg)
 		return -EACCES;
 	}
 
-	int ret = m_listeners[id]->set_attribute(buf->attribute, (char *)&buf->value, buf->len);
+	int ret = m_listeners[id]->set_attribute(buf->attribute, buf->value, buf->len);
 	if (ret < 0) {
 		delete [] buf;
 		return ret;

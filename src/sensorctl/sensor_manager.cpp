@@ -70,6 +70,8 @@ static struct sensor_info sensor_infos[] = {
 	{GESTURE_WRIST_UP_SENSOR,		"wristup"},
 	{GESTURE_WRIST_DOWN_SENSOR,		"wristdown"},
 	{GESTURE_MOVEMENT_STATE_SENSOR,	"movement_state"},
+	{GESTURE_PICK_UP_SENSOR,		"pickup"},
+	{GESTURE_FACE_DOWN_SENSOR,		"facedown"},
 
 	{WEAR_STATUS_SENSOR,			"wear_status"},
 	{WEAR_ON_MONITOR_SENSOR,		"wear_on"},

@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(sensord CXX)
 
-SET(DEPENDENTS "glib-2.0 gio-2.0 dlog libsystemd-daemon cynara-client cynara-creds-socket cynara-session")
+SET(DEPENDENTS "glib-2.0 gio-2.0 dlog libsystemd-daemon cynara-client cynara-creds-socket cynara-session vconf")
 
 INCLUDE(FindPkgConfig)
 PKG_CHECK_MODULES(SERVER_PKGS REQUIRED ${DEPENDENTS})

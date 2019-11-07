@@ -138,13 +138,11 @@ void sensor_manager::send_added_msg(sensor_info *info)
 	int size;
 
 	size = serialize(info, &bytes);
-	retm_if(size == -ENOMEM, "Failed to serialize");
 
 	ipc::message msg((const char *)bytes, size);
 	msg.set_type(CMD_MANAGER_SENSOR_ADDED);
 
 	send(msg);
-	delete []bytes;
 }
 
 void sensor_manager::send_removed_msg(const std::string &uri)
@@ -240,6 +238,18 @@ std::vector<sensor_handler *> sensor_manager::get_sensors(void)
 	return sensors;
 }
 
+static physical_sensor *create_physical_sensor(std::string uri, physical_sensor_registry_t &psensors)
+{
+	for (auto it = psensors.begin(); it != psensors.end(); ++it) {
+		if (uri.find((*it)->get_uri()) != std::string::npos) {
+			_D("%s, %s", uri.c_str(), (*it)->get_uri().c_str());
+			return (*it)->clone();
+		}
+	}
+
+	return NULL;
+}
+
 void sensor_manager::create_physical_sensors(device_sensor_registry_t &devices,
 		physical_sensor_registry_t &psensors)
 {
@@ -250,13 +260,19 @@ void sensor_manager::create_physical_sensors(device_sensor_registry_t &devices,
 		int count = (*it)->get_sensors(&info);
 
 		for (int i = 0; i < count; ++i) {
-			/* TODO: psensors */
+			physical_sensor *sensor = NULL;
+			sensor_info pinfo(info[i]);
+			std::string uri = pinfo.get_uri();
+
+			sensor = create_physical_sensor(uri, psensors);
+			if (sensor)
+				sensor->set_device(it->get());
+
 			psensor = new(std::nothrow) physical_sensor_handler(
-					info[i], it->get(), info[i].id, NULL);
+					info[i], it->get(), info[i].id, sensor);
 			retm_if(!psensor, "Failed to allocate memory");
 
-			sensor_info sinfo = psensor->get_sensor_info();
-			m_sensors[sinfo.get_uri()] = psensor;
+			m_sensors[uri] = psensor;
 		}
 	}
 }
@@ -376,12 +392,25 @@ void sensor_manager::init_sensors(void)
 
 void sensor_manager::register_handler(physical_sensor_handler *sensor)
 {
-	ret_if(sensor->get_poll_fd() < 0);
+	sensor_event_handler *handler = NULL;
+	int fd = sensor->get_poll_fd();
 
-	sensor_event_handler *handler = new(std::nothrow) sensor_event_handler(sensor);
+	ret_if(fd < 0);
+
+	auto it = m_event_handlers.find(fd);
+
+	if (it != m_event_handlers.end()) {
+		it->second->add_sensor(sensor);
+		return;
+	}
+
+	handler = new(std::nothrow) sensor_event_handler();
 	retm_if(!handler, "Failed to allocate memory");
 
-	m_loop->add_event(sensor->get_poll_fd(),
+	handler->add_sensor(sensor);
+	m_event_handlers[fd] = handler;
+
+	m_loop->add_event(fd,
 			ipc::EVENT_IN | ipc::EVENT_HUP | ipc::EVENT_NVAL, handler);
 }
 

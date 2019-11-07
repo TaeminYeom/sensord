@@ -34,6 +34,7 @@
 #include "physical_sensor_handler.h"
 #include "fusion_sensor_handler.h"
 #include "external_sensor_handler.h"
+#include "sensor_event_handler.h"
 
 namespace sensor {
 
@@ -84,6 +85,7 @@ private:
 	sensor_map_t m_sensors;
 
 	std::vector<ipc::channel *> m_channels;
+	std::map<int, sensor_event_handler *> m_event_handlers;
 };
 
 }

@@ -43,6 +43,9 @@ sensor_handler::sensor_handler(const sensor_info &info)
 	case EXERCISE_STANDALONE_SENSOR:
 		m_info.add_privilege(PRIVILEGE_LOCATION_URI);
 		break;
+	case GPS_CTRL_SENSOR:
+		m_info.add_privilege(PRIVILEGE_PLATFORM_URI);
+		break;
 	default:
 		break;
 	}
@@ -58,11 +61,12 @@ bool sensor_handler::has_observer(sensor_observer *ob)
 	return false;
 }
 
-void sensor_handler::add_observer(sensor_observer *ob)
+bool sensor_handler::add_observer(sensor_observer *ob)
 {
-	ret_if(has_observer(ob));
+	retv_if(has_observer(ob), false);
 
 	m_observers.push_back(ob);
+	return true;
 }
 
 void sensor_handler::remove_observer(sensor_observer *ob)
@@ -83,12 +87,10 @@ int sensor_handler::notify(const char *uri, sensor_data_t *data, int len)
 	for (auto it = m_observers.begin(); it != m_observers.end(); ++it)
 		(*it)->update(uri, msg);
 
-	if (msg->ref_count() == 0) {
-		delete msg;
-		msg = NULL;
-	}
-
 	set_cache(data, len);
+
+	if (msg->ref_count() == 0)
+		msg->unref();
 
 	return OP_SUCCESS;
 }
@@ -100,15 +102,12 @@ uint32_t sensor_handler::observer_count(void)
 
 void sensor_handler::set_cache(sensor_data_t *data, int size)
 {
-	retm_if(data == NULL, "Nothing to copy from as source is NULL");
-	retm_if(size <= 0, "data is of size 0");
-
-	if (m_last_data_size != size) {
-		m_last_data = (sensor_data_t*)realloc(m_last_data, size);
+	if (m_last_data == NULL) {
+		m_last_data = (sensor_data_t*)malloc(size);
 		retm_if(m_last_data == NULL, "Memory allocation failed");
-		m_last_data_size = size;
 	}
 
+	m_last_data_size = size;
 	memcpy(m_last_data, data, size);
 }
 
@@ -122,5 +121,10 @@ int sensor_handler::get_cache(sensor_data_t **data, int *len)
 	memcpy(*data, m_last_data, m_last_data_size);
 	*len = m_last_data_size;
 
+	return 0;
+}
+
+int sensor_handler::delete_batch_latency(sensor_observer *ob)
+{
 	return 0;
 }

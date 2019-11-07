@@ -26,7 +26,7 @@
 #include "sensor_log.h"
 #include "channel_event_handler.h"
 
-#define SYSTEMD_SOCK_BUF_SIZE 40000
+#define SYSTEMD_SOCK_BUF_SIZE (128*1024)
 
 using namespace ipc;
 
@@ -49,13 +49,8 @@ public:
 		if (!m_ch->send_sync(m_msg))
 			return false;
 
-		if (m_msg) {
+		if (m_msg)
 			m_msg->unref();
-			if(m_msg->ref_count() <= 0) {
-				delete m_msg;
-				m_msg = NULL;
-			}
-		}
 
 		return false;
 	}
@@ -100,14 +95,27 @@ channel::channel(socket *sock)
 , m_loop(NULL)
 , m_connected(false)
 {
+	_D("Created");
 }
 
 channel::~channel()
 {
-	/* disconnect() should not be called here */
+	_D("Destroyed[%llu]", m_event_id);
+	disconnect();
 }
 
-void channel::bind(channel_handler *handler, event_loop *loop)
+uint64_t channel::bind(void)
+{
+	retv_if(!m_loop, 0);
+	m_event_id = m_loop->add_event(m_socket->get_fd(),
+			(EVENT_IN | EVENT_HUP | EVENT_NVAL),
+			dynamic_cast<channel_event_handler *>(m_handler));
+
+	_D("Bound[%llu]", m_event_id);
+	return m_event_id;
+}
+
+uint64_t channel::bind(channel_handler *handler, event_loop *loop, bool loop_bind)
 {
 	m_handler = handler;
 	m_loop = loop;
@@ -115,29 +123,34 @@ void channel::bind(channel_handler *handler, event_loop *loop)
 
 	if (m_handler)
 		m_handler->connected(this);
+
+	if (loop_bind)
+		bind();
+
+	return m_event_id;
 }
 
-void channel::bind(void)
-{
-	ret_if(!m_loop);
-	m_event_id = m_loop->add_event(m_socket->get_fd(),
-			(EVENT_IN | EVENT_HUP | EVENT_NVAL),
-			dynamic_cast<channel_event_handler *>(m_handler));
-}
-
-bool channel::connect(channel_handler *handler, event_loop *loop)
+uint64_t channel::connect(channel_handler *handler, event_loop *loop, bool loop_bind)
 {
 	if (!m_socket->connect())
 		return false;
 
-	bind(handler, loop);
-	return true;
+	bind(handler, loop, loop_bind);
+
+	_D("Connected[%llu]", m_event_id);
+	return m_event_id;
 }
 
 void channel::disconnect(void)
 {
-	ret_if(!is_connected());
+	if (!is_connected()) {
+		_D("Channel is not connected");
+		return;
+	}
+
 	m_connected.store(false);
+
+	_D("Disconnecting..[%llu]", m_event_id);
 
 	if (m_handler) {
 		m_handler->disconnected(this);
@@ -145,23 +158,36 @@ void channel::disconnect(void)
 	}
 
 	if (m_loop) {
+		_D("Remove event[%llu]", m_event_id);
 		m_loop->remove_event(m_event_id, true);
 		m_loop = NULL;
 		m_event_id = 0;
 	}
 
 	if (m_socket) {
+		_D("Release socket[%d]", m_socket->get_fd());
 		delete m_socket;
 		m_socket = NULL;
 	}
+
+	_D("Disconnected");
 }
 
 bool channel::send(message *msg)
 {
+	int retry_cnt = 0;
+	int cur_buffer_size = 0;
+
 	retv_if(!m_loop, false);
 
-	int cur_buffer_size = m_socket->get_current_buffer_size();
-	retv_if(cur_buffer_size > SYSTEMD_SOCK_BUF_SIZE, false);
+	while (retry_cnt < 3) {
+		cur_buffer_size = m_socket->get_current_buffer_size();
+		if (cur_buffer_size <= SYSTEMD_SOCK_BUF_SIZE)
+			break;
+		usleep(3000);
+		retry_cnt++;
+	}
+	retvm_if(retry_cnt >= 3, false, "Socket buffer[%d] is exceeded", cur_buffer_size);
 
 	send_event_handler *handler = new(std::nothrow) send_event_handler(this, msg);
 	retvm_if(!handler, false, "Failed to allocate memory");
@@ -176,20 +202,23 @@ bool channel::send(message *msg)
 
 bool channel::send_sync(message *msg)
 {
-	retv_if(!msg, false);
+	retvm_if(!msg, false, "Invalid message");
+	retvm_if(msg->size() >= MAX_MSG_CAPACITY, true, "Invaild message size[%u]", msg->size());
 
 	ssize_t size = 0;
 	char *buf = msg->body();
 
 	/* header */
 	size = m_socket->send(reinterpret_cast<void *>(msg->header()),
-				   sizeof(message_header), true);
-	retv_if(size <= 0, false);
-	retv_if(msg->size() <= 0, true);
+	    sizeof(message_header), true);
+	retvm_if(size <= 0, false, "Failed to send header");
+
+	/* if body size is zero, skip to send body message */
+	retv_if(msg->size() == 0, true);
 
 	/* body */
 	size = m_socket->send(buf, msg->size(), true);
-	retv_if(size <= 0, false);
+	retvm_if(size <= 0, false, "Failed to send body");
 
 	return true;
 }
@@ -224,6 +253,11 @@ bool channel::read_sync(message &msg, bool select)
 	}
 
 	/* body */
+	if (header.length >= MAX_MSG_CAPACITY) {
+		_E("header.length error %u", header.length);
+		return false;
+	}
+
 	if (header.length > 0) {
 		size = m_socket->recv(&buf, header.length, select);
 		retv_if(size <= 0, false);
@@ -283,9 +317,4 @@ bool channel::get_option(int type, int &value) const
 int channel::get_fd(void) const
 {
 	return m_fd;
-}
-
-void channel::set_event_id(uint64_t id)
-{
-	m_event_id = id;
 }

@@ -40,6 +40,10 @@
 #ifdef ENABLE_PEDOMETER
 #include "pedometer/pedometer_sensor.h"
 #endif
+#ifdef ENABLE_GESTURE
+#include "gesture/face_down_sensor.h"
+#include "gesture/pick_up_sensor.h"
+#endif
 
 static std::vector<fusion_sensor_t> sensors;
 
@@ -63,7 +67,7 @@ void create_sensor(const char *name)
 extern "C" int create(fusion_sensor_t **fsensors)
 {
 #ifdef ENABLE_AUTO_ROTATION
-	create_sensor<auto_rotation_sensor>("Accelerometer");
+	create_sensor<auto_rotation_sensor>("Auto Rotation Sensor");
 #endif
 
 #ifdef ENABLE_GRAVITY
@@ -89,6 +93,10 @@ extern "C" int create(fusion_sensor_t **fsensors)
 	create_sensor<pedometer_sensor>("Pedometer");
 #endif
 
+#ifdef ENABLE_GESTURE
+	create_sensor<face_down_sensor>("Face Down Sensor");
+	create_sensor<pick_up_sensor>("Pick Up Sensor");
+#endif
 	*fsensors = &sensors[0];
 	return sensors.size();
 }

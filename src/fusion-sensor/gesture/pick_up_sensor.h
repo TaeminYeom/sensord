@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2016 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,26 @@
  *
  */
 
-#ifndef __FACE_DOWN_ALG_H__
-#define __FACE_DOWN_ALG_H__
+#ifndef __PICK_UP_SENSOR_H__
+#define __PICK_UP_SENSOR_H__
 
-#include <sensor_common.h>
+#include <fusion_sensor.h>
+#include <sensor_types.h>
 
-class face_down_alg {
+class pick_up_sensor : public fusion_sensor {
 public:
-	virtual ~face_down_alg() {};
-	virtual void push_event(const sensor_event_t & event) = 0;
-	virtual bool get_face_down(void) = 0;
+	pick_up_sensor();
+	virtual ~pick_up_sensor();
+
+	int get_sensor_info(const sensor_info2_t **info);
+	int get_required_sensors(const required_sensor_s **sensors);
+
+	int update(uint32_t id, sensor_data_t *data, int len);
+	int get_data(sensor_data_t **data, int *len);
+
+private:
+	int m_state;
+	unsigned long long m_timestamp;
 };
 
-#endif /* __FACE_DOWN_ALG_H __ */
+#endif /* __PICK_UP_SENSOR_H__ */

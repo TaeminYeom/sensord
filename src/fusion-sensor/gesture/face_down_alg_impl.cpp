@@ -16,10 +16,11 @@
  * limitations under the License.
  *
  */
+#include "face_down_alg_impl.h"
+
+#include <sensor_log.h>
 #include <cmath>
 #include <climits>
-#include <sensor_log.h>
-#include <face_down_alg_impl.h>
 
 #define GRAVITY 9.80665
 #define TWENTY_DEGREES 0.349066
@@ -37,17 +38,16 @@ face_down_alg_impl::~face_down_alg_impl()
 {
 }
 
-void face_down_alg_impl::push_event(const sensor_event_t & event)
+void face_down_alg_impl::update(sensor_data_t *data)
 {
-	//_I("face_down_alg: %llu acc[2]: %f",event.data->timestamp,event.data->values[2]);
-	m_current_time = event.data->timestamp;
+	m_current_time = data->timestamp;
 	remove_old_up_time();
 
-	if (event.data->values[2] < (GRAVITY * cos(ONE_SIXTY_DEGREES)))
-		m_latest_down_time = event.data->timestamp;
+	if (data->values[2] < (GRAVITY * cos(ONE_SIXTY_DEGREES)))
+		m_latest_down_time = data->timestamp;
 
-	if (event.data->values[2] > (GRAVITY * cos(TWENTY_DEGREES)))
-		m_oldest_up_time.push(event.data->timestamp);
+	if (data->values[2] > (GRAVITY * cos(TWENTY_DEGREES)))
+		m_oldest_up_time.push(data->timestamp);
 }
 
 void face_down_alg_impl::remove_old_up_time(void)
@@ -76,6 +76,7 @@ unsigned long long face_down_alg_impl::is_facing_down(void)
 {
 	if (m_current_time - m_latest_down_time < WINDOW_SIZE)
 		return m_latest_down_time;
+
 	return 0;
 }
 

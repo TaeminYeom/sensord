@@ -62,6 +62,8 @@ static std::map<sensor_type_t, const char *> types = {
 	{GYROSCOPE_RV_SENSOR,            "http://tizen.org/sensor/general/gyroscope_rotation_vector"},
 	{GEOMAGNETIC_RV_SENSOR,          "http://tizen.org/sensor/general/geomagnetic_rotation_vector"},
 
+	{SIGNIFICANT_MOTION_SENSOR,      "http://tizen.org/sensor/general/significant_motion"},
+
 	{HUMAN_PEDOMETER_SENSOR,         "http://tizen.org/sensor/healthinfo/human_pedometer"},
 	{HUMAN_SLEEP_MONITOR_SENSOR,     "http://tizen.org/sensor/healthinfo/human_sleep_monitor"},
 	{HUMAN_SLEEP_DETECTOR_SENSOR,    "http://tizen.org/sensor/healthinfo/human_sleep_detector"},
@@ -76,7 +78,6 @@ static std::map<sensor_type_t, const char *> types = {
 	{EXERCISE_ROWING_SENSOR,         "http://tizen.org/sensor/healthinfo/exercise.rowing"},
 	{EXERCISE_STEPPER_SENSOR,        "http://tizen.org/sensor/healthinfo/exercise.stepper"},
 
-	{EXTERNAL_EXERCISE_SENSOR,       "http://tizen.org/sensor/healthinfo/external_exercise"},
 
 	{FUSION_SENSOR,                  "http://tizen.org/sensor/general/fusion"},
 	{AUTO_ROTATION_SENSOR,           "http://tizen.org/sensor/general/auto_rotation"},
@@ -86,13 +87,18 @@ static std::map<sensor_type_t, const char *> types = {
 	{GESTURE_WRIST_UP_SENSOR,        "http://tizen.org/sensor/general/gesture_wrist_up"},
 	{GESTURE_WRIST_DOWN_SENSOR,      "http://tizen.org/sensor/general/gesture_wrist_down"},
 	{GESTURE_MOVEMENT_STATE_SENSOR,  "http://tizen.org/sensor/general/gesture_movement_state"},
+	{GESTURE_PICK_UP_SENSOR,         "http://tizen.org/sensor/general/gesture_pick_up"},
 	{GESTURE_FACE_DOWN_SENSOR,       "http://tizen.org/sensor/general/gesture_face_down"},
 
 	{ACTIVITY_TRACKER_SENSOR,        "http://tizen.org/sensor/general/activity_tracker"},
 	{ACTIVITY_LEVEL_MONITOR_SENSOR,  "http://tizen.org/sensor/general/activity_level_monitor"},
 	{GPS_BATCH_SENSOR,               "http://tizen.org/sensor/location/gps_batch"},
+	{PPG_BATCH_SENSOR,               "http://tizen.org/sensor/healthinfo/ppg_batch"},
+	{GPS_TIMESYNC_SENSOR,            "http://tizen.org/sensor/location/gps_timesync"},
 
 	{HRM_CTRL_SENSOR,                "http://tizen.org/sensor/general/hrm_ctrl"},
+	{REG_CTRL_SENSOR,                "http://tizen.org/sensor/general/reg_ctrl"},
+	{GPS_CTRL_SENSOR,                "http://tizen.org/sensor/general/gps_ctrl"},
 
 	{WEAR_STATUS_SENSOR,             "http://tizen.org/sensor/general/wear_status"},
 	{WEAR_ON_MONITOR_SENSOR,         "http://tizen.org/sensor/general/wear_on_monitor"},
@@ -107,6 +113,17 @@ static std::map<sensor_type_t, const char *> types = {
 	{PRESSURE_INDICATOR_SENSOR,      "http://tizen.org/sensor/general/pressure_indicator"},
 	{PRESSURE_ALERT_SENSOR,          "http://tizen.org/sensor/general/pressure_alert"},
 	{HR_CALORIE_SENSOR,              "http://tizen.org/sensor/healthinfo/hr_calorie"},
+	{SWIMMING_TRACKER_SENSOR,        "http://tizen.org/sensor/healthinfo/swimming_tracker"},
+	{SWIMMING_OUTDOOR_SENSOR,        "http://tizen.org/sensor/healthinfo/swimming_outdoor"},
+	{AUTO_SWIMMING_SENSOR,           "http://tizen.org/sensor/healthinfo/auto_swimming"},
+	{INACTIVITY_DETECTOR_SENSOR,     "http://tizen.org/sensor/general/inactivity_detector"},
+	{STRESS_TRACKER_SENSOR,          "http://tizen.org/sensor/healthinfo/stress_tracker"},
+	{FAKE_MOTION_SENSOR,             "http://tizen.org/sensor/general/fake_motion"},
+	{GEOFENCE_SENSOR,                "http://tizen.org/sensor/general/geofence"},
+	{INACTIVITY_DETECTOR_SENSOR,     "http://tizen.org/sensor/healthinfo/inactivity_detector"},
+	{HRM_BP_SENSOR,                  "http://tizen.org/sensor/healthinfo/hrm_bp"},
+	{ECG_SENSOR,                     "http://tizen.org/sensor/healthinfo/ecg"},
+	{FALL_DETECTION_SENSOR,          "http://tizen.org/sensor/general/fall_detection"},
 
 	{CONTEXT_SENSOR,                 "http://tizen.org/sensor/general/context"},
 	{MOTION_SENSOR,                  "http://tizen.org/sensor/general/motion"},
@@ -153,6 +170,8 @@ const char *sensor::utils::get_privilege(std::string uri)
 		return PRIVILEGE_HEALTHINFO_URI;
 	else if (uri.substr(start + 1, size) == PRIVILEGE_LOCATION_STR)
 		return PRIVILEGE_LOCATION_URI;
+	else if (uri.substr(start + 1, size) == PRIVILEGE_PLATFORM_STR)
+		return PRIVILEGE_PLATFORM_URI;
 
 	return "";
 }

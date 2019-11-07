@@ -35,7 +35,7 @@ public:
 
 	/* publisher */
 	bool has_observer(sensor_observer *ob);
-	void add_observer(sensor_observer *ob);
+	bool add_observer(sensor_observer *ob);
 	void remove_observer(sensor_observer *ob);
 	int notify(const char *type, sensor_data_t *data, int len);
 	uint32_t observer_count(void);
@@ -47,6 +47,7 @@ public:
 
 	virtual int set_interval(sensor_observer *ob, int32_t interval) = 0;
 	virtual int set_batch_latency(sensor_observer *ob, int32_t latency) = 0;
+	virtual int delete_batch_latency(sensor_observer *ob);
 	virtual int set_attribute(sensor_observer *ob, int32_t attr, int32_t value) = 0;
 	virtual int set_attribute(sensor_observer *ob, int32_t attr, const char *value, int len) = 0;
 	virtual int flush(sensor_observer *ob) = 0;

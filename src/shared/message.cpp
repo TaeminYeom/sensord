@@ -21,8 +21,6 @@
 
 #include <sensor_log.h>
 #include <atomic>
-#include <memory>
-
 
 using namespace ipc;
 
@@ -33,37 +31,31 @@ static std::atomic<uint64_t> sequence(0);
 message::message(size_t capacity)
 : m_size(0)
 , m_capacity(capacity)
-, m_msg(new(std::nothrow) char[sizeof(char) * capacity])
+, m_msg((char *)malloc(sizeof(char) * capacity))
 , ref_cnt(0)
 {
 	m_header.id = sequence++;
 	m_header.type = UNDEFINED_TYPE;
 	m_header.length = m_size;
 	m_header.err = 0;
-
-	for (int i = 0; i < MAX_HEADER_RESERVED; ++i)
-		m_header.ancillary[i] = NULL;
 }
 
 message::message(const void *msg, size_t sz)
 : m_size(sz)
 , m_capacity(sz)
-, m_msg(new(std::nothrow) char[sizeof(char) * sz])
+, m_msg((char *)msg)
 , ref_cnt(0)
 {
 	m_header.id = sequence++;
 	m_header.type = UNDEFINED_TYPE;
 	m_header.length = m_size;
 	m_header.err = 0;
-	::memcpy(m_msg, msg, sz);
-	for (int i = 0; i < MAX_HEADER_RESERVED; ++i)
-		m_header.ancillary[i] = NULL;
 }
 
 message::message(const message &msg)
 : m_size(msg.m_size)
 , m_capacity(msg.m_capacity)
-, m_msg(new(std::nothrow) char[(sizeof(char) * msg.m_capacity)])
+, m_msg((char *)malloc(sizeof(char) * msg.m_capacity))
 , ref_cnt(0)
 {
 	::memcpy(&m_header, &msg.m_header, sizeof(message_header));
@@ -80,15 +72,12 @@ message::message(int error)
 	m_header.type = UNDEFINED_TYPE;
 	m_header.length = 0;
 	m_header.err = error;
-
-	for (int i = 0; i < MAX_HEADER_RESERVED; ++i)
-		m_header.ancillary[i] = NULL;
 }
 
 message::~message()
 {
-	if (m_msg) {
-		delete [] m_msg;
+	if (m_msg && ref_cnt == 0) {
+		free(m_msg);
 		m_msg = NULL;
 	}
 }
@@ -146,12 +135,12 @@ void message::unref(void)
 {
 	ref_cnt--;
 
-	/*if (ref_cnt > 0 || !m_msg)
+	if (ref_cnt > 0 || !m_msg)
 		return;
 
-	delete [] m_msg;
+	free(m_msg);
 	m_msg = NULL;
-	delete this;*/
+	delete this;
 }
 
 int message::ref_count(void)

@@ -1,7 +1,7 @@
 /*
  * sensord
  *
- * Copyright (c) 2016 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,16 @@
  *
  */
 
-#ifndef _HRM_SENSOR_H_
-#define _HRM_SENSOR_H_
+#ifndef __SENSOR_POLICY_LISTENER_H__
+#define __SENSOR_POLICY_LISTENER_H__
 
-#include <physical_sensor.h>
-
-class hrm_sensor : public physical_sensor {
+namespace sensor {
+class sensor_policy_listener {
 public:
-	hrm_sensor();
-	virtual ~hrm_sensor();
+	virtual ~sensor_policy_listener() {}
+
+	virtual void on_policy_changed(int policy, int value) = 0;
 };
+}
 
-#endif /* _HRM_SENSOR_H_ */
-
+#endif /* __SENSOR_POLICY_LISTENER_H__ */

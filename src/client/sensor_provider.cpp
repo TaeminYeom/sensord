@@ -117,12 +117,12 @@ int sensor_provider::send_sensor_info(sensor_info *info)
 	int size;
 
 	size = serialize(info, &bytes);
-	retvm_if(size == -ENOMEM, -ENOMEM, "Failed to serialize");
+
 	ipc::message msg((const char *)bytes, size);
 	msg.set_type(CMD_PROVIDER_CONNECT);
 
 	m_channel->send_sync(&msg);
-	delete []bytes;
+
 	return OP_SUCCESS;
 }
 
@@ -170,14 +170,6 @@ void sensor_provider::restore(void)
 
 int sensor_provider::publish(sensor_data_t *data, int len)
 {
-	for (int i = 0; i < data->value_count; ++i) {
-		if (!(data->values[i] >= m_sensor.get_min_range() &&
-		      data->values[i] <= m_sensor.get_max_range())) {
-			_E("Out of range");
-			return OP_ERROR;
-		}
-	}
-
 	ipc::message msg;
 	msg.set_type(CMD_PROVIDER_PUBLISH);
 	msg.enclose((const char *)data, len);
@@ -205,5 +197,10 @@ void sensor_provider::set_stop_cb(sensord_provider_stop_cb cb, void *user_data)
 void sensor_provider::set_interval_cb(sensord_provider_interval_changed_cb cb, void *user_data)
 {
 	m_handler->set_interval_cb(cb, user_data);
+}
+
+void sensor_provider::set_attribute_str_cb(sensord_provider_attribute_str_cb cb, void *user_data)
+{
+	m_handler->set_attribute_str_cb(cb, user_data);
 }
 

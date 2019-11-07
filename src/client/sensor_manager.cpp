@@ -54,7 +54,7 @@ int sensor_manager::get_sensor(const char *uri, sensor_t *sensor)
 	}
 
 	sensor_info *info = get_info(uri);
-	retv_if(!info, -EACCES);
+	retvm_if(!info, -EACCES, "There is no accessible sensor for uri[%s]", uri);
 
 	*sensor = (sensor_t)info;
 	return OP_SUCCESS;
@@ -69,7 +69,7 @@ int sensor_manager::get_sensors(const char *uri, sensor_t **list, int *count)
 
 	infos = get_infos(uri);
 	size = infos.size();
-	retv_if(size == 0, -EACCES);
+	retvm_if(size == 0, -EACCES, "There is no accessible sensors for uri[%s]", uri);
 
 	*list = (sensor_t *)malloc(sizeof(sensor_info *) * size);
 	retvm_if(!*list, -ENOMEM, "Failed to allocate memory");
@@ -134,8 +134,8 @@ int sensor_manager::remove_sensor(const char *uri)
 {
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
 		if ((*it).get_uri() == uri) {
-			_I("Removing sensor[%s]", (*it).get_uri().c_str());
-			it = m_sensors.erase(it);
+			m_sensors.erase(it);
+			_I("Removed sensor[%s]", uri);
 
 			return OP_SUCCESS;
 		}
@@ -254,7 +254,7 @@ void sensor_manager::restore(void)
 	_D("Restored manager");
 }
 
-void sensor_manager::decode_sensors(const char *buf, std::vector<sensor_info> &infos)
+void sensor_manager::decode_sensors(const char *buf, std::list<sensor_info> &infos)
 {
 	int count = 0;
 	sensor_info info;
@@ -333,7 +333,7 @@ bool sensor_manager::has_privilege(std::string &uri)
 sensor_info *sensor_manager::get_info(const char *uri)
 {
 	if (strncmp(uri, utils::get_uri(ALL_SENSOR), strlen(utils::get_uri(ALL_SENSOR))) == 0)
-		return &m_sensors[0];
+		return &m_sensors.front();
 
 	for (auto it = m_sensors.begin(); it != m_sensors.end(); ++it) {
 		if ((*it).get_uri() != uri)

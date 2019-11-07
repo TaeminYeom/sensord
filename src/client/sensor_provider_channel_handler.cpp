@@ -30,9 +30,11 @@ sensor_provider::channel_handler::channel_handler(sensor_provider *provider)
 , m_start_cb(NULL)
 , m_stop_cb(NULL)
 , m_interval_changed_cb(NULL)
+, m_attribute_str_cb(NULL)
 , m_start_user_data(NULL)
 , m_stop_user_data(NULL)
 , m_interval_changed_user_data(NULL)
+, m_attribute_str_user_data(NULL)
 {
 }
 
@@ -65,6 +67,19 @@ void sensor_provider::channel_handler::read(ipc::channel *ch, ipc::message &msg)
 		if (buf.attribute == SENSORD_ATTRIBUTE_INTERVAL && m_interval_changed_cb)
 			m_interval_changed_cb(m_provider, buf.value, m_interval_changed_user_data);
 		break;
+	case CMD_PROVIDER_ATTR_STR:
+		cmd_provider_attr_str_t *attr;
+
+		attr = (cmd_provider_attr_str_t *) new(std::nothrow) char[msg.size()];
+		retm_if(!attr, "Failed to allocate memory");
+
+		msg.disclose((char *)attr);
+
+		if (m_attribute_str_cb)
+			m_attribute_str_cb(m_provider, attr->attribute, attr->value, attr->len, m_attribute_str_user_data);
+
+		delete [] attr;
+		break;
 	}
 }
 
@@ -92,4 +107,10 @@ void sensor_provider::channel_handler::set_interval_cb(sensord_provider_interval
 {
 	m_interval_changed_cb = cb;
 	m_interval_changed_user_data = user_data;
+}
+
+void sensor_provider::channel_handler::set_attribute_str_cb(sensord_provider_attribute_str_cb cb, void *user_data)
+{
+	m_attribute_str_cb = cb;
+	m_attribute_str_user_data = user_data;
 }

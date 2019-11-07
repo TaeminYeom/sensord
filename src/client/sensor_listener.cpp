@@ -24,8 +24,11 @@
 #include <sensor_types.h>
 #include <command_types.h>
 #include <ipc_client.h>
+#include <cmutex.h>
 
 using namespace sensor;
+
+static cmutex lock;
 
 class listener_handler : public ipc::channel_handler
 {
@@ -36,7 +39,6 @@ public:
 	void connected(ipc::channel *ch) {}
 	void disconnected(ipc::channel *ch)
 	{
-		_D("Disconnected");
 		/* If channel->disconnect() is not explicitly called,
 		 * listener will be restored */
 		m_listener->restore();
@@ -78,6 +80,22 @@ sensor_listener::sensor_listener(sensor_t sensor)
 	init();
 }
 
+sensor_listener::sensor_listener(sensor_t sensor, ipc::event_loop *loop)
+: m_id(0)
+, m_sensor(reinterpret_cast<sensor_info *>(sensor))
+, m_client(NULL)
+, m_cmd_channel(NULL)
+, m_evt_channel(NULL)
+, m_handler(NULL)
+, m_evt_handler(NULL)
+, m_acc_handler(NULL)
+, m_loop(loop)
+, m_connected(false)
+, m_started(false)
+{
+	init();
+}
+
 sensor_listener::~sensor_listener()
 {
 	deinit();
@@ -107,6 +125,8 @@ bool sensor_listener::init(void)
 
 void sensor_listener::deinit(void)
 {
+	_D("Deinitializing..");
+	stop();
 	disconnect();
 
 	delete m_handler;
@@ -116,6 +136,7 @@ void sensor_listener::deinit(void)
 	m_client = NULL;
 
 	m_attributes.clear();
+	_D("Deinitialized..");
 }
 
 int sensor_listener::get_id(void)
@@ -132,6 +153,8 @@ void sensor_listener::restore(void)
 {
 	ret_if(!is_connected());
 	retm_if(!connect(), "Failed to restore listener");
+
+	_D("Restoring sensor listener");
 
 	/* Restore attributes/status */
 	if (m_started.load())
@@ -153,7 +176,7 @@ bool sensor_listener::connect(void)
 	m_cmd_channel = m_client->connect(NULL);
 	retvm_if(!m_cmd_channel, false, "Failed to connect to server");
 
-	m_evt_channel = m_client->connect(m_handler, &m_loop, false);
+	m_evt_channel = m_client->connect(m_handler, m_loop, false);
 	retvm_if(!m_evt_channel, false, "Failed to connect to server");
 
 	ipc::message msg;
@@ -183,6 +206,8 @@ void sensor_listener::disconnect(void)
 	ret_if(!is_connected());
 	m_connected.store(false);
 
+	_D("Disconnecting..");
+
 	m_evt_channel->disconnect();
 	delete m_evt_channel;
 	m_evt_channel = NULL;
@@ -201,16 +226,22 @@ bool sensor_listener::is_connected(void)
 
 ipc::channel_handler *sensor_listener::get_event_handler(void)
 {
+	AUTOLOCK(lock);
+
 	return m_evt_handler;
 }
 
 void sensor_listener::set_event_handler(ipc::channel_handler *handler)
 {
+	AUTOLOCK(lock);
+
 	m_evt_handler = handler;
 }
 
 void sensor_listener::unset_event_handler(void)
 {
+	AUTOLOCK(lock);
+
 	delete m_evt_handler;
 	m_evt_handler = NULL;
 }
@@ -275,7 +306,7 @@ int sensor_listener::stop(void)
 	m_cmd_channel->read_sync(reply);
 
 	if (reply.header()->err < 0) {
-		_E("Failed to stop listener[%d], sensor[%s]", get_id(), m_sensor->get_uri().c_str());
+		_E("Failed to stop listener[%d]", get_id());
 		return reply.header()->err;
 	}
 
@@ -332,12 +363,24 @@ int sensor_listener::set_interval(unsigned int interval)
 
 	_I("Listener[%d] set interval[%u]", get_id(), _interval);
 
+	/* If it is not started, store the value only */
+	if (!m_started.load()) {
+		m_attributes[SENSORD_ATTRIBUTE_INTERVAL] = _interval;
+		return OP_SUCCESS;
+	}
+
 	return set_attribute(SENSORD_ATTRIBUTE_INTERVAL, _interval);
 }
 
 int sensor_listener::set_max_batch_latency(unsigned int max_batch_latency)
 {
 	_I("Listener[%d] set max batch latency[%u]", get_id(), max_batch_latency);
+
+	/* If it is not started, store the value only */
+	if (!m_started.load()) {
+		m_attributes[SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY] = max_batch_latency;
+		return OP_SUCCESS;
+	}
 
 	return set_attribute(SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY, max_batch_latency);
 }
@@ -392,14 +435,14 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 
 	size = sizeof(cmd_listener_attr_str_t) + len;
 
-	buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[size];
+	buf = (cmd_listener_attr_str_t *) malloc(sizeof(char) * size);
 	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
 
 	msg.set_type(CMD_LISTENER_ATTR_STR);
 	buf->listener_id = m_id;
 	buf->attribute = attribute;
 
-	memcpy(&buf->value, value, len);
+	memcpy(buf->value, value, len);
 	buf->len = len;
 
 	msg.enclose((char *)buf, size);
@@ -407,9 +450,13 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 	m_cmd_channel->send_sync(&msg);
 	m_cmd_channel->read_sync(reply);
 
-	delete [] buf;
+	/* Message memory is released automatically after sending message,
+	   so it doesn't need to free memory */
 
-	return reply.header()->err;
+	if (reply.header()->err < 0)
+		return reply.header()->err;
+
+	return OP_SUCCESS;
 }
 
 int sensor_listener::get_sensor_data(sensor_data_t *data)

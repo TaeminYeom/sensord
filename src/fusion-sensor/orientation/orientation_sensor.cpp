@@ -108,5 +108,5 @@ int orientation_sensor::get_data(sensor_data_t **data, int *length)
 	*data = sensor_data;
 	*length = sizeof(sensor_data_t);
 
-	return 1;
+	return 0;
 }

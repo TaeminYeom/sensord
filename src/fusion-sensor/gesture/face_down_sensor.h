@@ -17,31 +17,35 @@
  *
  */
 
-#ifndef _PEDOMETER_SENSOR_H_
-#define _PEDOMETER_SENSOR_H_
+#ifndef __FACE_DOWN_SENSOR_H__
+#define __FACE_DOWN_SENSOR_H__
 
-#include <physical_sensor.h>
+#include <fusion_sensor.h>
+#include <sensor_types.h>
 
-class pedometer_sensor : public physical_sensor {
+#include "face_down_alg_impl.h"
+
+class face_down_sensor : public fusion_sensor {
 public:
-	pedometer_sensor();
-	virtual ~pedometer_sensor();
+	face_down_sensor();
+	virtual ~face_down_sensor();
 
-	bool on_event(const sensor_data_t *data, int data_len, int remains);
+	int get_sensor_info(const sensor_info2_t **info);
+	int get_required_sensors(const required_sensor_s **sensors);
+
+	int update(uint32_t id, sensor_data_t *data, int len);
+	int get_data(sensor_data_t **data, int *len);
 
 private:
-	unsigned long long m_steps;
-	unsigned long long m_walk_steps;
-	unsigned long long m_run_steps;
-	unsigned long long m_walk_up_steps;
-	unsigned long long m_walk_down_steps;
-	unsigned long long m_run_up_steps;
-	unsigned long long m_run_down_steps;
-	double m_distance;
-	double m_calories;
+	bool init(void);
+	void deinit(void);
 
-	void accumulate(sensor_pedometer_data_t *data);
+	face_down_alg_impl *get_alg(void);
+
+	int m_state;
+	unsigned long long m_timestamp;
+
+	face_down_alg_impl *m_alg;
 };
 
-#endif /* _PEDOMETER_SENSOR_H_ */
-
+#endif /* __FACE_DOWN_SENSOR_H__ */

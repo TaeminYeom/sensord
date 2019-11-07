@@ -18,7 +18,6 @@
  */
 
 #include <sensor_log.h>
-#include <dbus_util.h>
 #include <new>
 #include <csignal>
 
@@ -59,11 +58,7 @@ int main(int argc, char *argv[])
 
 	std::set_new_handler(on_new_failed);
 
-	init_dbus();
-
 	server::run();
-
-	fini_dbus();
 
 	_I("Stopped");
 

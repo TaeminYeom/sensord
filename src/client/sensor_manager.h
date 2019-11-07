@@ -24,7 +24,7 @@
 #include <sensor_info.h>
 #include <ipc_client.h>
 #include <event_loop.h>
-#include <vector>
+#include <list>
 #include <atomic>
 
 #include "sensor_internal.h"
@@ -68,7 +68,7 @@ private:
 	bool connect_channel(void);
 	bool is_connected(void);
 
-	void decode_sensors(const char *buf, std::vector<sensor_info> &infos);
+	void decode_sensors(const char *buf, std::list<sensor_info> &infos);
 	bool get_sensors_internal(void);
 
 	bool has_privilege(std::string &uri);
@@ -82,7 +82,7 @@ private:
 	std::atomic<bool> m_connected;
 	channel_handler *m_handler;
 
-	std::vector<sensor_info> m_sensors;
+	std::list<sensor_info> m_sensors;
 };
 
 }

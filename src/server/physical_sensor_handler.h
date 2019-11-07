@@ -50,6 +50,7 @@ public:
 
 	int set_interval(sensor_observer *ob, int32_t interval);
 	int set_batch_latency(sensor_observer *ob, int32_t latency);
+	int delete_batch_latency(sensor_observer *ob);
 	int set_attribute(sensor_observer *ob, int32_t attr, int32_t value);
 	int set_attribute(sensor_observer *ob, int32_t attr, const char *value, int len);
 	int flush(sensor_observer *ob);
@@ -63,6 +64,7 @@ private:
 	physical_sensor *m_sensor;
 	uint32_t m_hal_id;
 	int32_t m_prev_interval;
+	int32_t m_prev_latency;
 
 	std::unordered_map<sensor_observer *, int> m_interval_map;
 	std::unordered_map<sensor_observer *, int> m_batch_latency_map;

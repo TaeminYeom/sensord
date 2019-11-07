@@ -34,6 +34,9 @@
 #define PRIVILEGE_LOCATION_STR "location"
 #define PRIVILEGE_LOCATION_URI "http://tizen.org/privilege/location"
 
+#define PRIVILEGE_PLATFORM_STR "platform"
+#define PRIVILEGE_PLATFORM_URI "http://tizen.org/privilege/internal/default/platform"
+
 #define URI_PRIV_INDEX 4
 #define URI_SENSOR_TYPE_INDEX 5
 

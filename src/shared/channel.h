@@ -38,11 +38,10 @@ public:
 	channel(socket *sock);
 	~channel();
 
-	/* TODO */
-	void bind(void);
-	void bind(channel_handler *handler, event_loop *loop);
+	uint64_t bind(void);
+	uint64_t bind(channel_handler *handler, event_loop *loop, bool loop_bind);
 
-	bool connect(channel_handler *handler, event_loop *loop);
+	uint64_t connect(channel_handler *handler, event_loop *loop, bool loop_bind);
 	void disconnect(void);
 
 	bool is_connected(void);
@@ -57,7 +56,6 @@ public:
 	bool set_option(int type, int value);
 
 	int  get_fd(void) const;
-	void set_event_id(uint64_t id);
 
 private:
 	int m_fd;

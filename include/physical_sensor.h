@@ -25,13 +25,15 @@
 #include <string>
 #include <sensor_types.h>
 
+#include "sensor_hal.h"
+
 #ifndef SENSOR_VERSION
 #define PHYSICAL_SENSOR_VERSION(maj, min) \
 		((((maj) & 0xFFFF) << 24) | ((min) & 0xFFFF))
 #endif
 
 #ifndef OP_SUCCESS
-#define OP_SUCCESS 1
+#define OP_SUCCESS 0
 #endif
 #ifndef OP_ERROR
 #define OP_ERROR   -1
@@ -57,11 +59,22 @@ public:
 
 	inline uint32_t get_version(void) { return PHYSICAL_SENSOR_VERSION(1, 0); }
 
-	/* TODO */
+	virtual std::string get_uri(void) { return ""; }
 	virtual std::string get_privilege(void) { return ""; }
 
-	virtual int start(observer_h ob) = 0;
-	virtual int stop(observer_h ob) = 0;
+	virtual physical_sensor *clone(void) const = 0;
+	virtual void set_device(sensor_device *device) { return; }
+
+	virtual int start(observer_h ob)
+	{
+		return OP_DEFAULT;
+	}
+
+	virtual int stop(observer_h ob)
+	{
+		return OP_DEFAULT;
+	}
+
 	virtual int set_interval(observer_h ob, uint32_t interval)
 	{
 		return OP_DEFAULT;
