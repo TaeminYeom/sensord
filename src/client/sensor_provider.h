@@ -49,7 +49,8 @@ public:
 	void set_interval_cb(sensord_provider_interval_changed_cb cb, void *user_data);
 	void set_attribute_str_cb(sensord_provider_attribute_str_cb cb, void *user_data);
 
-	int publish(sensor_data_t *data, int len);
+	int publish(const sensor_data_t &data);
+	int publish(const sensor_data_t data[], const int count);
 
 private:
 	class channel_handler;

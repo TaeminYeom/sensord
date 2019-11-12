@@ -330,13 +330,13 @@ int server_channel_handler::provider_publish(channel *ch, message &msg)
 	auto it = m_app_sensors.find(ch);
 	retv_if(it == m_app_sensors.end(), -EINVAL);
 
-	sensor_data_t *data = (sensor_data_t *)malloc(sizeof(sensor_data_t));
+	size_t size = msg.header()->length;
+	void *data = (void *)malloc(size);
 	retvm_if(!data, -ENOMEM, "Failed to allocate memory");
 
-	msg.disclose((char *)data);
+	msg.disclose(data);
 
-	it->second->publish(data, sizeof(sensor_data_t));
-
+	it->second->publish((sensor_data_t*)data, size);
 	return OP_SUCCESS;
 }
 

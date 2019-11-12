@@ -102,8 +102,12 @@ uint32_t sensor_handler::observer_count(void)
 
 void sensor_handler::set_cache(sensor_data_t *data, int size)
 {
-	if (m_last_data == NULL) {
-		m_last_data = (sensor_data_t*)malloc(size);
+	if (m_last_data_size != size) {
+		m_last_data_size = size;
+		if (m_last_data) {
+			free(m_last_data);
+		}
+		m_last_data = (sensor_data_t*)malloc(m_last_data_size);
 		retm_if(m_last_data == NULL, "Memory allocation failed");
 	}
 

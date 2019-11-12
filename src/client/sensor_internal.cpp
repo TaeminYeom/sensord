@@ -42,10 +42,12 @@ using namespace sensor;
 
 typedef struct {
 	int listener_id;
-	sensor_cb_t cb;
+	void* cb;
+	bool is_events_cb;
 	sensor_accuracy_changed_cb_t acc_cb;
 	sensor_info *sensor;
-	sensor_data_t *data;
+	char* data;
+	size_t data_size;
 	void *user_data;
 } callback_info_s;
 
@@ -63,8 +65,20 @@ static gboolean callback_dispatcher(gpointer data)
 	if (info->sensor)
 		event_type = CONVERT_TYPE_EVENT(info->sensor->get_type());
 
-	if (info->cb && info->sensor && listeners.find(info->listener_id) != listeners.end())
-		info->cb(info->sensor, event_type, info->data, info->user_data);
+	if (info->cb && info->sensor && listeners.find(info->listener_id) != listeners.end()) {
+		if (info->is_events_cb) {
+			size_t element_size =  sizeof(sensor_data_t);
+			size_t count = info->data_size / element_size;
+			sensor_data_t *events[count];
+			char* p = (char*)info->data;
+			for (size_t i = 0 ; i < count; ++i) {
+				events[i] = (sensor_data_t *)(p + i * element_size);
+			}
+			((sensor_events_cb_t)info->cb)(info->sensor, event_type, events, count, info->user_data);
+		} else {
+			((sensor_cb_t)info->cb)(info->sensor, event_type, (sensor_data_t*)info->data, info->user_data);
+		}
+	}
 
 	delete [] info->data;
 	delete info;
@@ -77,8 +91,10 @@ static gboolean accuracy_callback_dispatcher(gpointer data)
 
 	AUTOLOCK(lock);
 
-	if (info->acc_cb && info->sensor && listeners.find(info->listener_id) != listeners.end())
-		info->acc_cb(info->sensor, info->data->timestamp, info->data->accuracy, info->user_data);
+	if (info->acc_cb && info->sensor && listeners.find(info->listener_id) != listeners.end()) {
+		sensor_data_t * data = (sensor_data_t *)info->data;
+		info->acc_cb(info->sensor, data->timestamp, data->accuracy, info->user_data);
+	}
 
 	delete [] info->data;
 	delete info;
@@ -88,11 +104,12 @@ static gboolean accuracy_callback_dispatcher(gpointer data)
 class sensor_event_handler : public ipc::channel_handler
 {
 public:
-	sensor_event_handler(int id, sensor_t sensor, sensor_cb_t cb, void *user_data)
+	sensor_event_handler(int id, sensor_t sensor, void* cb, bool is_events_cb, void *user_data)
 	: m_listener_id(id)
 	, m_sensor(reinterpret_cast<sensor_info *>(sensor))
 	, m_cb(cb)
 	, m_user_data(user_data)
+	, m_is_events_cb(is_events_cb)
 	{}
 
 	void connected(ipc::channel *ch) {}
@@ -100,16 +117,19 @@ public:
 	void read(ipc::channel *ch, ipc::message &msg)
 	{
 		callback_info_s *info;
-		sensor_data_t *data = (sensor_data_t *) new(std::nothrow) char[msg.size()];
+		auto size = msg.size();
+		char *data = new(std::nothrow) char[size];
 
-		memcpy(data, msg.body(), msg.size());
+		memcpy(data, msg.body(), size);
 
 		info = new(std::nothrow) callback_info_s();
 		info->listener_id = m_listener_id;
 		info->cb = m_cb;
 		info->sensor = m_sensor;
 		info->data = data;
+		info->data_size = size;
 		info->user_data = m_user_data;
+		info->is_events_cb = m_is_events_cb;
 
 		g_idle_add(callback_dispatcher, info);
 	}
@@ -120,8 +140,9 @@ public:
 private:
 	int m_listener_id;
 	sensor_info *m_sensor;
-	sensor_cb_t m_cb;
+	void* m_cb;
 	void *m_user_data;
+	bool m_is_events_cb;
 };
 
 class sensor_accuracy_handler : public ipc::channel_handler
@@ -139,7 +160,7 @@ public:
 	void read(ipc::channel *ch, ipc::message &msg)
 	{
 		callback_info_s *info;
-		sensor_data_t *data = (sensor_data_t *) new(std::nothrow) char[msg.size()];
+		char *data = new(std::nothrow) char[msg.size()];
 
 		memcpy(data, msg.body(), msg.size());
 
@@ -341,8 +362,8 @@ API bool sensord_disconnect(int handle)
 	return true;
 }
 
-API bool sensord_register_event(int handle, unsigned int event_type,
-		unsigned int interval, unsigned int max_batch_latency, sensor_cb_t cb, void *user_data)
+static inline bool sensord_register_event_impl(int handle, unsigned int event_type,
+		unsigned int interval, unsigned int max_batch_latency, void* cb, bool is_events_callback, void *user_data)
 {
 	sensor::sensor_listener *listener;
 	int prev_interval;
@@ -370,7 +391,7 @@ API bool sensord_register_event(int handle, unsigned int event_type,
 		return false;
 	}
 
-	handler = new(std::nothrow) sensor_event_handler(handle, listener->get_sensor(), cb, user_data);
+	handler = new(std::nothrow) sensor_event_handler(handle, listener->get_sensor(), cb, is_events_callback, user_data);
 	if (!handler) {
 		listener->set_max_batch_latency(prev_max_batch_latency);
 		listener->set_interval(prev_interval);
@@ -385,7 +406,13 @@ API bool sensord_register_event(int handle, unsigned int event_type,
 	return true;
 }
 
-API bool sensord_unregister_event(int handle, unsigned int event_type)
+API bool sensord_register_event(int handle, unsigned int event_type,
+		unsigned int interval, unsigned int max_batch_latency, sensor_cb_t cb, void *user_data)
+{
+	return sensord_register_event_impl(handle, event_type, interval, max_batch_latency, (void*)cb, false, user_data);
+}
+
+static inline bool sensord_unregister_event_imple(int handle)
 {
 	sensor::sensor_listener *listener;
 
@@ -401,6 +428,21 @@ API bool sensord_unregister_event(int handle, unsigned int event_type)
 	_D("Unregister event[%d]", listener->get_id());
 
 	return true;
+}
+
+API bool sensord_unregister_event(int handle, unsigned int event_type)
+{
+	return sensord_unregister_event_imple(handle);
+}
+
+API bool sensord_register_events(int handle, unsigned int event_type, unsigned int max_batch_latency, sensor_events_cb_t cb, void *user_data)
+{
+	return sensord_register_event_impl(handle, event_type, 0, max_batch_latency, (void*)cb, true, user_data);
+}
+
+API bool sensord_unregister_events(int handle, unsigned int event_type)
+{
+	return sensord_unregister_event_imple(handle);
 }
 
 API bool sensord_register_accuracy_cb(int handle, sensor_accuracy_changed_cb_t cb, void *user_data)
@@ -888,8 +930,17 @@ API int sensord_provider_publish(sensord_provider_h provider, sensor_data_t data
 	sensor_provider *p = static_cast<sensor_provider *>(provider);
 
 	/* TODO: synchronous call is enough? */
-	return p->publish(&data, sizeof(data));
+	return p->publish(data);
 }
+
+API int sensord_provider_publish_events(sensord_provider_h provider, sensor_data_t events[], int count)
+{
+	retvm_if(!provider, -EINVAL, "Invalid paramter");
+
+	sensor_provider *p = static_cast<sensor_provider *>(provider);
+
+	return p->publish(events, count);
+};
 
 /* deperecated */
 API sensor_t sensord_get_sensor(sensor_type_t type)
@@ -955,23 +1006,6 @@ API bool sensord_get_privilege(sensor_t sensor, sensor_privilege_t *privilege)
 	*privilege = SENSOR_PRIVILEGE_PUBLIC;
 
 	return true;
-}
-
-static std::unordered_map<int, sensord_provider_h> external_providers;
-static int provider_id = 0;
-
-typedef struct external_cb_info_s {
-	int id;
-	sensor_external_command_cb_t cb;
-	void *user_data;
-} external_cb_info_s;
-
-static void external_attr_cb(sensord_provider_h provider, int attribute, const char *data, int cnt, void *user_data)
-{
-	external_cb_info_s *info = (external_cb_info_s *)user_data;
-
-	if (info->cb)
-		info->cb(info->id, data, cnt, info->user_data);
 }
 
 /* deprecated */

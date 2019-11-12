@@ -27,6 +27,8 @@
 
 #define SENSOR_EVENT(type) ((type) << 16 | 0x1)
 
+bool sensor_adapter::is_batch_mode = false;
+
 bool sensor_adapter::is_supported(sensor_type_t type)
 {
 	sensor_t sensor;
@@ -79,7 +81,11 @@ bool sensor_adapter::start(sensor_info info, int &handle)
 	handle = sensord_connect(sensors[info.index]);
 	ASSERT_GE(handle, 0);
 
-	ret = sensord_register_event(handle, SENSOR_EVENT(info.type), info.interval, info.batch_latency, info.cb, NULL);
+	if (is_batch_mode) {
+		ret = sensord_register_events(handle, SENSOR_EVENT(info.type), info.batch_latency, info.events_cb, NULL);
+	} else {
+		ret = sensord_register_event(handle, SENSOR_EVENT(info.type), info.interval, info.batch_latency, info.cb, NULL);
+	}
 	ASSERT_TRUE(ret);
 
 	ret = sensord_start(handle, info.powersave);
@@ -97,7 +103,11 @@ bool sensor_adapter::stop(sensor_info info, int handle)
 	ret = sensord_stop(handle);
 	EXPECT_TRUE(ret);
 
-	ret = sensord_unregister_event(handle, SENSOR_EVENT(info.type));
+	if (is_batch_mode) {
+		ret = sensord_unregister_events(handle, SENSOR_EVENT(info.type));
+	} else {
+		ret = sensord_unregister_event(handle, SENSOR_EVENT(info.type));
+	}
 	EXPECT_TRUE(ret);
 
 	ret = sensord_disconnect(handle);

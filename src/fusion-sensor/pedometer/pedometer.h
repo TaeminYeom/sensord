@@ -73,7 +73,6 @@ private:
 	bool m_some_speed;
 
 	sensor_frequency_compensator m_acceleration_compensator;
-
 };
 
 #endif /* __PEDOMETER_H__ */

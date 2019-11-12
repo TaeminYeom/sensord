@@ -122,19 +122,34 @@ static void test_cb(sensor_t sensor, unsigned int event_type, sensor_data_t *dat
 	_N("\n");
 }
 
+static void test_events_cb(sensor_t sensor, unsigned int event_type, sensor_data_t* datas[], int events_count, void *user_data)
+{
+	for (int i = 0 ; i < events_count; i++) {
+		_N("%llu ", datas[i]->timestamp);
+		for (int j = 0; j < datas[i]->value_count; j++)
+			_N(" %10f", datas[i]->values[j]);
+		_N("\n");
+	}
+}
+
 TESTCASE(manual_test, sensor)
 {
 	int handle;
 	bool ret;
 	int index = 0;
 	sensor_data_t data;
+	sensor_info info;
 
 	if (sensor_adapter::get_count(stype) > 1) {
 		_N("There are more than 2 sensors. please enter the index : ");
 		std::cin >> index;
 	}
 
-	sensor_info info(stype, index, interval, latency, powersave, test_cb, NULL);
+	if (sensor_adapter::is_batch_mode) {
+		info = sensor_info(stype, index, interval, latency, powersave, test_events_cb, NULL);
+	} else {
+		info = sensor_info(stype, index, interval, latency, powersave, test_cb, NULL);
+	}
 
 	ret = sensor_adapter::start(info, handle);
 	ASSERT_TRUE(ret);

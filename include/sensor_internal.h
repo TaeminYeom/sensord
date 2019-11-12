@@ -38,6 +38,7 @@ extern "C"
 #endif
 
 typedef void (*sensor_cb_t)(sensor_t sensor, unsigned int event_type, sensor_data_t *data, void *user_data);
+typedef void (*sensor_events_cb_t)(sensor_t sensor, unsigned int event_type, sensor_data_t* events[], int events_count, void *user_data);
 typedef void (*sensorhub_cb_t)(sensor_t sensor, unsigned int event_type, sensorhub_data_t *data, void *user_data);
 typedef void (*sensor_accuracy_changed_cb_t) (sensor_t sensor, unsigned long long timestamp, int accuracy, void *user_data);
 
@@ -240,6 +241,18 @@ bool sensord_disconnect(int handle);
 bool sensord_register_event(int handle, unsigned int event_type, unsigned int interval, unsigned int max_batch_latency, sensor_cb_t cb, void *user_data);
 
 /**
+ * @brief Register a callback with a connected sensor for a given event_type. This callback will be called when a given event occurs in a connected sensor.
+ *
+ * @param[in] handle a handle represensting a connected sensor.
+ * @param[in] event_type an event type  to register
+ * @param[in] max_batch_latency An event in the batch can be delayed by at most max_batch_latency microseconds. If this is set to zero, batch mode is disabled.
+ * @param[in] cb a callback which is called when a given event occurs
+ * @param[in] user_data the callback is called with user_data
+ * @return true on success, otherwise false.
+ */
+bool sensord_register_events(int handle, unsigned int event_type, unsigned int max_batch_latency, sensor_events_cb_t cb, void *user_data);
+
+/**
  * @brief Register a callback with a connected context sensor for a given event_type. This callback will be called when a given event occurs in a connected context sensor.
  *
  * @param[in] handle a handle represensting a connected context sensor.
@@ -261,6 +274,15 @@ bool sensord_register_hub_event(int handle, unsigned int event_type, unsigned in
  * @return true on success, otherwise false.
  */
 bool sensord_unregister_event(int handle, unsigned int event_type);
+
+/**
+ * @brief Unregister a event with a connected sensor.  After unregistering, that event will not be sent.
+ *
+ * @param[in] handle a handle represensting a connected sensor.
+ * @param[in] event_type an event type to unregister.
+ * @return true on success, otherwise false.
+ */
+bool sensord_unregister_events(int handle, unsigned int event_type);
 
 /**
  * @brief Register a callback with a connected sensor. This callback will be called when the accuracy of a sensor has changed.
@@ -427,6 +449,7 @@ typedef void (*sensord_provider_attribute_str_cb)(sensord_provider_h provider, i
 int sensord_provider_set_attribute_str_cb(sensord_provider_h provider, sensord_provider_attribute_str_cb callback, void *user_data);
 
 int sensord_provider_publish(sensord_provider_h provider, sensor_data_t data);
+int sensord_provider_publish_events(sensord_provider_h provider, sensor_data_t events[], int count);
 
 /* Deprecated */
 typedef void (*sensor_external_command_cb_t)(int handle, const char* data, int data_cnt, void *user_data);

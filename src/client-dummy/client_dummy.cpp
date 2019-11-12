@@ -133,6 +133,16 @@ API bool sensord_unregister_event(int handle, unsigned int event_type)
 	return false;
 }
 
+API bool sensord_register_events(int handle, unsigned int event_type, unsigned int max_batch_latency, sensor_events_cb_t cb, void *user_data)
+{
+	return false;
+}
+
+API bool sensord_unregister_events(int handle, unsigned int event_type)
+{
+	return false;
+}
+
 API bool sensord_register_accuracy_cb(int handle, sensor_accuracy_changed_cb_t cb, void *user_data)
 {
 	return false;
@@ -296,6 +306,11 @@ API int sensord_provider_set_interval_changed_cb(sensord_provider_h provider, se
 }
 
 API int sensord_provider_publish(sensord_provider_h provider, sensor_data_t data)
+{
+	return OP_ERROR;
+}
+
+API int sensord_provider_publish_events(sensord_provider_h provider, sensor_data_t events[], int count)
 {
 	return OP_ERROR;
 }

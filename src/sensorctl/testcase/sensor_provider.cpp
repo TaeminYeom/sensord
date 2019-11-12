@@ -27,8 +27,13 @@
 #include "test_bench.h"
 
 #define MYSENSOR_URI "http://example.org/sensor/general/mysensor/mysensor"
+#define MYSENSOR_BATCH_URI "http://example.org/sensor/general/mysensor/mysensor-batch"
+
 #define MYSENSOR_NAME "mysensor"
+#define MYSENSOR_BATCH_NAME "mysensor-batch"
 #define MYSENSOR_VENDOR "tizen"
+
+#define NUMBER_OF_EVENT 100
 
 static bool started = false;
 static bool added = false;
@@ -37,6 +42,16 @@ static bool called = false;
 static void event_cb(sensor_t sensor, unsigned int event_type, sensor_data_t *data, void *user_data)
 {
 	_I("[%llu] %f %f %f\n", data->timestamp, data->values[0], data->values[1], data->values[2]);
+}
+
+static void events_cb(sensor_t sensor, unsigned int event_type, sensor_data_t* datas[], int events_count, void *user_data)
+{
+	for (int i = 0 ; i < events_count; i++) {
+		_I("[%llu]", datas[i]->timestamp);
+		for (int j = 0; j < datas[i]->value_count; j++)
+			_I(" %f", datas[i]->values[j]);
+		_I("\n");
+	}
 }
 
 static void start_cb(sensord_provider_h provider, void *user_data)
@@ -73,6 +88,28 @@ static gboolean publish(gpointer gdata)
 	_N("[%llu] %f %f %f\n", data.timestamp, data.values[0], data.values[1], data.values[2]);
 	sensord_provider_publish(provider, data);
 	return TRUE;
+}
+
+static gboolean publish_batch_event(gpointer gdata)
+{
+	if (!started) return FALSE;
+
+	sensord_provider_h *provider = reinterpret_cast<sensord_provider_h *>(gdata);
+
+	sensor_data_t data[NUMBER_OF_EVENT];
+
+	for (int i = 0 ; i < NUMBER_OF_EVENT; i++) {
+		data[i].accuracy = 3;
+		data[i].timestamp = sensor::utils::get_timestamp();
+		data[i].value_count = 3;
+		data[i].values[0] = i;
+		data[i].values[1] = i;
+		data[i].values[2] = i;
+	}
+	sensord_provider_publish_events(provider, data, NUMBER_OF_EVENT);
+	_N("[ PUBLISH ] %d events\n", NUMBER_OF_EVENT);
+	g_timeout_add_seconds(1, publish_batch_event, provider);
+	return FALSE;
 }
 
 static void add_mysensor(void)
@@ -237,3 +274,85 @@ TESTCASE(skip_sensor_provider, mysensor_with_listener_p_1)
 	return true;
 }
 
+/* TODO: change it from manual test to auto-test */
+TESTCASE(skip_sensor_provider, mysensor_batch_p)
+{
+	int err = 0;
+	sensor_t sensor;
+	sensord_provider_h provider;
+
+	err = sensord_create_provider(MYSENSOR_BATCH_URI, &provider);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_provider_set_name(provider, MYSENSOR_BATCH_NAME);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_vendor(provider, MYSENSOR_VENDOR);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_range(provider, 0.0f, 1.0f);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_resolution(provider, 0.01f);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_add_provider(provider);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_provider_set_start_cb(provider, start_cb, NULL);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_stop_cb(provider, stop_cb, NULL);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_interval_changed_cb(provider, interval_cb, NULL);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_get_default_sensor_by_uri(MYSENSOR_BATCH_URI, &sensor);
+	ASSERT_EQ(err, 0);
+
+	g_timeout_add_seconds(1, publish_batch_event, provider);
+	mainloop::run();
+
+	err = sensord_remove_provider(provider);
+	ASSERT_EQ(err, 0);
+	err = sensord_destroy_provider(provider);
+	ASSERT_EQ(err, 0);
+
+	return true;
+}
+
+
+/* TODO: change it from manual test to auto-test */
+TESTCASE(skip_sensor_provider, mysensor_batch_with_listener_p_1)
+{
+	int err;
+	bool ret;
+	int handle;
+	sensor_t sensor;
+
+	called = false;
+
+	err = sensord_get_default_sensor_by_uri(MYSENSOR_BATCH_URI, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_register_events(handle, 1, 100, events_cb, NULL);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_start(handle, 0);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_change_event_interval(handle, 0, 100);
+	ASSERT_TRUE(ret);
+
+	mainloop::run();
+
+	ret = sensord_stop(handle);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_unregister_events(handle, 1);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}

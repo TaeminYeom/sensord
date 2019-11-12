@@ -168,11 +168,22 @@ void sensor_provider::restore(void)
 	_D("Restored provider[%s]", get_uri());
 }
 
-int sensor_provider::publish(sensor_data_t *data, int len)
+int sensor_provider::publish(const sensor_data_t &data)
 {
 	ipc::message msg;
 	msg.set_type(CMD_PROVIDER_PUBLISH);
-	msg.enclose((const char *)data, len);
+	msg.enclose((const void *)(&data), sizeof(data));
+
+	m_channel->send_sync(&msg);
+
+	return OP_SUCCESS;
+}
+
+int sensor_provider::publish(const sensor_data_t data[], const int count)
+{
+	ipc::message msg;
+	msg.set_type(CMD_PROVIDER_PUBLISH);
+	msg.enclose((const void *)data, sizeof(sensor_data_t) * count);
 
 	m_channel->send_sync(&msg);
 

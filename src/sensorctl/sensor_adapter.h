@@ -23,6 +23,9 @@
 
 class sensor_info {
 public:
+	sensor_info()
+	{ }
+
 	sensor_info(sensor_type_t _type, int _index, int _interval, int _batch_latency, int _powersave, sensor_cb_t _cb, void *_user_data)
 	: type(_type)
 	, index(_index)
@@ -33,13 +36,27 @@ public:
 	, user_data(_user_data)
 	{ }
 
-	sensor_type_t type;
-	int index;
-	int interval;
-	int batch_latency;
-	int powersave;
-	sensor_cb_t cb;
-	void *user_data;
+	sensor_info(sensor_type_t _type, int _index, int _interval, int _batch_latency, int _powersave, sensor_events_cb_t _events_cb, void *_user_data)
+	: type(_type)
+	, index(_index)
+	, interval(_interval)
+	, batch_latency(_batch_latency)
+	, powersave(_powersave)
+	, events_cb(_events_cb)
+	, user_data(_user_data)
+	{ }
+
+	sensor_type_t type { UNKNOWN_SENSOR };
+	int index { 0 };
+	int interval { 0 };
+	int batch_latency { 0 };
+	int powersave { 0 };
+	union
+	{
+		sensor_cb_t cb { NULL };
+		sensor_events_cb_t events_cb;
+	};
+	void *user_data { NULL };
 };
 
 class sensor_adapter {
@@ -59,4 +76,5 @@ public:
 
 	static bool get_data(int handle, sensor_type_t type, sensor_data_t &data);
 	static bool flush(int handle);
+	static bool is_batch_mode;
 };

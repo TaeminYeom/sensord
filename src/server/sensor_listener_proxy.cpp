@@ -107,7 +107,7 @@ int sensor_listener_proxy::start(bool policy)
 	_D("Listener[%d] try to start", get_id());
 
 	ret = sensor->start(this);
-	retv_if (ret < 0, OP_ERROR);
+	retv_if(ret < 0, OP_ERROR);
 
 	/* m_started is changed only when it is explicitly called by user,
 	 * not automatically determined by any pause policy. */

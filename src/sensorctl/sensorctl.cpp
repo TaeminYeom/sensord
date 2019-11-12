@@ -28,6 +28,7 @@
 #include "injector.h"
 #include "info.h"
 #include "loopback.h"
+#include "sensor_adapter.h"
 
 static sensor_manager *manager;
 
@@ -45,14 +46,18 @@ static sensor_manager *create_manager(char *command)
 {
 	sensor_manager *manager = NULL;
 
-	if (!strcmp(command, "test"))
+	if (!strcmp(command, "test")) {
 		manager = new(std::nothrow) tester_manager;
-	if (!strcmp(command, "inject"))
+	} else if (!strcmp(command, "batch_mode_test")) {
+		sensor_adapter::is_batch_mode = true;
+		manager = new(std::nothrow) tester_manager;
+	} else if (!strcmp(command, "inject")) {
 		manager = new(std::nothrow) injector_manager;
-	if (!strcmp(command, "info"))
+	} else if (!strcmp(command, "info")) {
 		manager = new(std::nothrow) info_manager;
-	if (!strcmp(command, "loopback"))
+	} else if (!strcmp(command, "loopback")) {
 		manager = new(std::nothrow) loopback_manager;
+	}
 
 	if (!manager) {
 		_E("failed to allocate memory for manager\n");
