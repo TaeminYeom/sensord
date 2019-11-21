@@ -246,3 +246,184 @@ TESTCASE(sensor_listener, attribute_string_1)
 
 	return true;
 }
+
+void sensor_attribute_int_changed_callback(sensor_t sensor, int attribute, int value, void *data)
+{
+	_I("[ATTRIBUTE INT CHANGED] attribute : %d, value : %d\n", attribute, value);
+}
+
+TESTCASE(skip_sensor_listener, register_attribute_int_changed)
+{
+	int err;
+	bool ret;
+	int handle;
+	sensor_t sensor;
+
+	called = false;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_register_attribute_int_changed_cb(handle, sensor_attribute_int_changed_callback, NULL);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_start(handle, 0);
+	ASSERT_TRUE(ret);
+
+	mainloop::run();
+
+	ret = sensord_stop(handle);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_unregister_attribute_int_changed_cb(handle);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}
+
+static int attribute = 1; // 1 is SENSOR_ATTRIBUTE_AXIS_ORIENTATION of sensor_attribute_e in sensor.h
+static int attribute_value = 0;
+
+static gboolean change_attribute_int(gpointer gdata)
+{
+	int *handle = reinterpret_cast<int *>(gdata);
+
+	sensord_set_attribute_int(*handle, attribute, attribute_value);
+
+	_N("[ SET ATTRIBUTE INT ] attribute %d, value : %d\n", attribute, attribute_value);
+
+	g_timeout_add_seconds(1, change_attribute_int, handle);
+
+	attribute_value ? attribute_value = 0 : attribute_value = 1;
+
+	return FALSE;
+}
+
+TESTCASE(skip_sensor_listener, attribute_int_changer)
+{
+	int err;
+	bool ret;
+	int handle;
+	sensor_t sensor;
+
+	called = false;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_start(handle, 0);
+	ASSERT_TRUE(ret);
+
+	g_timeout_add_seconds(1, change_attribute_int, &handle);
+	mainloop::run();
+
+	ret = sensord_stop(handle);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}
+
+void sensor_attribute_str_changed_callback(sensor_t sensor, int attribute, const char *value, int len, void *data)
+{
+	_I("[ATTRIBUTE STR CHANGED] attribute : %d, value : %s, len : %d\n", attribute, value, len);
+}
+
+TESTCASE(skip_sensor_listener, register_attribute_str_changed)
+{
+	int err;
+	bool ret;
+	int handle;
+	sensor_t sensor;
+
+	called = false;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_register_attribute_str_changed_cb(handle, sensor_attribute_str_changed_callback, NULL);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_start(handle, 0);
+	ASSERT_TRUE(ret);
+
+	mainloop::run();
+
+	ret = sensord_stop(handle);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_unregister_attribute_int_changed_cb(handle);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}
+
+static const char *attribute_value_str1 = "test_str_1";
+static const char *attribute_value_str2 = "test_str_2";
+static const char *attribute_value_str = attribute_value_str1;
+
+static gboolean change_attribute_str(gpointer gdata)
+{
+	int *handle = reinterpret_cast<int *>(gdata);
+	int len = strlen(attribute_value_str);
+	sensord_set_attribute_str(*handle, attribute, attribute_value_str, len);
+
+	_N("[ SET ATTRIBUTE STR ] attribute %d, value : %s, len : %d\n", attribute, attribute_value_str, len);
+
+	g_timeout_add_seconds(1, change_attribute_str, handle);
+
+	if (attribute_value_str == attribute_value_str1) {
+		attribute_value_str = attribute_value_str2;
+	} else {
+		attribute_value_str = attribute_value_str1;
+	}
+
+	return FALSE;
+}
+
+TESTCASE(skip_sensor_listener, attribute_str_changer)
+{
+	int err;
+	bool ret;
+	int handle;
+	sensor_t sensor;
+
+	called = false;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_start(handle, 0);
+	ASSERT_TRUE(ret);
+
+	g_timeout_add_seconds(1, change_attribute_str, &handle);
+	mainloop::run();
+
+	ret = sensord_stop(handle);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}

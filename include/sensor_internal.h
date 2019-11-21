@@ -41,6 +41,8 @@ typedef void (*sensor_cb_t)(sensor_t sensor, unsigned int event_type, sensor_dat
 typedef void (*sensor_events_cb_t)(sensor_t sensor, unsigned int event_type, sensor_data_t* events[], int events_count, void *user_data);
 typedef void (*sensorhub_cb_t)(sensor_t sensor, unsigned int event_type, sensorhub_data_t *data, void *user_data);
 typedef void (*sensor_accuracy_changed_cb_t) (sensor_t sensor, unsigned long long timestamp, int accuracy, void *user_data);
+typedef void (*sensor_attribute_int_changed_cb_t)(sensor_t sensor, int attribute, int value, void *data);
+typedef void (*sensor_attribute_str_changed_cb_t)(sensor_t sensor, int attribute, const char *value, int len, void *data);
 
 /**
  * @brief Get the list of available sensors of a certain type,  use ALL_SENSOR to get all the sensors.
@@ -302,6 +304,13 @@ bool sensord_register_accuracy_cb(int handle, sensor_accuracy_changed_cb_t cb, v
  */
 bool sensord_unregister_accuracy_cb(int handle);
 
+bool sensord_register_attribute_int_changed_cb(int handle, sensor_attribute_int_changed_cb_t cb, void *user_data);
+
+bool sensord_unregister_attribute_int_changed_cb(int handle);
+
+bool sensord_register_attribute_str_changed_cb(int handle, sensor_attribute_str_changed_cb_t cb, void *user_data);
+
+bool sensord_unregister_attribute_str_changed_cb(int handle);
 /**
  * @brief Start listening events with a connected sensor.
  *

@@ -27,10 +27,10 @@ using namespace sensor;
 
 sensor_reader::sensor_reader()
 : m_reader(NULL)
+, m_loop(NULL)
 , m_event_loop(NULL)
 , m_mutex()
 , m_cond()
-, m_loop(NULL)
 , m_running(false)
 {
 	m_event_loop = new(std::nothrow) ipc::event_loop();

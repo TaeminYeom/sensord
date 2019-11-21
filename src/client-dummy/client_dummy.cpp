@@ -153,6 +153,26 @@ API bool sensord_unregister_accuracy_cb(int handle)
 	return false;
 }
 
+API bool sensord_register_attribute_int_changed_cb(int handle, sensor_attribute_int_changed_cb_t cb, void *user_data)
+{
+	return false;
+}
+
+API bool sensord_unregister_attribute_int_changed_cb(int handle)
+{
+	return false;
+}
+
+API bool sensord_register_attribute_str_changed_cb(int handle, sensor_attribute_str_changed_cb_t cb, void *user_data)
+{
+	return false;
+}
+
+API bool sensord_unregister_attribute_str_changed_cb(int handle)
+{
+	return false;
+}
+
 API bool sensord_start(int handle, int option)
 {
 	return false;
