@@ -382,7 +382,7 @@ static const char *attribute_value_str = attribute_value_str1;
 static gboolean change_attribute_str(gpointer gdata)
 {
 	int *handle = reinterpret_cast<int *>(gdata);
-	int len = strlen(attribute_value_str);
+	int len = strlen(attribute_value_str) + 1;
 	sensord_set_attribute_str(*handle, attribute, attribute_value_str, len);
 
 	_N("[ SET ATTRIBUTE STR ] attribute %d, value : %s, len : %d\n", attribute, attribute_value_str, len);

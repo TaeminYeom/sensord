@@ -39,6 +39,7 @@ public:
 
 	/* sensor observer */
 	int update(const char *uri, ipc::message *msg);
+	int on_attribute_changed(ipc::message *msg);
 
 	int start(bool policy = false);
 	int stop(bool policy = false);
@@ -55,6 +56,8 @@ public:
 
 	/* sensor_policy_listener interface */
 	void on_policy_changed(int policy, int value);
+	bool notify_attribute_changed(int attribute, int value);
+	bool notify_attribute_changed(int attribute, const char *value, int len);
 
 private:
 	void update_event(ipc::message *msg);

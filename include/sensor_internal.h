@@ -41,8 +41,8 @@ typedef void (*sensor_cb_t)(sensor_t sensor, unsigned int event_type, sensor_dat
 typedef void (*sensor_events_cb_t)(sensor_t sensor, unsigned int event_type, sensor_data_t* events[], int events_count, void *user_data);
 typedef void (*sensorhub_cb_t)(sensor_t sensor, unsigned int event_type, sensorhub_data_t *data, void *user_data);
 typedef void (*sensor_accuracy_changed_cb_t) (sensor_t sensor, unsigned long long timestamp, int accuracy, void *user_data);
-typedef void (*sensor_attribute_int_changed_cb_t)(sensor_t sensor, int attribute, int value, void *data);
-typedef void (*sensor_attribute_str_changed_cb_t)(sensor_t sensor, int attribute, const char *value, int len, void *data);
+typedef void (*sensor_attribute_int_changed_cb_t)(sensor_t sensor, int attribute, int value, void *user_data);
+typedef void (*sensor_attribute_str_changed_cb_t)(sensor_t sensor, int attribute, const char *value, int len, void *user_data);
 
 /**
  * @brief Get the list of available sensors of a certain type,  use ALL_SENSOR to get all the sensors.
@@ -304,13 +304,42 @@ bool sensord_register_accuracy_cb(int handle, sensor_accuracy_changed_cb_t cb, v
  */
 bool sensord_unregister_accuracy_cb(int handle);
 
+/**
+ * @brief Register a callback with a connected sensor. This callback will be called when attributes of a sensor has changed.
+ *
+ * @param[in] handle a handle represensting a connected sensor.
+ * @param[in] cb a callback which is called when he attributes of a sensor has changed.
+ * @param[in] user_data the callback is called with user_data
+ * @return true on success, otherwise false.
+ */
 bool sensord_register_attribute_int_changed_cb(int handle, sensor_attribute_int_changed_cb_t cb, void *user_data);
 
+/**
+ * @brief Unregister a callback with a connected sensor. After unregistering, sensor_attribute_int_changed_cb will not be called.
+ *
+ * @param[in] handle a handle represensting a connected sensor.
+ * @return true on success, otherwise false.
+ */
 bool sensord_unregister_attribute_int_changed_cb(int handle);
 
+/**
+ * @brief Register a callback with a connected sensor. This callback will be called when attributes of a sensor has changed.
+ *
+ * @param[in] handle a handle represensting a connected sensor.
+ * @param[in] cb a callback which is called when he attributes of a sensor has changed.
+ * @param[in] user_data the callback is called with user_data
+ * @return true on success, otherwise false.
+ */
 bool sensord_register_attribute_str_changed_cb(int handle, sensor_attribute_str_changed_cb_t cb, void *user_data);
 
+/**
+ * @brief Unregister a callback with a connected sensor. After unregistering, sensor_attribute_str_changed_cb will not be called.
+ *
+ * @param[in] handle a handle represensting a connected sensor.
+ * @return true on success, otherwise false.
+ */
 bool sensord_unregister_attribute_str_changed_cb(int handle);
+
 /**
  * @brief Start listening events with a connected sensor.
  *

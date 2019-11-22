@@ -216,6 +216,8 @@ int server_channel_handler::listener_attr_int(channel *ch, message &msg)
 			-EACCES, "Permission denied[%d, %s]",
 			id, m_listeners[id]->get_required_privileges().c_str());
 
+	bool need_notify = false;
+
 	switch (buf.attribute) {
 	case SENSORD_ATTRIBUTE_INTERVAL:
 		ret = m_listeners[id]->set_interval(buf.value); break;
@@ -227,12 +229,21 @@ int server_channel_handler::listener_attr_int(channel *ch, message &msg)
 	case SENSORD_ATTRIBUTE_AXIS_ORIENTATION:
 	default:
 		ret = m_listeners[id]->set_attribute(buf.attribute, buf.value);
+		if (ret == OP_SUCCESS) {
+			need_notify = true;
+		}
 	}
 	/* TODO : check return value */
 	if (ret < 0)
 		_D("Return : %d", ret);
 
-	return send_reply(ch, OP_SUCCESS);
+	ret = send_reply(ch, OP_SUCCESS);
+
+	if (need_notify) {
+		m_listeners[id]->notify_attribute_changed(buf.attribute, buf.value);
+	}
+
+	return ret;
 }
 
 int server_channel_handler::listener_attr_str(channel *ch, message &msg)
@@ -264,8 +275,11 @@ int server_channel_handler::listener_attr_str(channel *ch, message &msg)
 		return ret;
 	}
 
+	ret = send_reply(ch, OP_SUCCESS);
+	m_listeners[id]->notify_attribute_changed(buf->attribute, buf->value, buf->len);
+
 	delete [] buf;
-	return send_reply(ch, OP_SUCCESS);
+	return ret;
 }
 
 int server_channel_handler::listener_get_data(channel *ch, message &msg)

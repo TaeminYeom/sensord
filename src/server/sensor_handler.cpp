@@ -23,6 +23,7 @@
 #include <sensor_log.h>
 #include <sensor_utils.h>
 #include <sensor_types_private.h>
+#include <command_types.h>
 
 using namespace sensor;
 
@@ -126,6 +127,64 @@ int sensor_handler::get_cache(sensor_data_t **data, int *len)
 	*len = m_last_data_size;
 
 	return 0;
+}
+
+bool sensor_handler::notify_attribute_changed(int attribute, int value)
+{
+	if (observer_count() == 0)
+		return OP_ERROR;
+
+	cmd_listener_attr_int_t buf;
+	buf.attribute = attribute;
+	buf.value = value;
+
+	ipc::message *msg;
+	msg = new(std::nothrow) ipc::message();
+	retvm_if(!msg, OP_ERROR, "Failed to allocate memory");
+
+	msg->set_type(CMD_LISTENER_ATTR_INT);
+	msg->enclose((char *)&buf, sizeof(buf));
+
+	for (auto it = m_observers.begin(); it != m_observers.end(); ++it)
+		(*it)->on_attribute_changed(msg);
+
+	if (msg->ref_count() == 0)
+		msg->unref();
+
+	return OP_SUCCESS;
+}
+
+bool sensor_handler::notify_attribute_changed(int attribute, const char *value, int len)
+{
+	if (observer_count() == 0)
+		return OP_ERROR;
+
+	cmd_listener_attr_str_t *buf;
+	size_t size;
+	size = sizeof(cmd_listener_attr_str_t) + len;
+	buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[size];
+	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
+
+	ipc::message *msg;
+	msg = new(std::nothrow) ipc::message();
+	retvm_if(!msg, OP_ERROR, "Failed to allocate memory");
+
+	buf->attribute = attribute;
+	memcpy(buf->value, value, len);
+	buf->len = len;
+
+	msg->set_type(CMD_LISTENER_ATTR_STR);
+	msg->enclose((char *)buf, size);
+
+	for (auto it = m_observers.begin(); it != m_observers.end(); ++it)
+		(*it)->on_attribute_changed(msg);
+
+	if (msg->ref_count() == 0)
+		msg->unref();
+
+	delete[] buf;
+
+	return OP_SUCCESS;
 }
 
 int sensor_handler::delete_batch_latency(sensor_observer *ob)

@@ -42,13 +42,19 @@ public:
 
 	ipc::channel_handler *get_event_handler(void);
 	ipc::channel_handler *get_accuracy_handler(void);
+	ipc::channel_handler *get_attribute_int_changed_handler(void);
+	ipc::channel_handler *get_attribute_str_changed_handler(void);
 
 	/* TODO: modify the listener so that it can register multiple handlers(1:n) */
 	void set_event_handler(ipc::channel_handler *handler);
 	void set_accuracy_handler(ipc::channel_handler *handler);
+	void set_attribute_int_changed_handler(ipc::channel_handler *handler);
+	void set_attribute_str_changed_handler(ipc::channel_handler *handler);
 
 	void unset_event_handler(void);
 	void unset_accuracy_handler(void);
+	void unset_attribute_int_changed_handler(void);
+	void unset_attribute_str_changed_handler(void);
 
 	int start(void);
 	int stop(void);
@@ -86,6 +92,9 @@ private:
 	ipc::channel_handler *m_handler;
 	ipc::channel_handler *m_evt_handler;
 	ipc::channel_handler *m_acc_handler;
+	ipc::channel_handler *m_attr_int_changed_handler;
+	ipc::channel_handler *m_attr_str_changed_handler;
+
 	ipc::event_loop *m_loop;
 	std::atomic<bool> m_connected;
 	std::atomic<bool> m_started;

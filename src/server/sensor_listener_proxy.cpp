@@ -66,6 +66,14 @@ int sensor_listener_proxy::update(const char *uri, ipc::message *msg)
 	return OP_CONTINUE;
 }
 
+int sensor_listener_proxy::on_attribute_changed(ipc::message *msg)
+{
+	retv_if(!m_ch || !m_ch->is_connected(), OP_CONTINUE);
+
+	m_ch->send(msg);
+	return OP_CONTINUE;
+}
+
 void sensor_listener_proxy::update_event(ipc::message *msg)
 {
 	/* TODO: check axis orientation */
@@ -247,4 +255,20 @@ void sensor_listener_proxy::on_policy_changed(int policy, int value)
 		stop(true);
 	if (!(value & m_pause_policy))
 		start(true);
+}
+
+bool sensor_listener_proxy::notify_attribute_changed(int attribute, int value)
+{
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
+	return sensor->notify_attribute_changed(attribute, value);
+}
+
+bool sensor_listener_proxy::notify_attribute_changed(int attribute, const char *value, int len)
+{
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
+	return sensor->notify_attribute_changed(attribute, value, len);
 }

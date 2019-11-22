@@ -36,6 +36,7 @@ public:
 	listener_handler(sensor_listener *listener)
 	: m_listener(listener)
 	{}
+
 	void connected(ipc::channel *ch) {}
 	void disconnected(ipc::channel *ch)
 	{
@@ -55,6 +56,16 @@ public:
 			if (m_listener->get_accuracy_handler())
 				m_listener->get_accuracy_handler()->read(ch, msg);
 			break;
+		case CMD_LISTENER_ATTR_INT:
+			if (m_listener->get_attribute_int_changed_handler())
+				m_listener->get_attribute_int_changed_handler()->read(ch, msg);
+			break;
+		case CMD_LISTENER_ATTR_STR:
+			if (m_listener->get_attribute_str_changed_handler())
+				m_listener->get_attribute_str_changed_handler()->read(ch, msg);
+			break;
+		default:
+			_W("Invalid command message");
 		}
 	}
 
@@ -74,6 +85,8 @@ sensor_listener::sensor_listener(sensor_t sensor)
 , m_handler(NULL)
 , m_evt_handler(NULL)
 , m_acc_handler(NULL)
+, m_attr_int_changed_handler(NULL)
+, m_attr_str_changed_handler(NULL)
 , m_connected(false)
 , m_started(false)
 {
@@ -89,6 +102,8 @@ sensor_listener::sensor_listener(sensor_t sensor, ipc::event_loop *loop)
 , m_handler(NULL)
 , m_evt_handler(NULL)
 , m_acc_handler(NULL)
+, m_attr_int_changed_handler(NULL)
+, m_attr_str_changed_handler(NULL)
 , m_loop(loop)
 , m_connected(false)
 , m_started(false)
@@ -134,6 +149,18 @@ void sensor_listener::deinit(void)
 
 	delete m_client;
 	m_client = NULL;
+
+	delete m_evt_handler;
+	m_evt_handler = NULL;
+
+	delete m_acc_handler;
+	m_acc_handler = NULL;
+
+	delete m_attr_int_changed_handler;
+	m_attr_int_changed_handler = NULL;
+
+	delete m_attr_str_changed_handler;
+	m_attr_str_changed_handler = NULL;
 
 	m_attributes.clear();
 	_D("Deinitialized..");
@@ -234,7 +261,9 @@ ipc::channel_handler *sensor_listener::get_event_handler(void)
 void sensor_listener::set_event_handler(ipc::channel_handler *handler)
 {
 	AUTOLOCK(lock);
-
+	if (m_evt_handler) {
+		delete m_evt_handler;
+	}
 	m_evt_handler = handler;
 }
 
@@ -248,18 +277,68 @@ void sensor_listener::unset_event_handler(void)
 
 ipc::channel_handler *sensor_listener::get_accuracy_handler(void)
 {
+	AUTOLOCK(lock);
 	return m_acc_handler;
 }
 
 void sensor_listener::set_accuracy_handler(ipc::channel_handler *handler)
 {
+	AUTOLOCK(lock);
+	if (m_acc_handler) {
+		delete m_acc_handler;
+	}
 	m_acc_handler = handler;
 }
 
 void sensor_listener::unset_accuracy_handler(void)
 {
+	AUTOLOCK(lock);
 	delete m_acc_handler;
 	m_acc_handler = NULL;
+}
+
+ipc::channel_handler *sensor_listener::get_attribute_int_changed_handler(void)
+{
+	AUTOLOCK(lock);
+	return m_attr_int_changed_handler;
+}
+
+void sensor_listener::set_attribute_int_changed_handler(ipc::channel_handler *handler)
+{
+	AUTOLOCK(lock);
+	if (m_attr_int_changed_handler) {
+		delete m_attr_int_changed_handler;
+	}
+	m_attr_int_changed_handler = handler;
+}
+
+void sensor_listener::unset_attribute_int_changed_handler(void)
+{
+	AUTOLOCK(lock);
+	delete m_attr_int_changed_handler;
+	m_attr_int_changed_handler = NULL;
+}
+
+ipc::channel_handler *sensor_listener::get_attribute_str_changed_handler(void)
+{
+	AUTOLOCK(lock);
+	return m_attr_str_changed_handler;
+}
+
+void sensor_listener::set_attribute_str_changed_handler(ipc::channel_handler *handler)
+{
+	AUTOLOCK(lock);
+	if (m_attr_str_changed_handler) {
+		delete m_attr_str_changed_handler;
+	}
+	m_attr_str_changed_handler = handler;
+}
+
+void sensor_listener::unset_attribute_str_changed_handler(void)
+{
+	AUTOLOCK(lock);
+	delete m_attr_str_changed_handler;
+	m_attr_str_changed_handler = NULL;
 }
 
 int sensor_listener::start(void)
@@ -435,7 +514,7 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 
 	size = sizeof(cmd_listener_attr_str_t) + len;
 
-	buf = (cmd_listener_attr_str_t *) malloc(sizeof(char) * size);
+	buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[size];
 	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
 
 	msg.set_type(CMD_LISTENER_ATTR_STR);
@@ -452,6 +531,8 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 
 	/* Message memory is released automatically after sending message,
 	   so it doesn't need to free memory */
+
+	delete [] buf;
 
 	if (reply.header()->err < 0)
 		return reply.header()->err;

@@ -55,6 +55,8 @@ public:
 
 	void set_cache(sensor_data_t *data, int size);
 	int get_cache(sensor_data_t **data, int *len);
+	bool notify_attribute_changed(int attribute, int value);
+	bool notify_attribute_changed(int attribute, const char *value, int len);
 
 protected:
 	sensor_info m_info;

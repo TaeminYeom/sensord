@@ -32,6 +32,7 @@
 #include <regex>
 #include <thread>
 #include <cmutex.h>
+#include <command_types.h>
 
 #include "sensor_reader.h"
 
@@ -116,10 +117,42 @@ static gboolean sensor_accuracy_changed_callback_dispatcher(gpointer data)
 	return FALSE;
 }
 
-class sensor_listener_handler : public ipc::channel_handler
+static gboolean sensor_attribute_int_changed_callback_dispatcher(gpointer data)
+{
+	callback_info_s *info = (callback_info_s *)data;
+
+	AUTOLOCK(lock);
+
+	if (info->cb && info->sensor && listeners.find(info->listener_id) != listeners.end()) {
+		cmd_listener_attr_int_t *d = (cmd_listener_attr_int_t *)info->data;
+		((sensor_attribute_int_changed_cb_t)info->cb)(info->sensor, d->attribute, d->value, info->user_data);
+	}
+
+	delete [] info->data;
+	delete info;
+	return FALSE;
+}
+
+static gboolean sensor_attribute_str_changed_callback_dispatcher(gpointer data)
+{
+	callback_info_s *info = (callback_info_s *)data;
+
+	AUTOLOCK(lock);
+
+	if (info->cb && info->sensor && listeners.find(info->listener_id) != listeners.end()) {
+		cmd_listener_attr_str_t *d = (cmd_listener_attr_str_t *)info->data;
+		((sensor_attribute_str_changed_cb_t)info->cb)(info->sensor, d->attribute, d->value, d->len, info->user_data);
+	}
+
+	delete [] info->data;
+	delete info;
+	return FALSE;
+}
+
+class sensor_listener_channel_handler : public ipc::channel_handler
 {
 public:
-	sensor_listener_handler(int id, sensor_t sensor, void* cb, void *user_data, callback_dispatcher_t dispatcher)
+	sensor_listener_channel_handler(int id, sensor_t sensor, void* cb, void *user_data, callback_dispatcher_t dispatcher)
 	: m_listener_id(id)
 	, m_sensor(reinterpret_cast<sensor_info *>(sensor))
 	, m_cb(cb)
@@ -343,7 +376,7 @@ static inline bool sensord_register_event_impl(int handle, unsigned int event_ty
 	sensor::sensor_listener *listener;
 	int prev_interval;
 	int prev_max_batch_latency;
-	sensor_listener_handler *handler;
+	sensor_listener_channel_handler *handler;
 
 	AUTOLOCK(lock);
 
@@ -367,9 +400,9 @@ static inline bool sensord_register_event_impl(int handle, unsigned int event_ty
 	}
 
 	if (is_events_callback) {
-		handler = new(std::nothrow)sensor_listener_handler(handle, listener->get_sensor(), (void *)cb, user_data, sensor_events_callback_dispatcher);
+		handler = new(std::nothrow)sensor_listener_channel_handler(handle, listener->get_sensor(), (void *)cb, user_data, sensor_events_callback_dispatcher);
 	} else {
-		handler = new(std::nothrow)sensor_listener_handler(handle, listener->get_sensor(), (void *)cb, user_data, sensor_event_callback_dispatcher);
+		handler = new(std::nothrow)sensor_listener_channel_handler(handle, listener->get_sensor(), (void *)cb, user_data, sensor_event_callback_dispatcher);
 	}
 
 	if (!handler) {
@@ -428,7 +461,7 @@ API bool sensord_unregister_events(int handle, unsigned int event_type)
 API bool sensord_register_accuracy_cb(int handle, sensor_accuracy_changed_cb_t cb, void *user_data)
 {
 	sensor::sensor_listener *listener;
-	sensor_listener_handler *handler;
+	sensor_listener_channel_handler *handler;
 
 	AUTOLOCK(lock);
 
@@ -437,7 +470,7 @@ API bool sensord_register_accuracy_cb(int handle, sensor_accuracy_changed_cb_t c
 
 	listener = it->second;
 
-	handler = new(std::nothrow) sensor_listener_handler(handle, listener->get_sensor(), (void *)cb, user_data, sensor_accuracy_changed_callback_dispatcher);
+	handler = new(std::nothrow) sensor_listener_channel_handler(handle, listener->get_sensor(), (void *)cb, user_data, sensor_accuracy_changed_callback_dispatcher);
 	retvm_if(!handler, false, "Failed to allocate memory");
 
 	listener->set_accuracy_handler(handler);
@@ -463,26 +496,74 @@ API bool sensord_unregister_accuracy_cb(int handle)
 
 API bool sensord_register_attribute_int_changed_cb(int handle, sensor_attribute_int_changed_cb_t cb, void *user_data)
 {
-	// TODO
-	return false;
+	sensor::sensor_listener *listener;
+	sensor_listener_channel_handler *handler;
+
+	AUTOLOCK(lock);
+
+	auto it = listeners.find(handle);
+	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
+
+	listener = it->second;
+
+	handler = new(std::nothrow) sensor_listener_channel_handler(handle, listener->get_sensor(), (void *)cb, user_data, sensor_attribute_int_changed_callback_dispatcher);
+	retvm_if(!handler, false, "Failed to allocate memory");
+
+	listener->set_attribute_int_changed_handler(handler);
+
+	return true;
 }
 
 API bool sensord_unregister_attribute_int_changed_cb(int handle)
 {
-	// TODO
-	return false;
+	sensor::sensor_listener *listener;
+
+	AUTOLOCK(lock);
+
+	auto it = listeners.find(handle);
+	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
+
+	listener = it->second;
+
+	listener->unset_attribute_int_changed_handler();
+
+	return true;
 }
 
 API bool sensord_register_attribute_str_changed_cb(int handle, sensor_attribute_str_changed_cb_t cb, void *user_data)
 {
-	// TODO
-	return false;
+	sensor::sensor_listener *listener;
+	sensor_listener_channel_handler *handler;
+
+	AUTOLOCK(lock);
+
+	auto it = listeners.find(handle);
+	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
+
+	listener = it->second;
+
+	handler = new(std::nothrow) sensor_listener_channel_handler(handle, listener->get_sensor(), (void *)cb, user_data, sensor_attribute_str_changed_callback_dispatcher);
+	retvm_if(!handler, false, "Failed to allocate memory");
+
+	listener->set_attribute_str_changed_handler(handler);
+
+	return true;
 }
 
 API bool sensord_unregister_attribute_str_changed_cb(int handle)
 {
-	// TODO
-	return false;
+	sensor::sensor_listener *listener;
+
+	AUTOLOCK(lock);
+
+	auto it = listeners.find(handle);
+	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
+
+	listener = it->second;
+
+	listener->unset_attribute_str_changed_handler();
+
+	return true;
 }
 
 API bool sensord_start(int handle, int option)
