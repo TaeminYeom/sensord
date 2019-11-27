@@ -211,6 +211,9 @@ int external_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, in
 	if (m_policy == OP_DEFAULT) {
 		/* default logic */
 	}
+
+	update_attribute(attr, value);
+
 	return OP_SUCCESS;
 }
 
@@ -226,6 +229,9 @@ int external_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, co
 	if (m_policy == OP_DEFAULT) {
 		/* default logic */
 	}
+
+	update_attribute(attr, value, len);
+
 	return OP_SUCCESS;
 }
 

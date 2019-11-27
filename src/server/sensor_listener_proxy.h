@@ -49,7 +49,9 @@ public:
 	int delete_batch_latency(void);
 	int set_passive_mode(bool passive);
 	int set_attribute(int attribute, int value);
+	int get_attribute(int attribute, int *value);
 	int set_attribute(int attribute, const char *value, int len);
+	int get_attribute(int attribute, char **value, int *len);
 	int flush(void);
 	int get_data(sensor_data_t **data, int *len);
 	std::string get_required_privileges(void);

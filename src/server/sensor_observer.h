@@ -30,7 +30,6 @@ public:
 
 	/* for performance, use message */
 	virtual int update(const char *uri, ipc::message *msg) = 0;
-	virtual int on_attribute_changed(ipc::message *msg) = 0;
 };
 
 }

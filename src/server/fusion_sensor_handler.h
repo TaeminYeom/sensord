@@ -51,11 +51,6 @@ public:
 
 	/* subscriber */
 	int update(const char *uri, ipc::message *msg);
-	int on_attribute_changed(ipc::message *msg)
-	{
-		// Do nothing
-		return OP_SUCCESS;
-	}
 
 	/* sensor interface */
 	const sensor_info &get_sensor_info(void);

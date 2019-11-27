@@ -714,6 +714,25 @@ API int sensord_set_attribute_int(int handle, int attribute, int value)
 	return OP_SUCCESS;
 }
 
+API int sensord_get_attribute_int(int handle, int attribute, int* value)
+{
+	sensor::sensor_listener *listener;
+
+	auto it = listeners.find(handle);
+	retvm_if(it == listeners.end(), -EINVAL, "Invalid handle[%d]", handle);
+
+	listener = it->second;
+
+	if (listener->get_attribute(attribute, value) < 0) {
+		_E("Failed to get attribute[%d]", attribute);
+		return -EIO;
+	}
+
+	_D("Get attribute[%d, %d, %d]", listener->get_id(), attribute, *value);
+
+	return OP_SUCCESS;
+}
+
 API int sensord_set_attribute_str(int handle, int attribute, const char *value, int len)
 {
 	sensor::sensor_listener *listener;
@@ -727,6 +746,24 @@ API int sensord_set_attribute_str(int handle, int attribute, const char *value, 
 		_E("Failed to set attribute[%d, %s]", attribute, value);
 		return -EIO;
 	}
+
+	return OP_SUCCESS;
+}
+
+API int sensord_get_attribute_str(int handle, int attribute, char **value, int* len)
+{
+	sensor::sensor_listener *listener;
+
+	auto it = listeners.find(handle);
+	retvm_if(it == listeners.end(), -EINVAL, "Invalid handle[%d]", handle);
+
+	listener = it->second;
+
+	if (listener->get_attribute(attribute, value, len) < 0) {
+		_E("Failed to get attribute[%d]", attribute);
+		return -EIO;
+	}
+	_D("Get attribute[%d, %d, %s]", listener->get_id(), attribute, *value);
 
 	return OP_SUCCESS;
 }

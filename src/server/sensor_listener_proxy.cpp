@@ -69,7 +69,7 @@ int sensor_listener_proxy::update(const char *uri, ipc::message *msg)
 int sensor_listener_proxy::on_attribute_changed(ipc::message *msg)
 {
 	retv_if(!m_ch || !m_ch->is_connected(), OP_CONTINUE);
-
+	_I("Proxy[%zu] call on_attribute_changed\n", get_id());
 	m_ch->send(msg);
 	return OP_CONTINUE;
 }
@@ -207,6 +207,26 @@ int sensor_listener_proxy::set_attribute(int attribute, int value)
 	return sensor->set_attribute(this, attribute, value);
 }
 
+int sensor_listener_proxy::get_attribute(int attribute, int *value)
+{
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
+	_D("Listener[%d] try to get attribute[%d] int", get_id(), attribute);
+
+	if (attribute == SENSORD_ATTRIBUTE_PAUSE_POLICY) {
+		*value = m_pause_policy;
+		return OP_SUCCESS;
+	} else if (attribute == SENSORD_ATTRIBUTE_AXIS_ORIENTATION) {
+		*value = m_axis_orientation;
+		return OP_SUCCESS;
+	} else if (attribute == SENSORD_ATTRIBUTE_FLUSH) {
+		return -EINVAL;
+	}
+
+	return sensor->get_attribute(attribute, value);
+}
+
 int sensor_listener_proxy::set_attribute(int attribute, const char *value, int len)
 {
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
@@ -215,6 +235,16 @@ int sensor_listener_proxy::set_attribute(int attribute, const char *value, int l
 	_D("Listener[%d] try to set string attribute[%d], len[%d]", get_id(), attribute, len);
 
 	return sensor->set_attribute(this, attribute, value, len);
+}
+
+int sensor_listener_proxy::get_attribute(int attribute, char **value, int *len)
+{
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
+	_D("Listener[%d] try to get attribute str[%d]", get_id(), attribute);
+
+	return sensor->get_attribute(attribute, value, len);
 }
 
 int sensor_listener_proxy::flush(void)
@@ -262,7 +292,7 @@ bool sensor_listener_proxy::notify_attribute_changed(int attribute, int value)
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
-	return sensor->notify_attribute_changed(attribute, value);
+	return sensor->notify_attribute_changed(m_id, attribute, value);
 }
 
 bool sensor_listener_proxy::notify_attribute_changed(int attribute, const char *value, int len)
@@ -270,5 +300,5 @@ bool sensor_listener_proxy::notify_attribute_changed(int attribute, const char *
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
-	return sensor->notify_attribute_changed(attribute, value, len);
+	return sensor->notify_attribute_changed(m_id, attribute, value, len);
 }

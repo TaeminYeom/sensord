@@ -43,9 +43,11 @@ enum cmd_type_e {
 	CMD_LISTENER_CONNECT,
 	CMD_LISTENER_START,
 	CMD_LISTENER_STOP,
-	CMD_LISTENER_ATTR_INT,
-	CMD_LISTENER_ATTR_STR,
+	CMD_LISTENER_SET_ATTR_INT,
+	CMD_LISTENER_SET_ATTR_STR,
 	CMD_LISTENER_GET_DATA,
+	CMD_LISTENER_GET_ATTR_INT,
+	CMD_LISTENER_GET_ATTR_STR,
 
 	/* Provider */
 	CMD_PROVIDER_CONNECT = 0x300,
@@ -79,13 +81,13 @@ typedef struct {
 	int listener_id;
 } cmd_listener_stop_t;
 
-typedef struct  {
+typedef struct {
 	int listener_id;
 	int attribute;
 	int value;
 } cmd_listener_attr_int_t;
 
-typedef struct  {
+typedef struct {
 	int listener_id;
 	int attribute;
 	int len;

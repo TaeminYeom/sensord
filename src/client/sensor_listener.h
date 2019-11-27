@@ -28,6 +28,7 @@
 #include <sensor_types.h>
 #include <map>
 #include <atomic>
+#include <vector>
 
 namespace sensor {
 
@@ -68,8 +69,11 @@ public:
 	int set_max_batch_latency(unsigned int max_batch_latency);
 	int set_passive_mode(bool passive);
 	int set_attribute(int attribute, int value);
+	int get_attribute(int attribute, int* value);
+	void update_attribute(int attribute, int value);
 	int set_attribute(int attribute, const char *value, int len);
-
+	int get_attribute(int attribute, char **value, int *len);
+	void update_attribute(int attribute, const char *value, int len);
 	int get_sensor_data(sensor_data_t *data);
 	int flush(void);
 
@@ -98,7 +102,8 @@ private:
 	ipc::event_loop *m_loop;
 	std::atomic<bool> m_connected;
 	std::atomic<bool> m_started;
-	std::map<int, int> m_attributes;
+	std::map<int, int> m_attributes_int;
+	std::map<int, std::vector<char>> m_attributes_str;
 };
 
 }

@@ -24,6 +24,7 @@
 #include <sensor_utils.h>
 #include <sensor_types_private.h>
 #include <command_types.h>
+#include <sensor_listener_proxy.h>
 
 using namespace sensor;
 
@@ -90,8 +91,9 @@ int sensor_handler::notify(const char *uri, sensor_data_t *data, int len)
 
 	set_cache(data, len);
 
-	if (msg->ref_count() == 0)
+	if (msg->ref_count() == 0) {
 		msg->unref();
+	}
 
 	return OP_SUCCESS;
 }
@@ -129,12 +131,13 @@ int sensor_handler::get_cache(sensor_data_t **data, int *len)
 	return 0;
 }
 
-bool sensor_handler::notify_attribute_changed(int attribute, int value)
+bool sensor_handler::notify_attribute_changed(uint32_t id, int attribute, int value)
 {
 	if (observer_count() == 0)
 		return OP_ERROR;
 
 	cmd_listener_attr_int_t buf;
+	buf.listener_id = id;
 	buf.attribute = attribute;
 	buf.value = value;
 
@@ -142,11 +145,16 @@ bool sensor_handler::notify_attribute_changed(int attribute, int value)
 	msg = new(std::nothrow) ipc::message();
 	retvm_if(!msg, OP_ERROR, "Failed to allocate memory");
 
-	msg->set_type(CMD_LISTENER_ATTR_INT);
+	msg->set_type(CMD_LISTENER_SET_ATTR_INT);
 	msg->enclose((char *)&buf, sizeof(buf));
 
-	for (auto it = m_observers.begin(); it != m_observers.end(); ++it)
-		(*it)->on_attribute_changed(msg);
+	sensor_listener_proxy *proxy = NULL;
+	for (auto it = m_observers.begin(); it != m_observers.end(); ++it) {
+		proxy = dynamic_cast<sensor_listener_proxy *>(*it);
+		if (proxy && proxy->get_id() != id) {
+			proxy->on_attribute_changed(msg);
+		}
+	}
 
 	if (msg->ref_count() == 0)
 		msg->unref();
@@ -154,7 +162,7 @@ bool sensor_handler::notify_attribute_changed(int attribute, int value)
 	return OP_SUCCESS;
 }
 
-bool sensor_handler::notify_attribute_changed(int attribute, const char *value, int len)
+bool sensor_handler::notify_attribute_changed(uint32_t id, int attribute, const char *value, int len)
 {
 	if (observer_count() == 0)
 		return OP_ERROR;
@@ -169,18 +177,26 @@ bool sensor_handler::notify_attribute_changed(int attribute, const char *value, 
 	msg = new(std::nothrow) ipc::message();
 	retvm_if(!msg, OP_ERROR, "Failed to allocate memory");
 
+	buf->listener_id = id;
 	buf->attribute = attribute;
 	memcpy(buf->value, value, len);
 	buf->len = len;
 
-	msg->set_type(CMD_LISTENER_ATTR_STR);
+	msg->set_type(CMD_LISTENER_SET_ATTR_STR);
 	msg->enclose((char *)buf, size);
 
-	for (auto it = m_observers.begin(); it != m_observers.end(); ++it)
-		(*it)->on_attribute_changed(msg);
+	_I("notify attribute changed by listener[%zu]\n", id);
+	sensor_listener_proxy *proxy = NULL;
+	for (auto it = m_observers.begin(); it != m_observers.end(); ++it) {
+		proxy = dynamic_cast<sensor_listener_proxy *>(*it);
+		if (proxy && proxy->get_id() != id) {
+			proxy->on_attribute_changed(msg);
+		}
+	}
 
-	if (msg->ref_count() == 0)
+	if (msg->ref_count() == 0) {
 		msg->unref();
+	}
 
 	delete[] buf;
 
@@ -190,4 +206,39 @@ bool sensor_handler::notify_attribute_changed(int attribute, const char *value, 
 int sensor_handler::delete_batch_latency(sensor_observer *ob)
 {
 	return 0;
+}
+
+int sensor_handler::get_attribute(int32_t attr, int32_t* value)
+{
+	auto it = m_attributes_int.find(attr);
+	retv_if(it == m_attributes_int.end(), OP_ERROR);
+
+	*value = it->second;
+	return OP_SUCCESS;
+}
+
+void sensor_handler::update_attribute(int32_t attr, int32_t value)
+{
+	m_attributes_int[attr] = value;
+	_I("[%s] attributes(int) size : %d", m_info.get_uri().c_str(), m_attributes_int.size());
+}
+
+int sensor_handler::get_attribute(int32_t attr, char **value, int *len)
+{
+	auto it = m_attributes_str.find(attr);
+	retv_if(it == m_attributes_str.end(), OP_ERROR);
+
+	*len = it->second.size();
+	*value = new(std::nothrow) char[*len];
+	std::copy(it->second.begin(), it->second.end(), *value);
+
+	return OP_SUCCESS;
+}
+
+void sensor_handler::update_attribute(int32_t attr, const char *value, int len)
+{
+	m_attributes_str[attr].clear();
+	m_attributes_str[attr].insert(m_attributes_str[attr].begin(), value, value + len);
+	_I("[%s] attributes(int) size : %d", m_info.get_uri().c_str(), m_attributes_int.size());
+
 }

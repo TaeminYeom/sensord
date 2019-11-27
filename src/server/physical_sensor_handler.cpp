@@ -271,6 +271,9 @@ int physical_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, in
 
 	ret = m_device->set_attribute_int(m_hal_id, attr, value);
 
+	if (ret) {
+		update_attribute(attr, value);
+	}
 	return (ret ? OP_SUCCESS : OP_ERROR);
 }
 
@@ -295,6 +298,10 @@ int physical_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, co
 	*/
 
 	ret = m_device->set_attribute_str(m_hal_id, attr, const_cast<char *>(value), len);
+
+	if (ret) {
+		update_attribute(attr, value, len);
+	}
 
 	return (ret ? OP_SUCCESS : OP_ERROR);
 }

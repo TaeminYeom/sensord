@@ -135,6 +135,7 @@ int application_sensor_handler::set_batch_latency(sensor_observer *ob, int32_t l
 
 int application_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, int32_t value)
 {
+	update_attribute(attr, value);
 	return OP_SUCCESS;
 }
 
@@ -159,7 +160,7 @@ int application_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr,
 	m_ch->send_sync(&msg);
 
 	_I("Set attribute[%d] to sensor[%s]", attr, m_info.get_uri().c_str());
-
+	update_attribute(attr, value, len);
 	return OP_SUCCESS;
 }
 

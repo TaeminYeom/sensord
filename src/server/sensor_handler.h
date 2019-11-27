@@ -25,6 +25,8 @@
 #include <sensor_types.h>
 #include <sensor_info.h>
 #include <list>
+#include <map>
+#include <vector>
 
 namespace sensor {
 
@@ -49,17 +51,23 @@ public:
 	virtual int set_batch_latency(sensor_observer *ob, int32_t latency) = 0;
 	virtual int delete_batch_latency(sensor_observer *ob);
 	virtual int set_attribute(sensor_observer *ob, int32_t attr, int32_t value) = 0;
+	virtual int get_attribute(int32_t attr, int32_t* value);
+	void update_attribute(int32_t attr, int32_t value);
 	virtual int set_attribute(sensor_observer *ob, int32_t attr, const char *value, int len) = 0;
+	virtual int get_attribute(int32_t attr, char **value, int *len);
+	void update_attribute(int32_t attr, const char *value, int len);
 	virtual int flush(sensor_observer *ob) = 0;
 	virtual int get_data(sensor_data_t **data, int *len) = 0;
 
 	void set_cache(sensor_data_t *data, int size);
 	int get_cache(sensor_data_t **data, int *len);
-	bool notify_attribute_changed(int attribute, int value);
-	bool notify_attribute_changed(int attribute, const char *value, int len);
+	bool notify_attribute_changed(uint32_t id, int attribute, int value);
+	bool notify_attribute_changed(uint32_t id, int attribute, const char *value, int len);
 
 protected:
 	sensor_info m_info;
+	std::map<int32_t, int32_t> m_attributes_int;
+	std::map<int32_t, std::vector<char>> m_attributes_str;
 
 private:
 	std::list<sensor_observer *> m_observers;

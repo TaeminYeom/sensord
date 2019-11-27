@@ -89,12 +89,16 @@ void server_channel_handler::read(channel *ch, message &msg)
 		err = listener_start(ch, msg); break;
 	case CMD_LISTENER_STOP:
 		err = listener_stop(ch, msg); break;
-	case CMD_LISTENER_ATTR_INT:
-		err = listener_attr_int(ch, msg); break;
-	case CMD_LISTENER_ATTR_STR:
-		err = listener_attr_str(ch, msg); break;
+	case CMD_LISTENER_SET_ATTR_INT:
+		err = listener_set_attr_int(ch, msg); break;
+	case CMD_LISTENER_SET_ATTR_STR:
+		err = listener_set_attr_str(ch, msg); break;
 	case CMD_LISTENER_GET_DATA:
 		err = listener_get_data(ch, msg); break;
+	case CMD_LISTENER_GET_ATTR_INT:
+		err = listener_get_attr_int(ch, msg); break;
+	case CMD_LISTENER_GET_ATTR_STR:
+		err = listener_get_attr_str(ch, msg); break;
 	case CMD_PROVIDER_CONNECT:
 		err = provider_connect(ch, msg); break;
 	case CMD_PROVIDER_PUBLISH:
@@ -202,7 +206,7 @@ int server_channel_handler::listener_stop(channel *ch, message &msg)
 	return send_reply(ch, OP_SUCCESS);
 }
 
-int server_channel_handler::listener_attr_int(channel *ch, message &msg)
+int server_channel_handler::listener_set_attr_int(channel *ch, message &msg)
 {
 	cmd_listener_attr_int_t buf;
 	msg.disclose((char *)&buf);
@@ -246,7 +250,7 @@ int server_channel_handler::listener_attr_int(channel *ch, message &msg)
 	return ret;
 }
 
-int server_channel_handler::listener_attr_str(channel *ch, message &msg)
+int server_channel_handler::listener_set_attr_str(channel *ch, message &msg)
 {
 	uint32_t id;
 	cmd_listener_attr_str_t *buf;
@@ -279,6 +283,96 @@ int server_channel_handler::listener_attr_str(channel *ch, message &msg)
 	m_listeners[id]->notify_attribute_changed(buf->attribute, buf->value, buf->len);
 
 	delete [] buf;
+	return ret;
+}
+
+int server_channel_handler::listener_get_attr_int(ipc::channel *ch, ipc::message &msg)
+{
+	cmd_listener_attr_int_t buf;
+	msg.disclose((char *)&buf);
+	uint32_t id = buf.listener_id;
+
+	int ret = OP_SUCCESS;
+
+	auto it = m_listeners.find(id);
+	retv_if(it == m_listeners.end(), -EINVAL);
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
+			-EACCES, "Permission denied[%d, %s]",
+			id, m_listeners[id]->get_required_privileges().c_str());
+
+	switch (buf.attribute) {
+	case SENSORD_ATTRIBUTE_INTERVAL:
+	case SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY:
+	case SENSORD_ATTRIBUTE_PASSIVE_MODE:
+		// TODO : Are these features required?
+		ret = OP_ERROR;
+		break;
+	case SENSORD_ATTRIBUTE_PAUSE_POLICY:
+	case SENSORD_ATTRIBUTE_AXIS_ORIENTATION:
+	default:
+		ret = m_listeners[id]->get_attribute(buf.attribute, &buf.value);
+	}
+
+	if (ret == OP_SUCCESS) {
+		message reply((char *)&buf, sizeof(buf));
+		reply.set_type(CMD_LISTENER_GET_ATTR_INT);
+		ret = ch->send_sync(&reply);
+	} else {
+		ret = send_reply(ch, OP_ERROR);
+	}
+
+	return ret;
+}
+
+int server_channel_handler::listener_get_attr_str(ipc::channel *ch, ipc::message &msg)
+{
+	uint32_t id;
+	cmd_listener_attr_str_t *buf;
+
+	buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[msg.size()];
+	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
+
+	msg.disclose((char *)buf);
+
+	id = buf->listener_id;
+	auto it = m_listeners.find(id);
+	auto attr = buf->attribute;
+	delete [] buf;
+
+	if (it == m_listeners.end()) {
+		return -EINVAL;
+	}
+
+	if (!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges())) {
+		_E("Permission denied[%d, %s]", id, m_listeners[id]->get_required_privileges().c_str());
+		return -EACCES;
+	}
+
+	char *value = NULL;
+	int len = 0;
+	int ret = m_listeners[id]->get_attribute(attr, &value, &len);
+
+	if (ret == OP_SUCCESS) {
+		cmd_listener_attr_str_t *reply_buf;
+		size_t size = sizeof(cmd_listener_attr_str_t) + len;
+		reply_buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[size];
+		retvm_if(!reply_buf, -ENOMEM, "Failed to allocate memory");
+
+		reply_buf->attribute = attr;
+		memcpy(reply_buf->value, value, len);
+		reply_buf->len = len;
+		delete [] value;
+
+		ipc::message reply;
+		reply.enclose((char *)reply_buf, size);
+		reply.set_type(CMD_LISTENER_GET_ATTR_STR);
+
+		ret = ch->send_sync(&reply);
+		delete [] reply_buf;
+	} else {
+		ret = send_reply(ch, OP_ERROR);
+	}
+
 	return ret;
 }
 

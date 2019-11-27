@@ -53,9 +53,11 @@ private:
 	int listener_disconnect(ipc::channel *ch, ipc::message &msg);
 	int listener_start(ipc::channel *ch, ipc::message &msg);
 	int listener_stop(ipc::channel *ch, ipc::message &msg);
-	int listener_attr_int(ipc::channel *ch, ipc::message &msg);
-	int listener_attr_str(ipc::channel *ch, ipc::message &msg);
+	int listener_set_attr_int(ipc::channel *ch, ipc::message &msg);
+	int listener_set_attr_str(ipc::channel *ch, ipc::message &msg);
 	int listener_get_data(ipc::channel *ch, ipc::message &msg);
+	int listener_get_attr_int(ipc::channel *ch, ipc::message &msg);
+	int listener_get_attr_str(ipc::channel *ch, ipc::message &msg);
 
 	int provider_connect(ipc::channel *ch, ipc::message &msg);
 	int provider_disconnect(ipc::channel *ch, ipc::message &msg);

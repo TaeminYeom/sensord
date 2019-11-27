@@ -224,22 +224,202 @@ TESTCASE(sensor_listener, bad_disconnect_p_2)
 	return true;
 }
 
-#define TEST_STRING "TESTTESTTEST"
-#define TEST_STRING_LEN 12
-
-TESTCASE(sensor_listener, attribute_string_1)
+TESTCASE(sensor_listener, set_get_attribute_int_1)
 {
-	int err;
-	bool ret;
-	int handle;
-	sensor_t sensor;
+	int err = 0;
+	bool ret = true;
+	int handle = 0;
+	sensor_t sensor = NULL;
+	int attr = 1;
+	int value = -1;
 
 	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensor);
-	err = sensord_set_attribute_str(handle, 1, TEST_STRING, TEST_STRING_LEN);
+	err = sensord_set_attribute_int(handle, attr, 1);
 	ASSERT_EQ(err, 0);
+
+	err = sensord_get_attribute_int(handle, attr, &value);
+	ASSERT_EQ(err, 0);
+
+	ASSERT_EQ(value, 1);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}
+
+TESTCASE(sensor_listener, set_get_attribute_int_2)
+{
+	int err = 0;
+	bool ret = true;
+	int handle = 0;
+	sensor_t sensor = NULL;
+	int attr = 20;
+	int value = -1;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	err = sensord_set_attribute_int(handle, attr, 1);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_get_attribute_int(handle, attr, &value);
+	ASSERT_EQ(err, 0);
+
+	ASSERT_EQ(value, 1);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}
+
+TESTCASE(sensor_listener, get_attribute_int_1)
+{
+	int err = 0;
+	bool ret = true;
+	int handle = 0;
+	sensor_t sensor = NULL;
+	int attr = 100;
+	int value = -1;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+
+	// attr 100 value is never set in these tests.
+	err = sensord_get_attribute_int(handle, attr, &value);
+	ASSERT_EQ(err, -5);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}
+
+#define TEST_STRING "TESTTESTTEST"
+#define TEST_STRING_LEN 13
+
+TESTCASE(sensor_listener, set_attribute_string_1)
+{
+	int err = 0;
+	bool ret = true;
+	int handle = 0;
+	sensor_t sensor = NULL;
+	int attr = 1;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	err = sensord_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}
+
+TESTCASE(sensor_listener, set_get_attribute_string_1)
+{
+	int err = 0;
+	bool ret = true;
+	int handle = 0;
+	char *value = NULL;
+	int len = 0;
+	sensor_t sensor = NULL;
+	int attr = 1;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	err = sensord_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_get_attribute_str(handle, attr, &value, &len);
+	ASSERT_EQ(err, 0);
+	ASSERT_EQ(len, TEST_STRING_LEN);
+	ASSERT_EQ(strncmp(value, TEST_STRING, len), 0);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	free(value);
+	return true;
+}
+
+TESTCASE(sensor_listener, set_get_get_attribute_string_1)
+{
+	int err;
+	bool ret;
+	int handle;
+	char *value = NULL;
+	int len = 0;
+	sensor_t sensor;
+	int attr = 1;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	err = sensord_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_get_attribute_str(handle, attr, &value, &len);
+	ASSERT_EQ(err, 0);
+	ASSERT_EQ(len, TEST_STRING_LEN);
+	ASSERT_EQ(strncmp(value, TEST_STRING, len), 0);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	free(value);
+
+	value = NULL;
+	len = 0;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+
+	err = sensord_get_attribute_str(handle, attr, &value, &len);
+	ASSERT_EQ(err, 0);
+	ASSERT_EQ(len, TEST_STRING_LEN);
+	ASSERT_EQ(strncmp(value, TEST_STRING, len), 0);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	free(value);
+	return true;
+}
+
+TESTCASE(sensor_listener, get_attribute_string_2)
+{
+	int err;
+	bool ret;
+	int handle;
+	char *value;
+	int len;
+	sensor_t sensor;
+	int attr = 100;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+
+	// attr 100 value is never set in these tests.
+	err = sensord_get_attribute_str(handle, attr, &value, &len);
+	ASSERT_EQ(err, -EIO);
 
 	ret = sensord_disconnect(handle);
 	ASSERT_TRUE(ret);

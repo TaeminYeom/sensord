@@ -199,6 +199,8 @@ int fusion_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, int3
 		/* default logic */
 	}
 
+	update_attribute(attr, value);
+
 	return set_attribute_internal(attr, value);
 }
 
@@ -214,6 +216,8 @@ int fusion_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, cons
 	if (policy == OP_DEFAULT) {
 		/* default logic */
 	}
+
+	update_attribute(attr, value, len);
 
 	return set_attribute_internal(attr, value, len);
 }

@@ -203,7 +203,17 @@ API int sensord_set_attribute_int(int handle, int attribute, int value)
 	return OP_ERROR;
 }
 
+API int sensord_get_attribute_int(int handle, int attribute, int* value)
+{
+	return OP_ERROR;
+}
+
 API int sensord_set_attribute_str(int handle, int attribute, const char *value, int len)
+{
+	return OP_ERROR;
+}
+
+API int sensord_get_attribute_str(int handle, int attribute, char **value, int *len)
 {
 	return OP_ERROR;
 }

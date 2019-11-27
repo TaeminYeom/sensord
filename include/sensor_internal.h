@@ -404,6 +404,19 @@ bool sensord_set_option(int handle, int option);
  */
 int sensord_set_attribute_int(int handle, int attribute, int value);
 
+/*
+ * @brief Get the attribute to a connected sensor
+ *
+ * @param[in] handle a handle represensting a connected sensor.
+ * @param[in] attribute an attribute to get value
+ * @param[out] value an attribute value
+ * @return 0 on success, otherwise a negative error value
+ * @retval 0 Successful
+ * @retval -EINVAL Invalid parameter
+ * @retval -EPERM Operation not permitted
+ */
+int sensord_get_attribute_int(int handle, int attribute, int* value);
+
 /**
  * @brief Set the attribute to a connected sensor
  *
@@ -417,6 +430,20 @@ int sensord_set_attribute_int(int handle, int attribute, int value);
  * @retval -EPERM Operation not permitted
  */
 int sensord_set_attribute_str(int handle, int attribute, const char *value, int len);
+
+/**
+ * @brief Get the attribute to a connected sensor
+ *
+ * @param[in] handle a handle represensting a connected sensor.
+ * @param[in] attribute an attribute to get value
+ * @param[out] value an attribute value, the caller should explicitly free this value
+ * @param[out] len the length of value
+ * @return 0 on success, otherwise a negative error value
+ * @retval 0 Successful
+ * @retval -EINVAL Invalid parameter
+ * @retval -EPERM Operation not permitted
+ */
+int sensord_get_attribute_str(int handle, int attribute, char **value, int *len);
 
 /**
  * @brief Send data to sensorhub
