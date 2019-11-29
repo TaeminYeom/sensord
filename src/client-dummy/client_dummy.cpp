@@ -233,6 +233,11 @@ API bool sensord_get_data(int handle, unsigned int data_id, sensor_data_t* senso
 	return false;
 }
 
+API bool sensord_get_data_list(int handle, unsigned int data_id, sensor_data_t** sensor_data, int* count)
+{
+	return false;
+}
+
 API bool sensord_flush(int handle)
 {
 	return false;

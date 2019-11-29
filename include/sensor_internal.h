@@ -467,6 +467,17 @@ bool sensord_send_command(int handle, const char *command, int command_len);
 bool sensord_get_data(int handle, unsigned int data_id, sensor_data_t* sensor_data);
 
 /**
+ * @brief get sensor data from a connected sensor
+ *
+ * @param[in] handle a handle represensting a connected context sensor.
+ * @param[in] data_id it specifies data to get
+ * @param[out] sensor_data the data list from connected sensor, the caller should explicitly free this list.
+ * @param[out] count the count of data contained in the list.
+ * @return true on success, otherwise false.
+ */
+bool sensord_get_data_list(int handle, unsigned int data_id, sensor_data_t** sensor_data, int* count);
+
+/**
  * @brief flush sensor data from a connected sensor
  *
  * @param[in] handle a handle represensting a connected context sensor.

@@ -48,6 +48,7 @@ enum cmd_type_e {
 	CMD_LISTENER_GET_DATA,
 	CMD_LISTENER_GET_ATTR_INT,
 	CMD_LISTENER_GET_ATTR_STR,
+	CMD_LISTENER_GET_DATA_LIST,
 
 	/* Provider */
 	CMD_PROVIDER_CONNECT = 0x300,
@@ -99,6 +100,13 @@ typedef struct {
 	int len;
 	sensor_data_t data;
 } cmd_listener_get_data_t;
+
+typedef struct {
+	int listener_id;
+	int len;
+	int data_count;
+	sensor_data_t data[0];
+} cmd_listener_get_data_list_t;
 
 typedef struct {
 	char info[0];

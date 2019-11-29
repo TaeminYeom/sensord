@@ -427,6 +427,56 @@ TESTCASE(sensor_listener, get_attribute_string_2)
 	return true;
 }
 
+#define SENSOR_SHIFT_TYPE 16
+TESTCASE(sensor_listener, get_data_list)
+{
+	int err;
+	bool ret;
+	int handle;
+	sensor_t sensor;
+	sensor_type_t type;
+
+	called = false;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+
+	sensord_get_type(sensor, &type);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_start(handle, 0);
+	ASSERT_TRUE(ret);
+
+	sensor_data_t* data_list = NULL;
+	int count = 0;
+	unsigned int data_id = type << SENSOR_SHIFT_TYPE | 0x1;
+
+	ret = sensord_get_data_list(handle, data_id, &data_list, &count);
+	ASSERT_TRUE(ret);
+	ASSERT_EQ(count, 1);
+
+	for (int i = 0 ; i < count; i++) {
+		_I("[%llu]", data_list[i].timestamp);
+		for (int j = 0; j < data_list[i].value_count; j++)
+			_I(" %f", data_list[i].values[j]);
+		_I("\n");
+	}
+	free(data_list);
+
+	ret = sensord_stop(handle);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_unregister_events(handle, 1);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}
+
 void sensor_attribute_int_changed_callback(sensor_t sensor, int attribute, int value, void *data)
 {
 	_I("[ATTRIBUTE INT CHANGED] attribute : %d, value : %d\n", attribute, value);

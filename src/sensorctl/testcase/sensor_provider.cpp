@@ -356,3 +356,163 @@ TESTCASE(skip_sensor_provider, mysensor_batch_with_listener_p_1)
 
 	return true;
 }
+
+TESTCASE(skip_sensor_provider, mysensor_batch_events_once)
+{
+	int err = 0;
+	bool ret = false;
+	sensor_t sensor;
+	sensord_provider_h provider;
+
+	err = sensord_create_provider(MYSENSOR_BATCH_URI, &provider);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_provider_set_name(provider, MYSENSOR_BATCH_NAME);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_vendor(provider, MYSENSOR_VENDOR);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_range(provider, 0.0f, 1.0f);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_resolution(provider, 0.01f);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_add_provider(provider);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_provider_set_start_cb(provider, start_cb, NULL);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_stop_cb(provider, stop_cb, NULL);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_interval_changed_cb(provider, interval_cb, NULL);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_get_default_sensor_by_uri(MYSENSOR_BATCH_URI, &sensor);
+	ASSERT_EQ(err, 0);
+
+	int client_handle;
+	sensor_t client_sensor;
+	err = sensord_get_default_sensor_by_uri(MYSENSOR_BATCH_URI, &client_sensor);
+	ASSERT_EQ(err, 0);
+	client_handle = sensord_connect(client_sensor);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_start(client_handle, 0);
+	ASSERT_TRUE(ret);
+
+	sensor_data_t data[NUMBER_OF_EVENT];
+	for (int i = 0 ; i < NUMBER_OF_EVENT; i++) {
+		data[i].accuracy = 3;
+		data[i].timestamp = sensor::utils::get_timestamp();
+		data[i].value_count = 3;
+		data[i].values[0] = i;
+		data[i].values[1] = i;
+		data[i].values[2] = i;
+	}
+	err = sensord_provider_publish_events(provider, data, NUMBER_OF_EVENT);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_stop(client_handle);
+	ASSERT_TRUE(ret);
+	ret = sensord_disconnect(client_handle);
+	ASSERT_TRUE(ret);
+
+	mainloop::run();
+
+	err = sensord_remove_provider(provider);
+	ASSERT_EQ(err, 0);
+	err = sensord_destroy_provider(provider);
+	ASSERT_EQ(err, 0);
+
+	return true;
+}
+
+TESTCASE(skip_sensor_provider, mysensor_batch_p_without_publish)
+{
+	int err = 0;
+	sensor_t sensor;
+	sensord_provider_h provider;
+
+	err = sensord_create_provider(MYSENSOR_BATCH_URI, &provider);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_provider_set_name(provider, MYSENSOR_BATCH_NAME);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_vendor(provider, MYSENSOR_VENDOR);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_range(provider, 0.0f, 1.0f);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_resolution(provider, 0.01f);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_add_provider(provider);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_provider_set_start_cb(provider, start_cb, NULL);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_stop_cb(provider, stop_cb, NULL);
+	ASSERT_EQ(err, 0);
+	err = sensord_provider_set_interval_changed_cb(provider, interval_cb, NULL);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_get_default_sensor_by_uri(MYSENSOR_BATCH_URI, &sensor);
+	ASSERT_EQ(err, 0);
+
+	mainloop::run();
+
+	err = sensord_remove_provider(provider);
+	ASSERT_EQ(err, 0);
+	err = sensord_destroy_provider(provider);
+	ASSERT_EQ(err, 0);
+
+	return true;
+}
+
+#define SENSOR_SHIFT_TYPE 16
+TESTCASE(skip_sensor_provider, mysensor_get_data_list)
+{
+	int err;
+	bool ret;
+	int handle;
+	sensor_t sensor;
+	sensor_type_t type;
+
+	called = false;
+
+	err = sensord_get_default_sensor_by_uri(MYSENSOR_BATCH_URI, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+
+	sensord_get_type(sensor, &type);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_start(handle, 0);
+	ASSERT_TRUE(ret);
+
+	sensor_data_t* data_list = NULL;
+	int count = 0;
+	unsigned int data_id = type << SENSOR_SHIFT_TYPE | 0x1;
+
+	ret = sensord_get_data_list(handle, data_id, &data_list, &count);
+	ASSERT_TRUE(ret);
+	ASSERT_EQ(count, NUMBER_OF_EVENT);
+
+	for (int i = 0 ; i < count; i++) {
+		_I("[%llu]", data_list[i].timestamp);
+		for (int j = 0; j < data_list[i].value_count; j++)
+			_I(" %f", data_list[i].values[j]);
+		_I("\n");
+	}
+	free(data_list);
+
+	ret = sensord_stop(handle);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_unregister_events(handle, 1);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}

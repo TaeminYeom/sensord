@@ -99,6 +99,8 @@ void server_channel_handler::read(channel *ch, message &msg)
 		err = listener_get_attr_int(ch, msg); break;
 	case CMD_LISTENER_GET_ATTR_STR:
 		err = listener_get_attr_str(ch, msg); break;
+	case CMD_LISTENER_GET_DATA_LIST:
+		err = listener_get_data_list(ch, msg); break;
 	case CMD_PROVIDER_CONNECT:
 		err = provider_connect(ch, msg); break;
 	case CMD_PROVIDER_PUBLISH:
@@ -408,6 +410,50 @@ int server_channel_handler::listener_get_data(channel *ch, message &msg)
 	free(data);
 
 	return OP_SUCCESS;
+}
+
+int server_channel_handler::listener_get_data_list(ipc::channel *ch, ipc::message &msg)
+{
+	ipc::message reply;
+	cmd_listener_get_data_list_t buf;
+	sensor_data_t *data;
+	int len;
+	uint32_t id;
+
+	msg.disclose((char *)&buf);
+	id = buf.listener_id;
+
+	auto it = m_listeners.find(id);
+	retv_if(it == m_listeners.end(), -EINVAL);
+	retvm_if(!has_privileges(ch->get_fd(), m_listeners[id]->get_required_privileges()),
+			-EACCES, "Permission denied[%d, %s]",
+			id, m_listeners[id]->get_required_privileges().c_str());
+
+	int ret = m_listeners[id]->get_data(&data, &len);
+	retv_if(ret < 0, ret);
+
+	size_t reply_size = sizeof(cmd_listener_get_data_list_t) + len;
+	cmd_listener_get_data_list_t* reply_buf = (cmd_listener_get_data_list_t *) malloc(reply_size);
+	if (!reply_buf) {
+		_E("Failed to allocate memory");
+		free(data);
+		return -ENOMEM;
+	}
+
+	memcpy(reply_buf->data, data, len);
+	reply_buf->len = len;
+	reply_buf->data_count = len / sizeof(sensor_data_t);
+	reply.enclose((const char *)reply_buf, reply_size);
+	reply.header()->err = OP_SUCCESS;
+	reply.header()->type = CMD_LISTENER_GET_DATA_LIST;
+
+	ch->send_sync(&reply);
+
+	free(data);
+	free(reply_buf);
+
+	return OP_SUCCESS;
+
 }
 
 int server_channel_handler::provider_connect(channel *ch, message &msg)

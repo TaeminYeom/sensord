@@ -787,6 +787,25 @@ API bool sensord_get_data(int handle, unsigned int data_id, sensor_data_t* senso
 	return true;
 }
 
+API bool sensord_get_data_list(int handle, unsigned int data_id, sensor_data_t** sensor_data, int* count)
+{
+	sensor::sensor_listener *listener;
+
+	AUTOLOCK(lock);
+
+	auto it = listeners.find(handle);
+	retvm_if(it == listeners.end(), false, "Invalid handle[%d]", handle);
+
+	listener = it->second;
+
+	if (listener->get_sensor_data_list(sensor_data, count) < 0) {
+		_E("Failed to get sensor data from listener");
+		return false;
+	}
+
+	return true;
+}
+
 API bool sensord_flush(int handle)
 {
 	sensor::sensor_listener *listener;

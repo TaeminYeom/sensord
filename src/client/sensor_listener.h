@@ -75,6 +75,7 @@ public:
 	int get_attribute(int attribute, char **value, int *len);
 	void update_attribute(int attribute, const char *value, int len);
 	int get_sensor_data(sensor_data_t *data);
+	int get_sensor_data_list(sensor_data_t **data, int *count);
 	int flush(void);
 
 	void restore(void);

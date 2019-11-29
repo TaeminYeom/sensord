@@ -58,6 +58,7 @@ private:
 	int listener_get_data(ipc::channel *ch, ipc::message &msg);
 	int listener_get_attr_int(ipc::channel *ch, ipc::message &msg);
 	int listener_get_attr_str(ipc::channel *ch, ipc::message &msg);
+	int listener_get_data_list(ipc::channel *ch, ipc::message &msg);
 
 	int provider_connect(ipc::channel *ch, ipc::message &msg);
 	int provider_disconnect(ipc::channel *ch, ipc::message &msg);

@@ -532,7 +532,6 @@ int sensor_listener::get_attribute(int attribute, int* value)
 		m_cmd_channel->read_sync(reply);
 
 		if (reply.header()->err < 0) {
-			_D("reply.header()->err < 0");
 			return reply.header()->err;
 		}
 		if (reply.header()->length && reply.body()) {
@@ -606,7 +605,6 @@ int sensor_listener::get_attribute(int attribute, char **value, int* len)
 
 		m_cmd_channel->read_sync(reply);
 		if (reply.header()->err < 0) {
-			_D("reply.header()->err < 0");
 			return reply.header()->err;
 		}
 
@@ -659,5 +657,52 @@ int sensor_listener::get_sensor_data(sensor_data_t *data)
 
 	_D("Listener[%d] read sensor data", get_id());
 
+	return OP_SUCCESS;
+}
+
+int sensor_listener::get_sensor_data_list(sensor_data_t **data, int *count)
+{
+	ipc::message msg;
+	ipc::message reply;
+	cmd_listener_get_data_list_t buf;
+
+	retvm_if(!m_cmd_channel, -EIO, "Failed to connect to server");
+
+	buf.listener_id = m_id;
+	msg.set_type(CMD_LISTENER_GET_DATA_LIST);
+	msg.enclose((char *)&buf, sizeof(buf));
+
+	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->read_sync(reply);
+
+	if (reply.header()->err < 0) {
+		return reply.header()->err;
+	}
+
+	size_t size = reply.size();
+	cmd_listener_get_data_list_t* reply_buf = (cmd_listener_get_data_list_t *) new(std::nothrow) char[size];
+
+	retvm_if(!reply_buf, -ENOMEM, "Failed to allocate memory");
+
+	reply.disclose((char *)reply_buf);
+
+	if (reply_buf->len <= 0) {
+		delete [] reply_buf;
+		return OP_ERROR;
+	}
+
+	*count = reply_buf->data_count;
+	*data = (sensor_data_t*) malloc(reply_buf->len);
+
+	if (!(*data)) {
+		_E("Memory allocation failed");
+		delete [] reply_buf;
+		return -ENOMEM;
+	}
+
+	memcpy(*data, reply_buf->data, reply_buf->len);
+
+	_D("Listener[%d] read sensor data list", get_id());
+	delete [] reply_buf;
 	return OP_SUCCESS;
 }
