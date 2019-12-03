@@ -207,7 +207,7 @@ bool sensor_manager::connect_channel(void)
 	retvm_if(!m_mon_channel, false, "Failed to connect to server");
 
 	msg.set_type(CMD_MANAGER_CONNECT);
-	m_mon_channel->send_sync(&msg);
+	m_mon_channel->send_sync(msg);
 
 	m_connected.store(true);
 
@@ -290,7 +290,7 @@ bool sensor_manager::get_sensors_internal(void)
 
 	msg.set_type(CMD_MANAGER_SENSOR_LIST);
 
-	ret = m_cmd_channel->send_sync(&msg);
+	ret = m_cmd_channel->send_sync(msg);
 	retvm_if(!ret, false, "Failed to send message");
 
 	ret = m_cmd_channel->read_sync(reply);
@@ -316,7 +316,7 @@ bool sensor_manager::has_privilege(std::string &uri)
 	memcpy(buf.sensor, uri.c_str(), uri.size());
 	msg.enclose((const char *)&buf, sizeof(buf));
 
-	ret = m_cmd_channel->send_sync(&msg);
+	ret = m_cmd_channel->send_sync(msg);
 	retvm_if(!ret, false, "Failed to send message");
 
 	ret = m_cmd_channel->read_sync(reply);

@@ -81,19 +81,14 @@ int sensor_handler::notify(const char *uri, sensor_data_t *data, int len)
 	if (observer_count() == 0)
 		return OP_ERROR;
 
-	ipc::message *msg;
+	auto msg = ipc::message::create((char *)data, len);
 
-	msg = new(std::nothrow) ipc::message((char *)data, len);
 	retvm_if(!msg, OP_ERROR, "Failed to allocate memory");
 
 	for (auto it = m_observers.begin(); it != m_observers.end(); ++it)
 		(*it)->update(uri, msg);
 
 	set_cache(data, len);
-
-	if (msg->ref_count() == 0) {
-		msg->unref();
-	}
 
 	return OP_SUCCESS;
 }
@@ -141,8 +136,8 @@ bool sensor_handler::notify_attribute_changed(uint32_t id, int attribute, int va
 	buf.attribute = attribute;
 	buf.value = value;
 
-	ipc::message *msg;
-	msg = new(std::nothrow) ipc::message();
+	auto msg = ipc::message::create();
+
 	retvm_if(!msg, OP_ERROR, "Failed to allocate memory");
 
 	msg->set_type(CMD_LISTENER_SET_ATTR_INT);
@@ -155,9 +150,6 @@ bool sensor_handler::notify_attribute_changed(uint32_t id, int attribute, int va
 			proxy->on_attribute_changed(msg);
 		}
 	}
-
-	if (msg->ref_count() == 0)
-		msg->unref();
 
 	return OP_SUCCESS;
 }
@@ -173,8 +165,7 @@ bool sensor_handler::notify_attribute_changed(uint32_t id, int attribute, const 
 	buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[size];
 	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
 
-	ipc::message *msg;
-	msg = new(std::nothrow) ipc::message();
+	auto msg = ipc::message::create();
 	retvm_if(!msg, OP_ERROR, "Failed to allocate memory");
 
 	buf->listener_id = id;
@@ -192,10 +183,6 @@ bool sensor_handler::notify_attribute_changed(uint32_t id, int attribute, const 
 		if (proxy && proxy->get_id() != id) {
 			proxy->on_attribute_changed(msg);
 		}
-	}
-
-	if (msg->ref_count() == 0) {
-		msg->unref();
 	}
 
 	delete[] buf;

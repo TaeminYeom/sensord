@@ -38,8 +38,8 @@ public:
 	uint32_t get_id(void);
 
 	/* sensor observer */
-	int update(const char *uri, ipc::message *msg);
-	int on_attribute_changed(ipc::message *msg);
+	int update(const char *uri, std::shared_ptr<ipc::message> msg);
+	int on_attribute_changed(std::shared_ptr<ipc::message> msg);
 
 	int start(bool policy = false);
 	int stop(bool policy = false);
@@ -62,8 +62,8 @@ public:
 	bool notify_attribute_changed(int attribute, const char *value, int len);
 
 private:
-	void update_event(ipc::message *msg);
-	void update_accuracy(ipc::message *msg);
+	void update_event(std::shared_ptr<ipc::message> msg);
+	void update_accuracy(std::shared_ptr<ipc::message> msg);
 
 	uint32_t m_id;
 	std::string m_uri;

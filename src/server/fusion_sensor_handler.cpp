@@ -43,7 +43,7 @@ void fusion_sensor_handler::add_required_sensor(uint32_t id, sensor_handler *sen
 	m_required_sensors.emplace(info.get_uri(), required_sensor(id, sensor));
 }
 
-int fusion_sensor_handler::update(const char *uri, ipc::message *msg)
+int fusion_sensor_handler::update(const char *uri, std::shared_ptr<ipc::message> msg)
 {
 	retv_if(!m_sensor, -EINVAL);
 

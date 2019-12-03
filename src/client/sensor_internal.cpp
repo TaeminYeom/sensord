@@ -746,6 +746,7 @@ API int sensord_set_attribute_str(int handle, int attribute, const char *value, 
 		_E("Failed to set attribute[%d, %s]", attribute, value);
 		return -EIO;
 	}
+	_D("Set attribute ID[%d], attr[%d], len[%d]", listener->get_id(), attribute, len);
 
 	return OP_SUCCESS;
 }
@@ -763,7 +764,7 @@ API int sensord_get_attribute_str(int handle, int attribute, char **value, int* 
 		_E("Failed to get attribute[%d]", attribute);
 		return -EIO;
 	}
-	_D("Get attribute[%d, %d, %s]", listener->get_id(), attribute, *value);
+	_D("Get attribute ID[%d], attr[%d], len[%d]", listener->get_id(), attribute, *len);
 
 	return OP_SUCCESS;
 }

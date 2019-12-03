@@ -58,7 +58,7 @@ int application_sensor_handler::start(sensor_observer *ob)
 
 	ipc::message msg;
 	msg.set_type(CMD_PROVIDER_START);
-	m_ch->send_sync(&msg);
+	m_ch->send_sync(msg);
 	m_started.store(true);
 
 	_I("Started[%s]", m_info.get_uri().c_str());
@@ -75,7 +75,7 @@ int application_sensor_handler::stop(sensor_observer *ob)
 
 	ipc::message msg;
 	msg.set_type(CMD_PROVIDER_STOP);
-	m_ch->send_sync(&msg);
+	m_ch->send_sync(msg);
 	m_started.store(false);
 
 	_I("Stopped[%s]", m_info.get_uri().c_str());
@@ -119,7 +119,7 @@ int application_sensor_handler::set_interval(sensor_observer *ob, int32_t interv
 
 	msg.set_type(CMD_PROVIDER_ATTR_INT);
 	msg.enclose((const char *)&buf, sizeof(cmd_provider_attr_int_t));
-	m_ch->send_sync(&msg);
+	m_ch->send_sync(msg);
 
 	m_prev_interval = cur_interval;
 
@@ -157,7 +157,7 @@ int application_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr,
 
 	msg.enclose((char *)buf, size);
 
-	m_ch->send_sync(&msg);
+	m_ch->send_sync(msg);
 
 	_I("Set attribute[%d] to sensor[%s]", attr, m_info.get_uri().c_str());
 	update_attribute(attr, value, len);

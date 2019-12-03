@@ -100,7 +100,7 @@ int sensor_provider::serialize(sensor_info *info, char **bytes)
 
 	info->serialize(*raw);
 
-	*bytes = new(std::nothrow) char[raw->size()];
+	*bytes = (char *) malloc(raw->size());
 	retvm_if(!*bytes, -ENOMEM, "Failed to allocate memory");
 
 	std::copy(raw->begin(), raw->end(), *bytes);
@@ -121,7 +121,7 @@ int sensor_provider::send_sensor_info(sensor_info *info)
 	ipc::message msg((const char *)bytes, size);
 	msg.set_type(CMD_PROVIDER_CONNECT);
 
-	m_channel->send_sync(&msg);
+	m_channel->send_sync(msg);
 
 	return OP_SUCCESS;
 }
@@ -174,7 +174,7 @@ int sensor_provider::publish(const sensor_data_t &data)
 	msg.set_type(CMD_PROVIDER_PUBLISH);
 	msg.enclose((const void *)(&data), sizeof(data));
 
-	m_channel->send_sync(&msg);
+	m_channel->send_sync(msg);
 
 	return OP_SUCCESS;
 }
@@ -185,7 +185,7 @@ int sensor_provider::publish(const sensor_data_t data[], const int count)
 	msg.set_type(CMD_PROVIDER_PUBLISH);
 	msg.enclose((const void *)data, sizeof(sensor_data_t) * count);
 
-	m_channel->send_sync(&msg);
+	m_channel->send_sync(msg);
 
 	return OP_SUCCESS;
 }

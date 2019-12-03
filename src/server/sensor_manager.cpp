@@ -115,7 +115,7 @@ int sensor_manager::serialize(sensor_info *info, char **bytes)
 
 	info->serialize(*raw);
 
-	*bytes = new(std::nothrow) char[raw->size()];
+	*bytes = (char *) malloc(raw->size());
 	retvm_if(!*bytes, -ENOMEM, "Failed to allocate memory");
 
 	std::copy(raw->begin(), raw->end(), *bytes);
@@ -129,7 +129,7 @@ int sensor_manager::serialize(sensor_info *info, char **bytes)
 void sensor_manager::send(ipc::message &msg)
 {
 	for (auto it = m_channels.begin(); it != m_channels.end(); ++it)
-		(*it)->send_sync(&msg);
+		(*it)->send_sync(msg);
 }
 
 void sensor_manager::send_added_msg(sensor_info *info)
@@ -410,8 +410,16 @@ void sensor_manager::register_handler(physical_sensor_handler *sensor)
 	handler->add_sensor(sensor);
 	m_event_handlers[fd] = handler;
 
-	m_loop->add_event(fd,
-			ipc::EVENT_IN | ipc::EVENT_HUP | ipc::EVENT_NVAL, handler);
+	if (m_loop->add_event(fd, ipc::EVENT_IN | ipc::EVENT_HUP | ipc::EVENT_NVAL, handler) == 0) {
+		_D("Failed to add sensor event handler");
+		handler->remove_sensor(sensor);
+
+		auto iter = m_event_handlers.find(fd);
+		if (iter != m_event_handlers.end()) {
+			m_event_handlers.erase(iter);
+		}
+		delete handler;
+	}
 }
 
 void sensor_manager::show(void)

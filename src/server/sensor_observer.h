@@ -28,8 +28,7 @@ class sensor_observer {
 public:
 	virtual ~sensor_observer() {}
 
-	/* for performance, use message */
-	virtual int update(const char *uri, ipc::message *msg) = 0;
+	virtual int update(const char *uri, std::shared_ptr<ipc::message> msg) = 0;
 };
 
 }

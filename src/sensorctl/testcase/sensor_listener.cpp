@@ -355,6 +355,37 @@ TESTCASE(sensor_listener, set_get_attribute_string_1)
 	return true;
 }
 
+#define BUF_SIZE 4000
+TESTCASE(sensor_listener, set_get_attribute_string_2)
+{
+	int err = 0;
+	bool ret = true;
+	int handle = 0;
+	char *value = NULL;
+	int len = 0;
+	sensor_t sensor = NULL;
+	int attr = 1;
+	char attr_value[BUF_SIZE] = {1, };
+	attr_value[BUF_SIZE - 1] = 1;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	err = sensord_set_attribute_str(handle, attr, attr_value, BUF_SIZE);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_get_attribute_str(handle, attr, &value, &len);
+	ASSERT_EQ(err, 0);
+	ASSERT_EQ(len, BUF_SIZE);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	free(value);
+	return true;
+}
+
 TESTCASE(sensor_listener, set_get_get_attribute_string_1)
 {
 	int err;

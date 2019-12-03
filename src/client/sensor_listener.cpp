@@ -224,7 +224,7 @@ bool sensor_listener::connect(void)
 	memcpy(buf.sensor, m_sensor->get_uri().c_str(), m_sensor->get_uri().size());
 	msg.set_type(CMD_LISTENER_CONNECT);
 	msg.enclose((const char *)&buf, sizeof(buf));
-	m_evt_channel->send_sync(&msg);
+	m_evt_channel->send_sync(msg);
 
 	m_evt_channel->read_sync(reply);
 	reply.disclose((char *)&buf);
@@ -364,7 +364,7 @@ int sensor_listener::start(void)
 	msg.set_type(CMD_LISTENER_START);
 	msg.enclose((char *)&buf, sizeof(buf));
 
-	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->send_sync(msg);
 	m_cmd_channel->read_sync(reply);
 
 	if (reply.header()->err < 0) {
@@ -392,7 +392,7 @@ int sensor_listener::stop(void)
 	msg.set_type(CMD_LISTENER_STOP);
 	msg.enclose((char *)&buf, sizeof(buf));
 
-	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->send_sync(msg);
 	m_cmd_channel->read_sync(reply);
 
 	if (reply.header()->err < 0) {
@@ -503,7 +503,7 @@ int sensor_listener::set_attribute(int attribute, int value)
 	msg.set_type(CMD_LISTENER_SET_ATTR_INT);
 	msg.enclose((char *)&buf, sizeof(buf));
 
-	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->send_sync(msg);
 	m_cmd_channel->read_sync(reply);
 
 	if (reply.header()->err < 0)
@@ -527,7 +527,7 @@ int sensor_listener::get_attribute(int attribute, int* value)
 
 		msg.set_type(CMD_LISTENER_GET_ATTR_INT);
 		msg.enclose((char *)&buf, sizeof(buf));
-		m_cmd_channel->send_sync(&msg);
+		m_cmd_channel->send_sync(msg);
 
 		m_cmd_channel->read_sync(reply);
 
@@ -572,7 +572,7 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 
 	msg.enclose((char *)buf, size);
 
-	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->send_sync(msg);
 	m_cmd_channel->read_sync(reply);
 
 	/* Message memory is released automatically after sending message,
@@ -601,7 +601,7 @@ int sensor_listener::get_attribute(int attribute, char **value, int* len)
 
 		msg.set_type(CMD_LISTENER_GET_ATTR_STR);
 		msg.enclose((char *)&buf, sizeof(buf));
-		m_cmd_channel->send_sync(&msg);
+		m_cmd_channel->send_sync(msg);
 
 		m_cmd_channel->read_sync(reply);
 		if (reply.header()->err < 0) {
@@ -640,7 +640,7 @@ int sensor_listener::get_sensor_data(sensor_data_t *data)
 	msg.set_type(CMD_LISTENER_GET_DATA);
 	msg.enclose((char *)&buf, sizeof(buf));
 
-	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->send_sync(msg);
 	m_cmd_channel->read_sync(reply);
 
 	reply.disclose((char *)&buf);
@@ -672,7 +672,7 @@ int sensor_listener::get_sensor_data_list(sensor_data_t **data, int *count)
 	msg.set_type(CMD_LISTENER_GET_DATA_LIST);
 	msg.enclose((char *)&buf, sizeof(buf));
 
-	m_cmd_channel->send_sync(&msg);
+	m_cmd_channel->send_sync(msg);
 	m_cmd_channel->read_sync(reply);
 
 	if (reply.header()->err < 0) {

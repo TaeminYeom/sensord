@@ -50,7 +50,7 @@ public:
 	void add_required_sensor(uint32_t id, sensor_handler *sensor);
 
 	/* subscriber */
-	int update(const char *uri, ipc::message *msg);
+	int update(const char *uri, std::shared_ptr<ipc::message> msg);
 
 	/* sensor interface */
 	const sensor_info &get_sensor_info(void);

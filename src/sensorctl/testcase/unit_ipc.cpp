@@ -61,7 +61,7 @@ public:
 	{
 		char buf[MAX_BUF_SIZE];
 
-		message *reply = new(std::nothrow) message();
+		auto reply = message::create();
 		RETM_IF(!reply, "Failed to allocate memory");
 
 		msg.disclose(buf);
@@ -117,7 +117,7 @@ static bool run_ipc_client_sleep_1s(const char *str, int size, int count)
 	msg.enclose(buf, MAX_BUF_SIZE);
 
 	SLEEP_1S;
-	ch->send_sync(&msg);
+	ch->send_sync(msg);
 
 	/* Test */
 	SLEEP_1S;
@@ -162,7 +162,7 @@ static bool run_ipc_client_small_buffer(const char *str, int size, int count)
 	_I("After:  Buffer size : %d\n", buf_size);
 
 	for (int i = 0; i < 1024; ++i) {
-		ch->send_sync(&msg);
+		ch->send_sync(msg);
 		ch->read_sync(reply);
 	}
 
@@ -197,7 +197,7 @@ static bool run_ipc_client_1M(const char *str, int size, int count)
 	SLEEP_1S;
 
 	for (int i = 0; i < 256; ++i) {
-		ch->send_sync(&msg);
+		ch->send_sync(msg);
 		ch->read_sync(reply);
 	}
 
@@ -224,7 +224,7 @@ public:
 		char buf[MAX_BUF_SIZE];
 		msg.disclose(buf);
 
-		message *reply = new(std::nothrow) message();
+		auto reply = message::create();
 		if (!reply) return;
 
 		reply->enclose("TEXTTEXTTEXTTEXT", 16);
@@ -278,7 +278,7 @@ static bool run_ipc_client_2_channel_message(const char *str, int size, int coun
 	ASSERT_NE(ch[0], 0);
 
 	msg.enclose("TESTTESTTEST", 12);
-	ch[0]->send_sync(&msg);
+	ch[0]->send_sync(msg);
 	SLEEP_1S;
 	ch[0]->read_sync(reply);
 	reply.disclose(buf);
@@ -289,7 +289,7 @@ static bool run_ipc_client_2_channel_message(const char *str, int size, int coun
 	ASSERT_NE(ch[1], 0);
 
 	msg.enclose("TESTTESTTEST", 12);
-	ch[1]->send_sync(&msg);
+	ch[1]->send_sync(msg);
 	SLEEP_1S;
 	ch[1]->read_sync(reply);
 	reply.disclose(buf);
@@ -338,7 +338,7 @@ static bool run_ipc_client(const char *str, int size, int count)
 	char buf[MAX_BUF_SIZE];
 
 	msg.enclose("TESTTESTTEST", 12);
-	ch->send_sync(&msg);
+	ch->send_sync(msg);
 
 	SLEEP_1S;
 

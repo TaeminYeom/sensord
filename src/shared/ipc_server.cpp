@@ -98,6 +98,7 @@ void ipc_server::register_acceptor(void)
 			(event_condition)(EVENT_IN | EVENT_HUP | EVENT_NVAL), m_accept_handler);
 
 	if (id == 0) {
+		_D("Failed to add accept event handler");
 		delete m_accept_handler;
 		m_accept_handler = NULL;
 	}

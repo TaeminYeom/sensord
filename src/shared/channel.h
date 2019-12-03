@@ -46,8 +46,8 @@ public:
 
 	bool is_connected(void);
 
-	bool send(message *msg);
-	bool send_sync(message *msg);
+	bool send(std::shared_ptr<message> msg);
+	bool send_sync(message &msg);
 
 	bool read(void);
 	bool read_sync(message &msg, bool select = true);

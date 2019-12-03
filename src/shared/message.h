@@ -22,6 +22,7 @@
 
 #include <stdlib.h> /* size_t */
 #include <atomic>
+#include <memory>
 
 #define MAX_MSG_CAPACITY (16*1024)
 #define MAX_HEADER_RESERVED 3
@@ -38,6 +39,13 @@ typedef struct message_header {
 
 class message {
 public:
+	template <class... Args>
+	static std::shared_ptr<message> create(Args&&... args)
+		noexcept(noexcept(message(std::forward<Args>(args)...)))
+	{
+		return std::shared_ptr<message>(new (std::nothrow) message(std::forward<Args>(args)...));
+	}
+
 	message(size_t capacity = MAX_MSG_CAPACITY);
 	message(const void *msg, size_t size);
 	message(const message &msg);
@@ -66,7 +74,6 @@ private:
 	size_t m_capacity;
 
 	char *m_msg;
-	std::atomic<int> ref_cnt;
 };
 
 }

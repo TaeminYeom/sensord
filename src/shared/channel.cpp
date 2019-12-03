@@ -33,7 +33,7 @@ using namespace ipc;
 class send_event_handler : public event_handler
 {
 public:
-	send_event_handler(channel *ch, message *msg)
+	send_event_handler(channel *ch, std::shared_ptr<message> msg)
 	: m_ch(ch)
 	, m_msg(msg)
 	{ }
@@ -46,18 +46,15 @@ public:
 		if (condition & (EVENT_IN | EVENT_HUP))
 			return false;
 
-		if (!m_ch->send_sync(m_msg))
+		if (!m_ch->send_sync(*m_msg))
 			return false;
-
-		if (m_msg)
-			m_msg->unref();
 
 		return false;
 	}
 
 private:
 	channel *m_ch;
-	message *m_msg;
+	std::shared_ptr<message> m_msg;
 };
 
 class read_event_handler : public event_handler
@@ -173,7 +170,7 @@ void channel::disconnect(void)
 	_D("Disconnected");
 }
 
-bool channel::send(message *msg)
+bool channel::send(std::shared_ptr<message> msg)
 {
 	int retry_cnt = 0;
 	int cur_buffer_size = 0;
@@ -192,32 +189,32 @@ bool channel::send(message *msg)
 	send_event_handler *handler = new(std::nothrow) send_event_handler(this, msg);
 	retvm_if(!handler, false, "Failed to allocate memory");
 
-	msg->ref();
-
-	m_loop->add_event(m_socket->get_fd(),
-			(EVENT_OUT | EVENT_HUP | EVENT_NVAL) , handler);
+	if (m_loop->add_event(m_socket->get_fd(), (EVENT_OUT | EVENT_HUP | EVENT_NVAL) , handler) == 0) {
+		_D("Failed to add send event handler");
+		delete handler;
+		return false;
+	}
 
 	return true;
 }
 
-bool channel::send_sync(message *msg)
+bool channel::send_sync(message &msg)
 {
-	retvm_if(!msg, false, "Invalid message");
-	retvm_if(msg->size() >= MAX_MSG_CAPACITY, true, "Invaild message size[%u]", msg->size());
+	retvm_if(msg.size() >= MAX_MSG_CAPACITY, true, "Invaild message size[%u]", msg.size());
 
 	ssize_t size = 0;
-	char *buf = msg->body();
+	char *buf = msg.body();
 
 	/* header */
-	size = m_socket->send(reinterpret_cast<void *>(msg->header()),
+	size = m_socket->send(reinterpret_cast<void *>(msg.header()),
 	    sizeof(message_header), true);
 	retvm_if(size <= 0, false, "Failed to send header");
 
 	/* if body size is zero, skip to send body message */
-	retv_if(msg->size() == 0, true);
+	retv_if(msg.size() == 0, true);
 
 	/* body */
-	size = m_socket->send(buf, msg->size(), true);
+	size = m_socket->send(buf, msg.size(), true);
 	retvm_if(size <= 0, false, "Failed to send body");
 
 	return true;
@@ -230,7 +227,11 @@ bool channel::read(void)
 	read_event_handler *handler = new(std::nothrow) read_event_handler(this);
 	retvm_if(!handler, false, "Failed to allocate memory");
 
-	m_loop->add_event(m_socket->get_fd(), (EVENT_IN | EVENT_HUP | EVENT_NVAL), handler);
+	if (m_loop->add_event(m_socket->get_fd(), (EVENT_IN | EVENT_HUP | EVENT_NVAL), handler) == 0) {
+		_D("Failed to add read event handler");
+		delete handler;
+		return false;
+	}
 
 	return true;
 }

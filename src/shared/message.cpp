@@ -29,10 +29,9 @@ using namespace ipc;
 static std::atomic<uint64_t> sequence(0);
 
 message::message(size_t capacity)
-: m_size(0)
-, m_capacity(capacity)
-, m_msg((char *)malloc(sizeof(char) * capacity))
-, ref_cnt(0)
+	: m_size(0)
+	, m_capacity(capacity)
+	, m_msg((char *)malloc(sizeof(char) * capacity))
 {
 	m_header.id = sequence++;
 	m_header.type = UNDEFINED_TYPE;
@@ -41,10 +40,9 @@ message::message(size_t capacity)
 }
 
 message::message(const void *msg, size_t sz)
-: m_size(sz)
-, m_capacity(sz)
-, m_msg((char *)msg)
-, ref_cnt(0)
+	: m_size(sz)
+	, m_capacity(sz)
+	, m_msg((char *)msg)
 {
 	m_header.id = sequence++;
 	m_header.type = UNDEFINED_TYPE;
@@ -53,20 +51,18 @@ message::message(const void *msg, size_t sz)
 }
 
 message::message(const message &msg)
-: m_size(msg.m_size)
-, m_capacity(msg.m_capacity)
-, m_msg((char *)malloc(sizeof(char) * msg.m_capacity))
-, ref_cnt(0)
+	: m_size(msg.m_size)
+	, m_capacity(msg.m_capacity)
+	, m_msg((char *)malloc(sizeof(char) * msg.m_capacity))
 {
 	::memcpy(&m_header, &msg.m_header, sizeof(message_header));
 	::memcpy(m_msg, msg.m_msg, msg.m_size);
 }
 
 message::message(int error)
-: m_size(0)
-, m_capacity(0)
-, m_msg(NULL)
-, ref_cnt(0)
+	: m_size(0)
+	, m_capacity(0)
+	, m_msg(NULL)
 {
 	m_header.id = sequence++;
 	m_header.type = UNDEFINED_TYPE;
@@ -76,7 +72,7 @@ message::message(int error)
 
 message::~message()
 {
-	if (m_msg && ref_cnt == 0) {
+	if (m_msg) {
 		free(m_msg);
 		m_msg = NULL;
 	}
@@ -123,29 +119,6 @@ void message::set_type(uint32_t msg_type)
 size_t message::size(void)
 {
 	return m_size;
-}
-
-/* TODO: remove ref/unref and use reference counting automatically */
-void message::ref(void)
-{
-	ref_cnt++;
-}
-
-void message::unref(void)
-{
-	ref_cnt--;
-
-	if (ref_cnt > 0 || !m_msg)
-		return;
-
-	free(m_msg);
-	m_msg = NULL;
-	delete this;
-}
-
-int message::ref_count(void)
-{
-	return ref_cnt;
 }
 
 message_header *message::header(void)

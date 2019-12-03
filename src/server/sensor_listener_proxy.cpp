@@ -56,7 +56,7 @@ uint32_t sensor_listener_proxy::get_id(void)
 	return m_id;
 }
 
-int sensor_listener_proxy::update(const char *uri, ipc::message *msg)
+int sensor_listener_proxy::update(const char *uri, std::shared_ptr<ipc::message> msg)
 {
 	retv_if(!m_ch || !m_ch->is_connected(), OP_CONTINUE);
 
@@ -66,7 +66,7 @@ int sensor_listener_proxy::update(const char *uri, ipc::message *msg)
 	return OP_CONTINUE;
 }
 
-int sensor_listener_proxy::on_attribute_changed(ipc::message *msg)
+int sensor_listener_proxy::on_attribute_changed(std::shared_ptr<ipc::message> msg)
 {
 	retv_if(!m_ch || !m_ch->is_connected(), OP_CONTINUE);
 	_I("Proxy[%zu] call on_attribute_changed\n", get_id());
@@ -74,7 +74,7 @@ int sensor_listener_proxy::on_attribute_changed(ipc::message *msg)
 	return OP_CONTINUE;
 }
 
-void sensor_listener_proxy::update_event(ipc::message *msg)
+void sensor_listener_proxy::update_event(std::shared_ptr<ipc::message> msg)
 {
 	/* TODO: check axis orientation */
 	msg->header()->type = CMD_LISTENER_EVENT;
@@ -83,7 +83,7 @@ void sensor_listener_proxy::update_event(ipc::message *msg)
 	m_ch->send(msg);
 }
 
-void sensor_listener_proxy::update_accuracy(ipc::message *msg)
+void sensor_listener_proxy::update_accuracy(std::shared_ptr<ipc::message> msg)
 {
 	sensor_data_t *data = reinterpret_cast<sensor_data_t *>(msg->body());
 
@@ -95,7 +95,8 @@ void sensor_listener_proxy::update_accuracy(ipc::message *msg)
 	sensor_data_t acc_data;
 	acc_data.accuracy = m_last_accuracy;
 
-	ipc::message *acc_msg = new(std::nothrow) ipc::message();
+	auto acc_msg = ipc::message::create();
+
 	retm_if(!acc_msg, "Failed to allocate memory");
 
 	acc_msg->header()->type = CMD_LISTENER_ACC_EVENT;

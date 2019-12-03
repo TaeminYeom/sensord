@@ -112,7 +112,7 @@ void server_channel_handler::read(channel *ch, message &msg)
 
 	if (err != 0) {
 		message reply(err);
-		ch->send_sync(&reply);
+		ch->send_sync(reply);
 	}
 }
 
@@ -133,7 +133,7 @@ int server_channel_handler::manager_get_sensor_list(channel *ch, message &msg)
 
 	reply.enclose((const char *)bytes, size);
 	reply.header()->err = OP_SUCCESS;
-	ch->send_sync(&reply);
+	ch->send_sync(reply);
 
 	delete [] bytes;
 
@@ -161,7 +161,7 @@ int server_channel_handler::listener_connect(channel *ch, message &msg)
 	reply.enclose((const char *)&buf, sizeof(buf));
 	reply.header()->err = OP_SUCCESS;
 
-	if (!ch->send_sync(&reply))
+	if (!ch->send_sync(reply))
 		return OP_ERROR;
 
 	_I("Connected sensor_listener[fd(%d) -> id(%u)]", ch->get_fd(), listener_id);
@@ -316,9 +316,10 @@ int server_channel_handler::listener_get_attr_int(ipc::channel *ch, ipc::message
 	}
 
 	if (ret == OP_SUCCESS) {
-		message reply((char *)&buf, sizeof(buf));
+		message reply;
+		reply.enclose((char *)&buf, sizeof(buf));
 		reply.set_type(CMD_LISTENER_GET_ATTR_INT);
-		ret = ch->send_sync(&reply);
+		ret = ch->send_sync(reply);
 	} else {
 		ret = send_reply(ch, OP_ERROR);
 	}
@@ -369,7 +370,7 @@ int server_channel_handler::listener_get_attr_str(ipc::channel *ch, ipc::message
 		reply.enclose((char *)reply_buf, size);
 		reply.set_type(CMD_LISTENER_GET_ATTR_STR);
 
-		ret = ch->send_sync(&reply);
+		ret = ch->send_sync(reply);
 		delete [] reply_buf;
 	} else {
 		ret = send_reply(ch, OP_ERROR);
@@ -405,7 +406,7 @@ int server_channel_handler::listener_get_data(channel *ch, message &msg)
 	reply.header()->err = OP_SUCCESS;
 	reply.header()->type = CMD_LISTENER_GET_DATA;
 
-	ch->send_sync(&reply);
+	ch->send_sync(reply);
 
 	free(data);
 
@@ -447,7 +448,7 @@ int server_channel_handler::listener_get_data_list(ipc::channel *ch, ipc::messag
 	reply.header()->err = OP_SUCCESS;
 	reply.header()->type = CMD_LISTENER_GET_DATA_LIST;
 
-	ch->send_sync(&reply);
+	ch->send_sync(reply);
 
 	free(data);
 	free(reply_buf);
@@ -514,7 +515,7 @@ int server_channel_handler::has_privileges(channel *ch, message &msg)
 int server_channel_handler::send_reply(channel *ch, int error)
 {
 	message reply(error);
-	retvm_if(!ch->send_sync(&reply), OP_ERROR, "Failed to send reply");
+	retvm_if(!ch->send_sync(reply), OP_ERROR, "Failed to send reply");
 	return OP_SUCCESS;
 }
 
