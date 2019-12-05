@@ -20,15 +20,28 @@
 #ifndef __EVENT_HANDLER_H__
 #define __EVENT_HANDLER_H__
 
+#include <stdint.h>
 namespace ipc {
 
 typedef unsigned int event_condition;
 
 class event_handler {
 public:
+	event_handler()
+		: m_event_id(0)
+	{
+	}
+
 	virtual ~event_handler() {}
 
 	virtual bool handle(int fd, event_condition condition) = 0;
+	void set_event_id(int64_t event_id)
+	{
+		m_event_id = 0;
+	}
+
+protected:
+	int64_t m_event_id;
 };
 
 }

@@ -22,6 +22,7 @@
 
 #include <unistd.h>
 #include <atomic>
+#include <vector>
 
 #include "socket.h"
 #include "message.h"
@@ -55,7 +56,8 @@ public:
 	bool get_option(int type, int &value) const;
 	bool set_option(int type, int value);
 
-	int  get_fd(void) const;
+	int get_fd(void) const;
+	void remove_pending_event_id(uint64_t id);
 
 private:
 	int m_fd;
@@ -63,6 +65,7 @@ private:
 	socket *m_socket;
 	channel_handler *m_handler;
 	event_loop *m_loop;
+	std::vector<uint64_t> m_pending_event_id;
 
 	std::atomic<bool> m_connected;
 };

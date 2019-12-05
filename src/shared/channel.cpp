@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <memory>
+#include <algorithm>
 
 #include "sensor_log.h"
 #include "channel_event_handler.h"
@@ -40,14 +41,23 @@ public:
 
 	bool handle(int fd, event_condition condition)
 	{
-		if (!m_ch || !m_ch->is_connected())
+		if (!m_ch) {
 			return false;
+		}
 
-		if (condition & (EVENT_IN | EVENT_HUP))
-			return false;
+		m_ch->remove_pending_event_id(m_event_id);
 
-		if (!m_ch->send_sync(*m_msg))
+		if (!m_ch->is_connected()) {
 			return false;
+		}
+
+		if (condition & (EVENT_IN | EVENT_HUP)) {
+			return false;
+		}
+
+		if (!m_ch->send_sync(*m_msg)) {
+			return false;
+		}
 
 		return false;
 	}
@@ -66,16 +76,24 @@ public:
 
 	bool handle(int fd, event_condition condition)
 	{
+		if (!m_ch) {
+			return false;
+		}
+
+		m_ch->remove_pending_event_id(m_event_id);
+
+		if (!m_ch->is_connected()) {
+			return false;
+		}
+
+		if (condition & (EVENT_OUT | EVENT_HUP)) {
+			return false;
+		}
+
 		message msg;
-
-		if (!m_ch || !m_ch->is_connected())
+		if (!m_ch->read_sync(msg, false)) {
 			return false;
-
-		if (condition & (EVENT_OUT | EVENT_HUP))
-			return false;
-
-		if (!m_ch->read_sync(msg, false))
-			return false;
+		}
 
 		return false;
 	}
@@ -155,6 +173,10 @@ void channel::disconnect(void)
 	}
 
 	if (m_loop) {
+		for(auto id : m_pending_event_id) {
+			_D("Remove pending event id[%llu]", id);
+			m_loop->remove_event(id, true);
+		}
 		_D("Remove event[%llu]", m_event_id);
 		m_loop->remove_event(m_event_id, true);
 		m_loop = NULL;
@@ -189,12 +211,14 @@ bool channel::send(std::shared_ptr<message> msg)
 	send_event_handler *handler = new(std::nothrow) send_event_handler(this, msg);
 	retvm_if(!handler, false, "Failed to allocate memory");
 
-	if (m_loop->add_event(m_socket->get_fd(), (EVENT_OUT | EVENT_HUP | EVENT_NVAL) , handler) == 0) {
+	uint64_t event_id = m_loop->add_event(m_socket->get_fd(), (EVENT_OUT | EVENT_HUP | EVENT_NVAL), handler);
+	if (event_id == 0) {
 		_D("Failed to add send event handler");
 		delete handler;
 		return false;
 	}
 
+	m_pending_event_id.push_back(event_id);
 	return true;
 }
 
@@ -227,12 +251,14 @@ bool channel::read(void)
 	read_event_handler *handler = new(std::nothrow) read_event_handler(this);
 	retvm_if(!handler, false, "Failed to allocate memory");
 
-	if (m_loop->add_event(m_socket->get_fd(), (EVENT_IN | EVENT_HUP | EVENT_NVAL), handler) == 0) {
+	uint64_t event_id = m_loop->add_event(m_socket->get_fd(), (EVENT_IN | EVENT_HUP | EVENT_NVAL), handler);
+	if (event_id == 0) {
 		_D("Failed to add read event handler");
 		delete handler;
 		return false;
 	}
 
+	m_pending_event_id.push_back(event_id);
 	return true;
 }
 
@@ -318,4 +344,12 @@ bool channel::get_option(int type, int &value) const
 int channel::get_fd(void) const
 {
 	return m_fd;
+}
+
+void channel::remove_pending_event_id(uint64_t id)
+{
+	auto it = std::find(m_pending_event_id.begin(), m_pending_event_id.end(), id);
+	if (it != m_pending_event_id.end()) {
+		m_pending_event_id.erase(it);
+	}
 }

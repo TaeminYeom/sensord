@@ -129,10 +129,14 @@ uint64_t event_loop::add_event(const int fd, const event_condition cond, event_h
 	}
 
 	uint64_t id = m_sequence++;
+	if (m_sequence == 0) {
+		m_sequence = 1;
+	}
 
 	handler_info *info = new(std::nothrow) handler_info(id, fd, ch, src, handler, this);
 	retvm_if(!info, BAD_HANDLE, "Failed to allocate memory");
 
+	handler->set_event_id(id);
 	g_source_set_callback(src, (GSourceFunc) g_io_handler, info, NULL);
 	g_source_attach(src, g_main_loop_get_context(m_mainloop));
 
