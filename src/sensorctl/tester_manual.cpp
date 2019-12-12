@@ -122,12 +122,12 @@ static void test_cb(sensor_t sensor, unsigned int event_type, sensor_data_t *dat
 	_N("\n");
 }
 
-static void test_events_cb(sensor_t sensor, unsigned int event_type, sensor_data_t* datas[], int events_count, void *user_data)
+static void test_events_cb(sensor_t sensor, unsigned int event_type, sensor_data_t datas[], int events_count, void *user_data)
 {
 	for (int i = 0 ; i < events_count; i++) {
-		_N("%llu ", datas[i]->timestamp);
-		for (int j = 0; j < datas[i]->value_count; j++)
-			_N(" %10f", datas[i]->values[j]);
+		_N("%llu ", datas[i].timestamp);
+		for (int j = 0; j < datas[i].value_count; j++)
+			_N(" %10f", datas[i].values[j]);
 		_N("\n");
 	}
 }

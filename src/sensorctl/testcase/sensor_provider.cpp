@@ -44,12 +44,12 @@ static void event_cb(sensor_t sensor, unsigned int event_type, sensor_data_t *da
 	_I("[%llu] %f %f %f\n", data->timestamp, data->values[0], data->values[1], data->values[2]);
 }
 
-static void events_cb(sensor_t sensor, unsigned int event_type, sensor_data_t* datas[], int events_count, void *user_data)
+static void events_cb(sensor_t sensor, unsigned int event_type, sensor_data_t datas[], int events_count, void *user_data)
 {
 	for (int i = 0 ; i < events_count; i++) {
-		_I("[%llu]", datas[i]->timestamp);
-		for (int j = 0; j < datas[i]->value_count; j++)
-			_I(" %f", datas[i]->values[j]);
+		_I("[%llu]", datas[i].timestamp);
+		for (int j = 0; j < datas[i].value_count; j++)
+			_I(" %f", datas[i].values[j]);
 		_I("\n");
 	}
 }

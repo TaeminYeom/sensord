@@ -38,7 +38,7 @@ extern "C"
 #endif
 
 typedef void (*sensor_cb_t)(sensor_t sensor, unsigned int event_type, sensor_data_t *data, void *user_data);
-typedef void (*sensor_events_cb_t)(sensor_t sensor, unsigned int event_type, sensor_data_t* events[], int events_count, void *user_data);
+typedef void (*sensor_events_cb_t)(sensor_t sensor, unsigned int event_type, sensor_data_t events[], int events_count, void *user_data);
 typedef void (*sensorhub_cb_t)(sensor_t sensor, unsigned int event_type, sensorhub_data_t *data, void *user_data);
 typedef void (*sensor_accuracy_changed_cb_t) (sensor_t sensor, unsigned long long timestamp, int accuracy, void *user_data);
 typedef void (*sensor_attribute_int_changed_cb_t)(sensor_t sensor, int attribute, int value, void *user_data);

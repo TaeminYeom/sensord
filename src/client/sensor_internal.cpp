@@ -69,12 +69,7 @@ static gboolean sensor_events_callback_dispatcher(gpointer data)
 	if (info->cb && info->sensor && listeners.find(info->listener_id) != listeners.end()) {
 		size_t element_size =  sizeof(sensor_data_t);
 		size_t count = info->data_size / element_size;
-		sensor_data_t *events[count];
-		char* p = (char*)info->data;
-		for (size_t i = 0 ; i < count; ++i) {
-			events[i] = (sensor_data_t *)(p + i * element_size);
-		}
-		((sensor_events_cb_t)info->cb)(info->sensor, event_type, events, count, info->user_data);
+		((sensor_events_cb_t)info->cb)(info->sensor, event_type, (sensor_data_t*)info->data, count, info->user_data);
 	}
 
 	delete [] info->data;
