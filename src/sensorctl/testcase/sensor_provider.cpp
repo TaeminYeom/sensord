@@ -516,3 +516,47 @@ TESTCASE(skip_sensor_provider, mysensor_get_data_list)
 
 	return true;
 }
+
+TESTCASE(skip_sensor_provider, mysensor_get_data)
+{
+	int err;
+	bool ret;
+	int handle;
+	sensor_t sensor;
+	sensor_type_t type;
+
+	called = false;
+
+	err = sensord_get_default_sensor_by_uri(MYSENSOR_BATCH_URI, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+
+	sensord_get_type(sensor, &type);
+	ASSERT_EQ(err, 0);
+
+	ret = sensord_start(handle, 0);
+	ASSERT_TRUE(ret);
+
+	sensor_data_t data ;
+	unsigned int data_id = type << SENSOR_SHIFT_TYPE | 0x1;
+
+	ret = sensord_get_data(handle, data_id, &data);
+	ASSERT_TRUE(ret);
+
+	_I("[%llu]", data.timestamp);
+	for (int j = 0; j < data.value_count; j++)
+		_I(" %f", data.values[j]);
+	_I("\n");
+
+	ret = sensord_stop(handle);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_unregister_events(handle, 1);
+	ASSERT_TRUE(ret);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}

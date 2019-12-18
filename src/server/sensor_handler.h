@@ -72,8 +72,7 @@ protected:
 private:
 	std::list<sensor_observer *> m_observers;
 
-	sensor_data_t *m_last_data;
-	int m_last_data_size;
+	std::vector<char> m_sensor_data_cache;
 };
 
 }

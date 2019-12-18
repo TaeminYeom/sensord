@@ -30,8 +30,6 @@ using namespace sensor;
 
 sensor_handler::sensor_handler(const sensor_info &info)
 : m_info(info)
-, m_last_data(NULL)
-, m_last_data_size(0)
 {
 	const char *priv = sensor::utils::get_privilege(m_info.get_uri());
 	m_info.set_privilege(priv);
@@ -100,28 +98,29 @@ uint32_t sensor_handler::observer_count(void)
 
 void sensor_handler::set_cache(sensor_data_t *data, int size)
 {
-	if (m_last_data_size != size) {
-		m_last_data_size = size;
-		if (m_last_data) {
-			free(m_last_data);
-		}
-		m_last_data = (sensor_data_t*)malloc(m_last_data_size);
-		retm_if(m_last_data == NULL, "Memory allocation failed");
-	}
+	char* p = (char*) data;
 
-	m_last_data_size = size;
-	memcpy(m_last_data, data, size);
+	try {
+		m_sensor_data_cache.reserve(size);
+	} catch (...) {
+		_E("Memory allocation failed");
+		return;
+	}
+	m_sensor_data_cache.clear();
+	m_sensor_data_cache.insert(m_sensor_data_cache.begin(), p, p + size);
 }
 
 int sensor_handler::get_cache(sensor_data_t **data, int *len)
 {
-	retv_if(m_last_data == NULL, -ENODATA);
+	auto size = m_sensor_data_cache.size();
+	retv_if(size == 0, -ENODATA);
 
-	*data = (sensor_data_t *)malloc(m_last_data_size);
-	retvm_if(*data == NULL, -ENOMEM, "Memory allocation failed");
+	char* temp = (char *)malloc(size);
+	retvm_if(temp == NULL, -ENOMEM, "Memory allocation failed");
+	std::copy(m_sensor_data_cache.begin(), m_sensor_data_cache.end(), temp);
 
-	memcpy(*data, m_last_data, m_last_data_size);
-	*len = m_last_data_size;
+	*len = size;
+	*data = (sensor_data_t *)temp;
 
 	return 0;
 }
