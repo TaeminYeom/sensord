@@ -48,7 +48,11 @@ public:
 	virtual int stop(sensor_observer *ob) = 0;
 
 	virtual int set_interval(sensor_observer *ob, int32_t interval) = 0;
+	virtual int get_interval(sensor_observer *ob, int32_t &interval) = 0;
+
 	virtual int set_batch_latency(sensor_observer *ob, int32_t latency) = 0;
+	virtual int get_batch_latency(sensor_observer *ob, int32_t &latency) = 0;
+
 	virtual int delete_batch_latency(sensor_observer *ob);
 	virtual int set_attribute(sensor_observer *ob, int32_t attr, int32_t value) = 0;
 	virtual int get_attribute(int32_t attr, int32_t* value);
@@ -61,14 +65,22 @@ public:
 
 	void set_cache(sensor_data_t *data, int size);
 	int get_cache(sensor_data_t **data, int *len);
-	bool notify_attribute_changed(uint32_t id, int attribute, int value);
-	bool notify_attribute_changed(uint32_t id, int attribute, const char *value, int len);
-
+	bool notify_attribute_changed(uint32_t id, int32_t attribute, int32_t value);
+	bool notify_attribute_changed(uint32_t id, int32_t attribute, const char *value, int len);
+	bool need_to_notify_attribute_changed();
+	void set_need_to_notify_attribute_changed(bool value);
 protected:
+	void update_prev_interval(int32_t interval);
+	void update_prev_latency(int32_t latency);
+
 	sensor_info m_info;
+	int32_t m_prev_interval;
+	int32_t m_prev_latency;
+
 	std::map<int32_t, int32_t> m_attributes_int;
 	std::map<int32_t, std::vector<char>> m_attributes_str;
 
+	bool m_need_to_notify_attribute_changed;
 private:
 	std::list<sensor_observer *> m_observers;
 

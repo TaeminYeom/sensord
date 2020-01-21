@@ -30,7 +30,6 @@ application_sensor_handler::application_sensor_handler(const sensor_info &info, 
 : sensor_handler(info)
 , m_ch(ch)
 , m_started(false)
-, m_prev_interval(0)
 {
 }
 
@@ -121,15 +120,25 @@ int application_sensor_handler::set_interval(sensor_observer *ob, int32_t interv
 	msg.enclose((const char *)&buf, sizeof(cmd_provider_attr_int_t));
 	m_ch->send_sync(msg);
 
-	m_prev_interval = cur_interval;
+	update_prev_interval(cur_interval);
+	return OP_SUCCESS;
+}
 
-	_I("Set interval[%d] to sensor[%s]", cur_interval, m_info.get_uri().c_str());
-
+int application_sensor_handler::get_interval(sensor_observer *ob, int32_t& interval)
+{
+	interval = m_prev_interval;
 	return OP_SUCCESS;
 }
 
 int application_sensor_handler::set_batch_latency(sensor_observer *ob, int32_t latency)
 {
+	update_prev_latency(latency);
+	return OP_SUCCESS;
+}
+
+int application_sensor_handler::get_batch_latency(sensor_observer *ob, int32_t &latency)
+{
+	latency = m_prev_latency;
 	return OP_SUCCESS;
 }
 

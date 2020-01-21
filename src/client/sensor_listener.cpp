@@ -62,17 +62,11 @@ public:
 			if (m_listener->get_attribute_int_changed_handler()) {
 				m_listener->get_attribute_int_changed_handler()->read(ch, msg);
 			}
-
-			cmd_listener_attr_int_t* buf = (cmd_listener_attr_int_t*) msg.body();
-			m_listener->update_attribute(buf->attribute, buf->value);
 		} break;
 		case CMD_LISTENER_SET_ATTR_STR: {
 			if (m_listener->get_attribute_str_changed_handler()) {
 				m_listener->get_attribute_str_changed_handler()->read(ch, msg);
 			}
-
-			cmd_listener_attr_str_t* buf = (cmd_listener_attr_str_t*) msg.body();
-			m_listener->update_attribute(buf->attribute, buf->value, buf->len);
 		} break;
 		default:
 			_W("Invalid command message");
@@ -200,11 +194,11 @@ void sensor_listener::restore(void)
 
 	auto interval = m_attributes_int.find(SENSORD_ATTRIBUTE_INTERVAL);
 	if (interval != m_attributes_int.end())
-		set_interval( m_attributes_int[SENSORD_ATTRIBUTE_INTERVAL]);
+		set_interval(m_attributes_int[SENSORD_ATTRIBUTE_INTERVAL]);
 
 	auto latency = m_attributes_int.find(SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY);
 	if (latency != m_attributes_int.end())
-		set_max_batch_latency( m_attributes_int[SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY]);
+		set_max_batch_latency(m_attributes_int[SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY]);
 
 	_D("Restored listener[%d]", get_id());
 }
@@ -412,7 +406,7 @@ int sensor_listener::get_interval(void)
 	auto it = m_attributes_int.find(SENSORD_ATTRIBUTE_INTERVAL);
 	retv_if(it == m_attributes_int.end(), -1);
 
-	return  m_attributes_int[SENSORD_ATTRIBUTE_INTERVAL];
+	return m_attributes_int[SENSORD_ATTRIBUTE_INTERVAL];
 }
 
 int sensor_listener::get_max_batch_latency(void)
@@ -420,7 +414,7 @@ int sensor_listener::get_max_batch_latency(void)
 	auto it = m_attributes_int.find(SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY);
 	retv_if(it == m_attributes_int.end(), -1);
 
-	return  m_attributes_int[SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY];
+	return m_attributes_int[SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY];
 }
 
 int sensor_listener::get_pause_policy(void)
@@ -428,7 +422,7 @@ int sensor_listener::get_pause_policy(void)
 	auto it = m_attributes_int.find(SENSORD_ATTRIBUTE_PAUSE_POLICY);
 	retv_if(it == m_attributes_int.end(), -1);
 
-	return  m_attributes_int[SENSORD_ATTRIBUTE_PAUSE_POLICY];
+	return m_attributes_int[SENSORD_ATTRIBUTE_PAUSE_POLICY];
 }
 
 int sensor_listener::get_passive_mode(void)
@@ -436,7 +430,7 @@ int sensor_listener::get_passive_mode(void)
 	auto it = m_attributes_int.find(SENSORD_ATTRIBUTE_PASSIVE_MODE);
 	retv_if(it == m_attributes_int.end(), -1);
 
-	return  m_attributes_int[SENSORD_ATTRIBUTE_PASSIVE_MODE];
+	return m_attributes_int[SENSORD_ATTRIBUTE_PASSIVE_MODE];
 }
 
 int sensor_listener::set_interval(unsigned int interval)
@@ -455,7 +449,7 @@ int sensor_listener::set_interval(unsigned int interval)
 
 	/* If it is not started, store the value only */
 	if (!m_started.load()) {
-		 m_attributes_int[SENSORD_ATTRIBUTE_INTERVAL] = _interval;
+		m_attributes_int[SENSORD_ATTRIBUTE_INTERVAL] = _interval;
 		return OP_SUCCESS;
 	}
 
@@ -468,7 +462,7 @@ int sensor_listener::set_max_batch_latency(unsigned int max_batch_latency)
 
 	/* If it is not started, store the value only */
 	if (!m_started.load()) {
-		 m_attributes_int[SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY] = max_batch_latency;
+		m_attributes_int[SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY] = max_batch_latency;
 		return OP_SUCCESS;
 	}
 
@@ -516,37 +510,37 @@ int sensor_listener::set_attribute(int attribute, int value)
 
 int sensor_listener::get_attribute(int attribute, int* value)
 {
-	auto it = m_attributes_int.find(attribute);
-	if (it == m_attributes_int.end()) {
-		ipc::message msg;
-		ipc::message reply;
-		cmd_listener_attr_int_t buf;
+	ipc::message msg;
+	ipc::message reply;
+	cmd_listener_attr_int_t buf;
 
-		buf.listener_id = m_id;
-		buf.attribute = attribute;
+	retvm_if(!m_cmd_channel, -EIO, "Failed to connect to server");
 
-		msg.set_type(CMD_LISTENER_GET_ATTR_INT);
-		msg.enclose((char *)&buf, sizeof(buf));
-		m_cmd_channel->send_sync(msg);
+	buf.listener_id = m_id;
+	buf.attribute = attribute;
+	msg.set_type(CMD_LISTENER_GET_ATTR_INT);
+	msg.enclose((char *)&buf, sizeof(buf));
 
-		m_cmd_channel->read_sync(reply);
+	m_cmd_channel->send_sync(msg);
+	m_cmd_channel->read_sync(reply);
 
-		if (reply.header()->err < 0) {
-			return reply.header()->err;
-		}
-		if (reply.header()->length && reply.body()) {
-			update_attribute(attribute, ((cmd_listener_attr_int_t *)reply.body())->value);
-		}
+	if (reply.header()->err < 0) {
+		return reply.header()->err;
 	}
 
-	*value = m_attributes_int[attribute];
-	return OP_SUCCESS;
+	if (reply.header()->length && reply.body()) {
+		*value = ((cmd_listener_attr_int_t *)reply.body())->value;
+		return OP_SUCCESS;
+	}
+
+	return OP_ERROR;
 }
 
 void sensor_listener::update_attribute(int attribute, int value)
 {
+	AUTOLOCK(lock);
 	m_attributes_int[attribute] = value;
-	_I("listener[%d]'s attribues(int) size : %d", get_id(), m_attributes_int.size());
+	_I("Update_attribute(int) listener[%d] attribute[%d] value[%d] attributes size[%d]", get_id(), attribute, value, m_attributes_int.size());
 }
 
 int sensor_listener::set_attribute(int attribute, const char *value, int len)
@@ -590,42 +584,40 @@ int sensor_listener::set_attribute(int attribute, const char *value, int len)
 
 int sensor_listener::get_attribute(int attribute, char **value, int* len)
 {
-	auto it = m_attributes_str.find(attribute);
-	if (it == m_attributes_str.end()) {
-		ipc::message msg;
-		ipc::message reply;
-		cmd_listener_attr_str_t buf;
+	ipc::message msg;
+	ipc::message reply;
+	cmd_listener_attr_str_t buf;
 
-		buf.listener_id = m_id;
-		buf.attribute = attribute;
+	buf.listener_id = m_id;
+	buf.attribute = attribute;
 
-		msg.set_type(CMD_LISTENER_GET_ATTR_STR);
-		msg.enclose((char *)&buf, sizeof(buf));
-		m_cmd_channel->send_sync(msg);
+	msg.set_type(CMD_LISTENER_GET_ATTR_STR);
+	msg.enclose((char *)&buf, sizeof(buf));
+	m_cmd_channel->send_sync(msg);
 
-		m_cmd_channel->read_sync(reply);
-		if (reply.header()->err < 0) {
-			return reply.header()->err;
-		}
-
-		if (reply.header()->length && reply.body()) {
-			cmd_listener_attr_str_t * recv_buf = (cmd_listener_attr_str_t *)reply.body();
-			update_attribute(attribute, (char *)recv_buf->value, recv_buf->len);
-		}
+	m_cmd_channel->read_sync(reply);
+	if (reply.header()->err < 0) {
+		return reply.header()->err;
 	}
 
-	*len = m_attributes_str[attribute].size();
-	*value = (char *) malloc(*len);
-	std::copy(m_attributes_str[attribute].begin(), m_attributes_str[attribute].end(), *value);
+	if (reply.header()->length && reply.body()) {
+		cmd_listener_attr_str_t * recv_buf = (cmd_listener_attr_str_t *)reply.body();
+		char* p = (char *)recv_buf->value;
+		*len = recv_buf->len;
+		*value = (char *) malloc(*len);
+		std::copy(p, p + recv_buf->len, *value);
+		return OP_SUCCESS;
+	}
 
-	return OP_SUCCESS;
+	return OP_ERROR;
 }
 
 void sensor_listener::update_attribute(int attribute, const char *value, int len)
 {
+	AUTOLOCK(lock);
 	m_attributes_str[attribute].clear();
 	m_attributes_str[attribute].insert(m_attributes_str[attribute].begin(), value, value + len);
-	_I("listener[%d]'s attribues(str) size : %d", get_id(), m_attributes_str.size());
+	_I("Update_attribute(str) listener[%d] attribute[%d] value[%s] attributes size[%zu]", get_id(), attribute, value, m_attributes_int.size());
 }
 
 int sensor_listener::get_sensor_data(sensor_data_t *data)

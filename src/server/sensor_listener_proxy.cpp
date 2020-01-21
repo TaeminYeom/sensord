@@ -41,6 +41,7 @@ sensor_listener_proxy::sensor_listener_proxy(uint32_t id,
 , m_pause_policy(SENSORD_PAUSE_ALL)
 , m_axis_orientation(SENSORD_AXIS_DISPLAY_ORIENTED)
 , m_last_accuracy(SENSOR_ACCURACY_UNDEFINED)
+, m_need_to_notify_attribute_changed(false)
 {
 	sensor_policy_monitor::get_instance().add_listener(this);
 }
@@ -151,24 +152,49 @@ int sensor_listener_proxy::stop(bool policy)
 	return OP_SUCCESS;
 }
 
-int sensor_listener_proxy::set_interval(unsigned int interval)
+int sensor_listener_proxy::set_interval(int32_t interval)
 {
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
 	_D("Listener[%d] try to set interval[%d]", get_id(), interval);
 
-	return sensor->set_interval(this, interval);
+	int ret = sensor->set_interval(this, interval);
+	apply_sensor_handler_need_to_notify_attribute_changed(sensor);
+
+	return ret;
 }
 
-int sensor_listener_proxy::set_max_batch_latency(unsigned int max_batch_latency)
+int sensor_listener_proxy::get_interval(int32_t& interval)
+{
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
+	_D("Listener[%d] try to get interval[%d]", get_id());
+
+	return sensor->get_interval(this, interval);
+}
+
+int sensor_listener_proxy::set_max_batch_latency(int32_t max_batch_latency)
 {
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
 	_D("Listener[%d] try to set max batch latency[%d]", get_id(), max_batch_latency);
+	int ret = sensor->set_batch_latency(this, max_batch_latency);
+	apply_sensor_handler_need_to_notify_attribute_changed(sensor);
 
-	return sensor->set_batch_latency(this, max_batch_latency);
+	return ret;
+}
+
+int sensor_listener_proxy::get_max_batch_latency(int32_t& max_batch_latency)
+{
+	sensor_handler *sensor = m_manager->get_sensor(m_uri);
+	retv_if(!sensor, -EINVAL);
+
+	_D("Listener[%d] try to get max batch latency[%d]", get_id());
+
+	return sensor->get_batch_latency(this, max_batch_latency);
 }
 
 int sensor_listener_proxy::delete_batch_latency(void)
@@ -188,7 +214,7 @@ int sensor_listener_proxy::set_passive_mode(bool passive)
 	return OP_SUCCESS;
 }
 
-int sensor_listener_proxy::set_attribute(int attribute, int value)
+int sensor_listener_proxy::set_attribute(int32_t attribute, int32_t value)
 {
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
@@ -196,19 +222,28 @@ int sensor_listener_proxy::set_attribute(int attribute, int value)
 	_D("Listener[%d] try to set attribute[%d, %d]", get_id(), attribute, value);
 
 	if (attribute == SENSORD_ATTRIBUTE_PAUSE_POLICY) {
-		m_pause_policy = value;
+		if (m_pause_policy != value) {
+			m_pause_policy = value;
+			set_need_to_notify_attribute_changed(true);
+		}
 		return OP_SUCCESS;
 	} else if (attribute == SENSORD_ATTRIBUTE_AXIS_ORIENTATION) {
-		m_axis_orientation = value;
+		if (m_axis_orientation != value) {
+			m_axis_orientation = value;
+			set_need_to_notify_attribute_changed(true);
+		}
 		return OP_SUCCESS;
 	} else if (attribute == SENSORD_ATTRIBUTE_FLUSH) {
 		return flush();
 	}
 
-	return sensor->set_attribute(this, attribute, value);
+	int ret = sensor->set_attribute(this, attribute, value);
+	apply_sensor_handler_need_to_notify_attribute_changed(sensor);
+
+	return ret;
 }
 
-int sensor_listener_proxy::get_attribute(int attribute, int *value)
+int sensor_listener_proxy::get_attribute(int32_t attribute, int32_t *value)
 {
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
@@ -228,17 +263,20 @@ int sensor_listener_proxy::get_attribute(int attribute, int *value)
 	return sensor->get_attribute(attribute, value);
 }
 
-int sensor_listener_proxy::set_attribute(int attribute, const char *value, int len)
+int sensor_listener_proxy::set_attribute(int32_t attribute, const char *value, int len)
 {
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
 	_D("Listener[%d] try to set string attribute[%d], len[%d]", get_id(), attribute, len);
 
-	return sensor->set_attribute(this, attribute, value, len);
+	int ret = sensor->set_attribute(this, attribute, value, len);
+	apply_sensor_handler_need_to_notify_attribute_changed(sensor);
+
+	return ret;
 }
 
-int sensor_listener_proxy::get_attribute(int attribute, char **value, int *len)
+int sensor_listener_proxy::get_attribute(int32_t attribute, char **value, int *len)
 {
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
@@ -288,7 +326,7 @@ void sensor_listener_proxy::on_policy_changed(int policy, int value)
 		start(true);
 }
 
-bool sensor_listener_proxy::notify_attribute_changed(int attribute, int value)
+bool sensor_listener_proxy::notify_attribute_changed(int32_t attribute, int32_t value)
 {
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
@@ -302,4 +340,20 @@ bool sensor_listener_proxy::notify_attribute_changed(int attribute, const char *
 	retv_if(!sensor, -EINVAL);
 
 	return sensor->notify_attribute_changed(m_id, attribute, value, len);
+}
+
+bool sensor_listener_proxy::need_to_notify_attribute_changed()
+{
+	return m_need_to_notify_attribute_changed;
+}
+
+void sensor_listener_proxy::set_need_to_notify_attribute_changed(bool value)
+{
+	m_need_to_notify_attribute_changed = value;
+}
+
+void sensor_listener_proxy::apply_sensor_handler_need_to_notify_attribute_changed(sensor_handler *handler)
+{
+	set_need_to_notify_attribute_changed(handler->need_to_notify_attribute_changed());
+	handler->set_need_to_notify_attribute_changed(false);
 }

@@ -33,8 +33,6 @@ physical_sensor_handler::physical_sensor_handler(const sensor_info &info,
 , m_device(device)
 , m_sensor(sensor)
 , m_hal_id(hal_id)
-, m_prev_interval(0)
-, m_prev_latency(0)
 {
 }
 
@@ -179,11 +177,16 @@ int physical_sensor_handler::set_interval(sensor_observer *ob, int32_t interval)
 
 	ret = m_device->set_interval(m_hal_id, cur_interval);
 
-	m_prev_interval = cur_interval;
-
-	_I("Set interval[%d] to sensor[%s]", cur_interval, m_info.get_uri().c_str());
+	update_prev_interval(cur_interval);
 
 	return (ret ? OP_SUCCESS : OP_ERROR);
+}
+
+int physical_sensor_handler::get_interval(sensor_observer *ob, int32_t& interval)
+{
+	retv_if(!m_device, -EINVAL);
+	interval = m_prev_interval;
+	return OP_SUCCESS;
 }
 
 int physical_sensor_handler::get_min_batch_latency(void)
@@ -224,11 +227,16 @@ int physical_sensor_handler::set_batch_latency(sensor_observer *ob, int32_t late
 
 	ret = m_device->set_batch_latency(m_hal_id, cur_latency);
 
-	m_prev_latency = cur_latency;
-
-	_I("Set batch latency[%d] to sensor[%s]", cur_latency, m_info.get_uri().c_str());
+	update_prev_latency(cur_latency);
 
 	return (ret ? OP_SUCCESS : OP_ERROR);
+}
+
+int physical_sensor_handler::get_batch_latency(sensor_observer *ob, int32_t &latency)
+{
+	retv_if(!m_device, -EINVAL);
+	latency = m_prev_latency;
+	return OP_SUCCESS;
 }
 
 int physical_sensor_handler::delete_batch_latency(sensor_observer *ob)

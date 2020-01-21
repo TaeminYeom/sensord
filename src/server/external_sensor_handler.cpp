@@ -150,15 +150,22 @@ int external_sensor_handler::set_interval(sensor_observer *ob, int32_t interval)
 		retv_if(m_policy <= OP_ERROR, m_policy);
 	}
 
-	m_interval_map[ob] = interval;
+	m_interval_map[ob] = _interval;
 
+	int ret = OP_SUCCESS;
 	if (m_policy == OP_DEFAULT && observer_count() > 0) {
 		_interval = get_min_interval();
-		return m_sensor->set_interval(ob, _interval);
+		ret = m_sensor->set_interval(ob, _interval);
 	}
 
-	_I("Set interval[%d] to sensor[%s]", _interval, m_info.get_uri().c_str());
+	update_prev_interval(_interval);
+	return ret;
+}
 
+int external_sensor_handler::get_interval(sensor_observer *ob, int32_t& interval)
+{
+	retv_if(!m_sensor, -EINVAL);
+	interval = m_prev_interval;
 	return OP_SUCCESS;
 }
 
@@ -192,10 +199,20 @@ int external_sensor_handler::set_batch_latency(sensor_observer *ob, int32_t late
 
 	m_batch_latency_map[ob] = _latency;
 
+	int ret = OP_SUCCESS;
 	if (m_policy == OP_DEFAULT && observer_count() > 0) {
 		_latency = get_min_batch_latency();
-		return m_sensor->set_batch_latency(ob, latency);
+		ret = m_sensor->set_batch_latency(ob, latency);
 	}
+
+	update_prev_latency(_latency);
+	return ret;
+}
+
+int external_sensor_handler::get_batch_latency(sensor_observer *ob, int32_t &latency)
+{
+	retv_if(!m_sensor, -EINVAL);
+	latency = m_prev_latency;
 	return OP_SUCCESS;
 }
 

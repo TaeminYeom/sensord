@@ -36,7 +36,7 @@
 
 #include "sensor_reader.h"
 
-#define CONVERT_OPTION_PAUSE_POLICY(option) ((option) ^ 0b11)
+#define CONVERT_OPTION_TO_PAUSE_POLICY(option) ((option) ^ 0b11)
 #define MAX_LISTENER 100
 
 using namespace sensor;
@@ -575,7 +575,7 @@ API bool sensord_start(int handle, int option)
 
 	listener = it->second;
 
-	pause = CONVERT_OPTION_PAUSE_POLICY(option);
+	pause = CONVERT_OPTION_TO_PAUSE_POLICY(option);
 	prev_pause = listener->get_pause_policy();
 
 	if (listener->set_attribute(SENSORD_ATTRIBUTE_PAUSE_POLICY, pause) < 0) {
@@ -678,7 +678,7 @@ API bool sensord_set_option(int handle, int option)
 
 	listener = it->second;
 
-	pause = CONVERT_OPTION_PAUSE_POLICY(option);
+	pause = CONVERT_OPTION_TO_PAUSE_POLICY(option);
 
 	if (listener->set_attribute(SENSORD_ATTRIBUTE_PAUSE_POLICY, pause) < 0) {
 		_E("Failed to set option[%d(%d)] to listener", option, pause);

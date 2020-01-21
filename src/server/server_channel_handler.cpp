@@ -235,9 +235,6 @@ int server_channel_handler::listener_set_attr_int(channel *ch, message &msg)
 	case SENSORD_ATTRIBUTE_AXIS_ORIENTATION:
 	default:
 		ret = m_listeners[id]->set_attribute(buf.attribute, buf.value);
-		if (ret == OP_SUCCESS) {
-			need_notify = true;
-		}
 	}
 	/* TODO : check return value */
 	if (ret < 0)
@@ -245,8 +242,9 @@ int server_channel_handler::listener_set_attr_int(channel *ch, message &msg)
 
 	ret = send_reply(ch, OP_SUCCESS);
 
-	if (need_notify) {
+	if (m_listeners[id]->need_to_notify_attribute_changed()) {
 		m_listeners[id]->notify_attribute_changed(buf.attribute, buf.value);
+		m_listeners[id]->set_need_to_notify_attribute_changed(false);
 	}
 
 	return ret;
@@ -282,7 +280,11 @@ int server_channel_handler::listener_set_attr_str(channel *ch, message &msg)
 	}
 
 	ret = send_reply(ch, OP_SUCCESS);
-	m_listeners[id]->notify_attribute_changed(buf->attribute, buf->value, buf->len);
+
+	if (m_listeners[id]->need_to_notify_attribute_changed()) {
+		m_listeners[id]->notify_attribute_changed(buf->attribute, buf->value, buf->len);
+		m_listeners[id]->set_need_to_notify_attribute_changed(false);
+	}
 
 	delete [] buf;
 	return ret;
@@ -293,7 +295,8 @@ int server_channel_handler::listener_get_attr_int(ipc::channel *ch, ipc::message
 	cmd_listener_attr_int_t buf;
 	msg.disclose((char *)&buf);
 	uint32_t id = buf.listener_id;
-
+	int attr = buf.attribute;
+	int value = 0;
 	int ret = OP_SUCCESS;
 
 	auto it = m_listeners.find(id);
@@ -302,9 +305,11 @@ int server_channel_handler::listener_get_attr_int(ipc::channel *ch, ipc::message
 			-EACCES, "Permission denied[%d, %s]",
 			id, m_listeners[id]->get_required_privileges().c_str());
 
-	switch (buf.attribute) {
+	switch (attr) {
 	case SENSORD_ATTRIBUTE_INTERVAL:
+		ret = m_listeners[id]->get_interval(value); break;
 	case SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY:
+		ret = m_listeners[id]->get_max_batch_latency(value); break;
 	case SENSORD_ATTRIBUTE_PASSIVE_MODE:
 		// TODO : Are these features required?
 		ret = OP_ERROR;
@@ -312,19 +317,26 @@ int server_channel_handler::listener_get_attr_int(ipc::channel *ch, ipc::message
 	case SENSORD_ATTRIBUTE_PAUSE_POLICY:
 	case SENSORD_ATTRIBUTE_AXIS_ORIENTATION:
 	default:
-		ret = m_listeners[id]->get_attribute(buf.attribute, &buf.value);
+		ret = m_listeners[id]->get_attribute(attr, &value);
 	}
 
-	if (ret == OP_SUCCESS) {
-		message reply;
-		reply.enclose((char *)&buf, sizeof(buf));
-		reply.set_type(CMD_LISTENER_GET_ATTR_INT);
-		ret = ch->send_sync(reply);
-	} else {
-		ret = send_reply(ch, OP_ERROR);
+	if (ret != OP_SUCCESS) {
+		_E("Failed to listener_get_attr_int");
+		return ret;
 	}
+	message reply;
+	cmd_listener_attr_int_t ret_buf;
 
-	return ret;
+	ret_buf.listener_id = id;
+	ret_buf.attribute = attr;
+	ret_buf.value = value;
+
+	reply.enclose((char *)&ret_buf, sizeof(ret_buf));
+	reply.header()->err = OP_SUCCESS;
+	reply.set_type(CMD_LISTENER_GET_ATTR_INT);
+	ret = ch->send_sync(reply);
+
+	return OP_SUCCESS;
 }
 
 int server_channel_handler::listener_get_attr_str(ipc::channel *ch, ipc::message &msg)
@@ -355,28 +367,29 @@ int server_channel_handler::listener_get_attr_str(ipc::channel *ch, ipc::message
 	int len = 0;
 	int ret = m_listeners[id]->get_attribute(attr, &value, &len);
 
-	if (ret == OP_SUCCESS) {
-		cmd_listener_attr_str_t *reply_buf;
-		size_t size = sizeof(cmd_listener_attr_str_t) + len;
-		reply_buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[size];
-		retvm_if(!reply_buf, -ENOMEM, "Failed to allocate memory");
-
-		reply_buf->attribute = attr;
-		memcpy(reply_buf->value, value, len);
-		reply_buf->len = len;
-		delete [] value;
-
-		ipc::message reply;
-		reply.enclose((char *)reply_buf, size);
-		reply.set_type(CMD_LISTENER_GET_ATTR_STR);
-
-		ret = ch->send_sync(reply);
-		delete [] reply_buf;
-	} else {
-		ret = send_reply(ch, OP_ERROR);
+	if (ret != OP_SUCCESS) {
+		_E("Failed to listener_get_attr_str");
+		return ret;
 	}
 
-	return ret;
+	cmd_listener_attr_str_t *reply_buf;
+	size_t size = sizeof(cmd_listener_attr_str_t) + len;
+	reply_buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[size];
+	retvm_if(!reply_buf, -ENOMEM, "Failed to allocate memory");
+
+	reply_buf->attribute = attr;
+	memcpy(reply_buf->value, value, len);
+	reply_buf->len = len;
+	delete [] value;
+
+	ipc::message reply;
+	reply.enclose((char *)reply_buf, size);
+	reply.set_type(CMD_LISTENER_GET_ATTR_STR);
+
+	ret = ch->send_sync(reply);
+	delete [] reply_buf;
+
+	return OP_SUCCESS;
 }
 
 int server_channel_handler::listener_get_data(channel *ch, message &msg)

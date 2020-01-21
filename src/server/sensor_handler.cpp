@@ -30,6 +30,9 @@ using namespace sensor;
 
 sensor_handler::sensor_handler(const sensor_info &info)
 : m_info(info)
+, m_prev_interval(0)
+, m_prev_latency(0)
+, m_need_to_notify_attribute_changed(false)
 {
 	const char *priv = sensor::utils::get_privilege(m_info.get_uri());
 	m_info.set_privilege(priv);
@@ -125,7 +128,7 @@ int sensor_handler::get_cache(sensor_data_t **data, int *len)
 	return 0;
 }
 
-bool sensor_handler::notify_attribute_changed(uint32_t id, int attribute, int value)
+bool sensor_handler::notify_attribute_changed(uint32_t id, int32_t attribute, int32_t value)
 {
 	if (observer_count() == 0)
 		return OP_ERROR;
@@ -153,7 +156,7 @@ bool sensor_handler::notify_attribute_changed(uint32_t id, int attribute, int va
 	return OP_SUCCESS;
 }
 
-bool sensor_handler::notify_attribute_changed(uint32_t id, int attribute, const char *value, int len)
+bool sensor_handler::notify_attribute_changed(uint32_t id, int32_t attribute, const char *value, int len)
 {
 	if (observer_count() == 0)
 		return OP_ERROR;
@@ -179,7 +182,7 @@ bool sensor_handler::notify_attribute_changed(uint32_t id, int attribute, const 
 	sensor_listener_proxy *proxy = NULL;
 	for (auto it = m_observers.begin(); it != m_observers.end(); ++it) {
 		proxy = dynamic_cast<sensor_listener_proxy *>(*it);
-		if (proxy && proxy->get_id() != id) {
+		if (proxy) {
 			proxy->on_attribute_changed(msg);
 		}
 	}
@@ -205,8 +208,18 @@ int sensor_handler::get_attribute(int32_t attr, int32_t* value)
 
 void sensor_handler::update_attribute(int32_t attr, int32_t value)
 {
-	m_attributes_int[attr] = value;
-	_I("[%s] attributes(int) size : %d", m_info.get_uri().c_str(), m_attributes_int.size());
+	auto it = m_attributes_int.find(attr);
+	if(it != m_attributes_int.end()) {
+		if (it->second != value) {
+			set_need_to_notify_attribute_changed(true);
+		}
+	} else {
+		set_need_to_notify_attribute_changed(true);
+	}
+	if (need_to_notify_attribute_changed()) {
+		m_attributes_int[attr] = value;
+		_I("[%s] attributes(int) attr[%d] value[%d] attributes size[%zu]", m_info.get_uri().c_str(), attr, value, m_attributes_int.size());
+	}
 }
 
 int sensor_handler::get_attribute(int32_t attr, char **value, int *len)
@@ -223,8 +236,52 @@ int sensor_handler::get_attribute(int32_t attr, char **value, int *len)
 
 void sensor_handler::update_attribute(int32_t attr, const char *value, int len)
 {
-	m_attributes_str[attr].clear();
-	m_attributes_str[attr].insert(m_attributes_str[attr].begin(), value, value + len);
-	_I("[%s] attributes(int) size : %d", m_info.get_uri().c_str(), m_attributes_int.size());
+	auto it = m_attributes_str.find(attr);
+	if(it != m_attributes_str.end()) {
+		if (it->second.size() != (size_t)len) {
+			set_need_to_notify_attribute_changed(true);
+		} else {
+			for(int i = 0 ; i < len; i++) {
+				if (value[i] != it->second[i]) {
+					set_need_to_notify_attribute_changed(true);
+					break;
+				}
+			}
+		}
+	} else {
+		set_need_to_notify_attribute_changed(true);
+	}
+	if (need_to_notify_attribute_changed()) {
+		m_attributes_str[attr].clear();
+		m_attributes_str[attr].insert(m_attributes_str[attr].begin(), value, value + len);
+		_I("[%s] attributes(int) attr[%d] value[%s] attributes size[%zu]", m_info.get_uri().c_str(), attr, value, m_attributes_str.size());
+	}
+}
 
+bool sensor_handler::need_to_notify_attribute_changed()
+{
+	return m_need_to_notify_attribute_changed;
+}
+
+void sensor_handler::set_need_to_notify_attribute_changed(bool value)
+{
+	m_need_to_notify_attribute_changed = value;
+}
+
+void sensor_handler::update_prev_interval(int32_t interval)
+{
+	if (m_prev_interval != interval) {
+		m_prev_interval = interval;
+		set_need_to_notify_attribute_changed(true);
+		_I("Set interval[%d] to sensor[%s]", m_prev_interval, m_info.get_uri().c_str());
+	}
+}
+
+void sensor_handler::update_prev_latency(int32_t latency)
+{
+	if (m_prev_latency != latency) {
+		m_prev_latency = latency;
+		set_need_to_notify_attribute_changed(true);
+		_I("Set interval[%d] to sensor[%s]", m_prev_latency, m_info.get_uri().c_str());
+	}
 }

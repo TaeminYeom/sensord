@@ -44,26 +44,31 @@ public:
 	int start(bool policy = false);
 	int stop(bool policy = false);
 
-	int set_interval(unsigned int interval);
-	int set_max_batch_latency(unsigned int max_batch_latency);
+	int set_interval(int32_t interval);
+	int get_interval(int32_t& interval);
+	int set_max_batch_latency(int32_t max_batch_latency);
+	int get_max_batch_latency(int32_t& max_batch_latency);
 	int delete_batch_latency(void);
 	int set_passive_mode(bool passive);
-	int set_attribute(int attribute, int value);
-	int get_attribute(int attribute, int *value);
-	int set_attribute(int attribute, const char *value, int len);
-	int get_attribute(int attribute, char **value, int *len);
+	int set_attribute(int32_t attribute, int32_t value);
+	int get_attribute(int32_t attribute, int32_t *value);
+	int set_attribute(int32_t attribute, const char *value, int len);
+	int get_attribute(int32_t attribute, char **value, int *len);
 	int flush(void);
 	int get_data(sensor_data_t **data, int *len);
 	std::string get_required_privileges(void);
 
 	/* sensor_policy_listener interface */
 	void on_policy_changed(int policy, int value);
-	bool notify_attribute_changed(int attribute, int value);
-	bool notify_attribute_changed(int attribute, const char *value, int len);
+	bool notify_attribute_changed(int32_t attribute, int32_t value);
+	bool notify_attribute_changed(int32_t attribute, const char *value, int len);
+	bool need_to_notify_attribute_changed();
+	void set_need_to_notify_attribute_changed(bool value);
 
 private:
 	void update_event(std::shared_ptr<ipc::message> msg);
 	void update_accuracy(std::shared_ptr<ipc::message> msg);
+	void apply_sensor_handler_need_to_notify_attribute_changed(sensor_handler* handler);
 
 	uint32_t m_id;
 	std::string m_uri;
@@ -73,9 +78,10 @@ private:
 
 	bool m_started;
 	bool m_passive;
-	int m_pause_policy;
-	int m_axis_orientation;
-	int m_last_accuracy;
+	int32_t m_pause_policy;
+	int32_t m_axis_orientation;
+	int32_t m_last_accuracy;
+	bool m_need_to_notify_attribute_changed;
 };
 
 }

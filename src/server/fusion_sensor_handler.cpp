@@ -139,14 +139,22 @@ int fusion_sensor_handler::set_interval(sensor_observer *ob, int32_t interval)
 	policy = m_sensor->set_interval(ob, _interval);
 	retv_if(policy <= OP_ERROR, policy);
 
-	m_interval_map[ob] = interval;
+	m_interval_map[ob] = _interval;
 
 	if (policy == OP_DEFAULT)
 		_interval = get_min_interval();
 
-	_I("Set interval[%d] to sensor[%s]", _interval, m_info.get_uri().c_str());
+	update_prev_interval(_interval);
 
 	return set_interval_internal(_interval);
+}
+
+int fusion_sensor_handler::get_interval(sensor_observer *ob, int32_t& interval)
+{
+	retv_if(!m_sensor, -EINVAL);
+
+	interval = m_prev_interval;
+	return OP_SUCCESS;
 }
 
 int fusion_sensor_handler::get_min_batch_latency(void)
@@ -183,7 +191,17 @@ int fusion_sensor_handler::set_batch_latency(sensor_observer *ob, int32_t latenc
 	if (policy == OP_DEFAULT)
 		_latency = get_min_batch_latency();
 
+	update_prev_latency(_latency);
+
 	return set_batch_latency_internal(_latency);
+}
+
+int fusion_sensor_handler::get_batch_latency(sensor_observer *ob, int32_t &latency)
+{
+	retv_if(!m_sensor, -EINVAL);
+
+	latency = m_prev_latency;
+	return OP_SUCCESS;
 }
 
 int fusion_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, int32_t value)

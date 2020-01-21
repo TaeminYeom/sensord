@@ -278,6 +278,36 @@ TESTCASE(sensor_listener, set_get_attribute_int_2)
 	return true;
 }
 
+TESTCASE(sensor_listener, set_get_attribute_int_3)
+{
+	int err = 0;
+	bool ret = true;
+	int handle = 0;
+	sensor_t sensor = NULL;
+	int attr = 20;
+	int value = -1;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+
+	err = sensord_set_attribute_int(handle, attr, 1);
+	ASSERT_EQ(err, 0);
+
+	for (int i = 0 ; i < 10; i ++) {
+		err = sensord_get_attribute_int(handle, attr, &value);
+		ASSERT_EQ(err, 0);
+	}
+
+	ASSERT_EQ(value, 1);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}
+
 TESTCASE(sensor_listener, get_attribute_int_1)
 {
 	int err = 0;
@@ -378,6 +408,37 @@ TESTCASE(sensor_listener, set_get_attribute_string_2)
 	err = sensord_get_attribute_str(handle, attr, &value, &len);
 	ASSERT_EQ(err, 0);
 	ASSERT_EQ(len, BUF_SIZE);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	free(value);
+	return true;
+}
+
+TESTCASE(sensor_listener, set_get_attribute_string_3)
+{
+	int err = 0;
+	bool ret = true;
+	int handle = 0;
+	char *value = NULL;
+	int len = 0;
+	sensor_t sensor = NULL;
+	int attr = 1;
+
+	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	err = sensord_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
+	ASSERT_EQ(err, 0);
+
+	for (int i = 0; i < 10; i++) {
+		err = sensord_get_attribute_str(handle, attr, &value, &len);
+		ASSERT_EQ(err, 0);
+		ASSERT_EQ(len, TEST_STRING_LEN);
+		ASSERT_EQ(strncmp(value, TEST_STRING, len), 0);
+	}
 
 	ret = sensord_disconnect(handle);
 	ASSERT_TRUE(ret);
@@ -627,7 +688,7 @@ TESTCASE(skip_sensor_listener, register_attribute_str_changed)
 	ret = sensord_stop(handle);
 	ASSERT_TRUE(ret);
 
-	ret = sensord_unregister_attribute_int_changed_cb(handle);
+	ret = sensord_unregister_attribute_str_changed_cb(handle);
 	ASSERT_TRUE(ret);
 
 	ret = sensord_disconnect(handle);
@@ -682,6 +743,55 @@ TESTCASE(skip_sensor_listener, attribute_str_changer)
 
 	ret = sensord_stop(handle);
 	ASSERT_TRUE(ret);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}
+
+TESTCASE(skip_sensor_listener, light_sensor_set_attribute_int_1)
+{
+	int err = 0;
+	bool ret = true;
+	int handle = 0;
+	sensor_t sensor = NULL;
+	int attr = 2;
+	int value = 0;
+
+	err = sensord_get_default_sensor(LIGHT_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	err = sensord_set_attribute_int(handle, attr, 2);
+	ASSERT_EQ(err, 0);
+
+	err = sensord_get_attribute_int(handle, attr, &value);
+	ASSERT_EQ(err, 0);
+	ASSERT_EQ(value, 2);
+
+	ret = sensord_disconnect(handle);
+	ASSERT_TRUE(ret);
+
+	return true;
+}
+
+TESTCASE(skip_sensor_listener, light_sensor_get_attribute_int_1)
+{
+	int err = 0;
+	bool ret = true;
+	int handle = 0;
+	sensor_t sensor = NULL;
+	int attr = 2;
+	int value = 0;
+
+	err = sensord_get_default_sensor(LIGHT_SENSOR, &sensor);
+	ASSERT_EQ(err, 0);
+
+	handle = sensord_connect(sensor);
+	err = sensord_get_attribute_int(handle, attr, &value);
+	ASSERT_EQ(err, 0);
+	ASSERT_EQ(value, 2);
 
 	ret = sensord_disconnect(handle);
 	ASSERT_TRUE(ret);
