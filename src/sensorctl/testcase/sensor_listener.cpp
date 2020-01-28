@@ -59,6 +59,7 @@ TESTCASE(sensor_listener, get_sensors_p_1)
 
 	err = sensord_get_sensors(ACCELEROMETER_SENSOR, &sensors, &count);
 	ASSERT_EQ(err, 0);
+	ASSERT_FREE((count < 0), sensors);
 	ASSERT_GT(count, 0);
 
 	free(sensors);
@@ -105,26 +106,33 @@ TESTCASE(sensor_listener, all_api_p_1)
 	ASSERT_EQ(err, 0);
 
 	ret = sensord_register_event(handle, 1, 100, 100, event_cb, NULL);
+	ASSERT_FREE(((ret != true) && list), list);
 	ASSERT_TRUE(ret);
 
 	ret = sensord_start(handle, 0);
+	ASSERT_FREE(((ret != true) && list), list);
 	ASSERT_TRUE(ret);
 
 	ret = sensord_change_event_interval(handle, 0, 100);
+	ASSERT_FREE(((ret != true) && list), list);
 	ASSERT_TRUE(ret);
 
 	ret = sensord_change_event_max_batch_latency(handle, 0, 100);
+	ASSERT_FREE(((ret != true) && list), list);
 	ASSERT_TRUE(ret);
 
 	mainloop::run();
 
 	ret = sensord_stop(handle);
+	ASSERT_FREE(((ret != true) && list), list);
 	ASSERT_TRUE(ret);
 
 	ret = sensord_unregister_event(handle, 1);
+	ASSERT_FREE(((ret != true) && list), list);
 	ASSERT_TRUE(ret);
 
 	ret = sensord_disconnect(handle);
+	ASSERT_FREE(((ret != true) && list), list);
 	ASSERT_TRUE(ret);
 
 	free(list);

@@ -30,11 +30,11 @@
 namespace ipc {
 
 typedef struct message_header {
-	uint64_t id;
-	uint32_t type;
-	size_t length;
-	int32_t err;
-	void *ancillary[MAX_HEADER_RESERVED];
+	uint64_t id { 0 };
+	uint32_t type { 0 };
+	size_t length { 0 };
+	int32_t err { 0 };
+	void *ancillary[MAX_HEADER_RESERVED] { nullptr };
 } message_header;
 
 class message {

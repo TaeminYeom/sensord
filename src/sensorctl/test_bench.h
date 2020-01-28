@@ -67,6 +67,9 @@ do { \
 	} \
 } while (0)
 
+#define ASSERT_FREE(expr, X) \
+	do { if (expr) { free (X); X = NULL; } } while (0)
+
 #define ASSERT_TRUE(condition) ASSERT(condition, ==, true)
 #define ASSERT_FALSE(condition) ASSERT(condition, ==, false)
 #define ASSERT_EQ(left, right) ASSERT(left, ==, right)

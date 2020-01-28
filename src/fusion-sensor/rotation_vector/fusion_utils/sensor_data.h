@@ -29,7 +29,7 @@ template <typename TYPE>
 class sensor_data {
 public:
 	vect<TYPE, SENSOR_DATA_SIZE> m_data;
-	unsigned long long m_time_stamp;
+	unsigned long long m_time_stamp { 0 };
 
 	sensor_data();
 	sensor_data(const TYPE x, const TYPE y, const TYPE z,

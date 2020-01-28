@@ -55,30 +55,39 @@ bool sensor_adapter::get_handle(sensor_info info, int &handle)
 {
 	int err;
 	int count;
-	sensor_t *sensors;
+	sensor_t *sensors = NULL;
 
 	err = sensord_get_sensors(info.type, &sensors, &count);
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensors[info.index]);
+	ASSERT_FREE((handle < 0), sensors);
 	ASSERT_GE(handle, 0);
+
+	free(sensors);
+	sensors = NULL;
 
 	return true;
 }
 
 bool sensor_adapter::start(sensor_info info, int &handle)
 {
-	sensor_t *sensors;
+	sensor_t *sensors = NULL;
 	int count;
 	int err;
 	bool ret;
 
 	err = sensord_get_sensors(info.type, &sensors, &count);
 	ASSERT_EQ(err, 0);
+
+	ASSERT_FREE((info.index >= count), sensors);
 	ASSERT_LT(info.index, count);
+
+	ASSERT_FREE((info.index < 0), sensors);
 	ASSERT_GE(info.index, 0);
 
 	handle = sensord_connect(sensors[info.index]);
+	ASSERT_FREE((handle < 0), sensors);
 	ASSERT_GE(handle, 0);
 
 	if (is_batch_mode) {
@@ -89,9 +98,11 @@ bool sensor_adapter::start(sensor_info info, int &handle)
 	ASSERT_TRUE(ret);
 
 	ret = sensord_start(handle, info.powersave);
+	ASSERT_FREE((ret != true), sensors);
 	ASSERT_TRUE(ret);
 
 	free(sensors);
+	sensors = NULL;
 
 	return true;
 }

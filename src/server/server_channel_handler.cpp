@@ -222,8 +222,6 @@ int server_channel_handler::listener_set_attr_int(channel *ch, message &msg)
 			-EACCES, "Permission denied[%d, %s]",
 			id, m_listeners[id]->get_required_privileges().c_str());
 
-	bool need_notify = false;
-
 	switch (buf.attribute) {
 	case SENSORD_ATTRIBUTE_INTERVAL:
 		ret = m_listeners[id]->set_interval(buf.value); break;
