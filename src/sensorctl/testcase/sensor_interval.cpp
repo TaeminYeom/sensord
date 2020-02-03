@@ -35,7 +35,7 @@ TESTCASE(interval_test, 20ms_p)
 {
 	int err, count, handle;
 	bool ret;
-	sensor_t *sensors;
+	sensor_t *sensors = nullptr;
 	sensor_type_t type;
 
 	err = sensord_get_sensors(ACCELEROMETER_SENSOR, &sensors, &count);
@@ -63,7 +63,7 @@ TESTCASE(interval_test, 100ms_p)
 {
 	int err, count, handle;
 	bool ret;
-	sensor_t *sensors;
+	sensor_t *sensors = nullptr;
 	sensor_type_t type;
 
 	err = sensord_get_sensors(ACCELEROMETER_SENSOR, &sensors, &count);
@@ -91,7 +91,7 @@ TESTCASE(interval_test, 200ms_p)
 {
 	int err, count, handle;
 	bool ret;
-	sensor_t *sensors;
+	sensor_t *sensors = nullptr;
 	sensor_type_t type;
 
 	err = sensord_get_sensors(ACCELEROMETER_SENSOR, &sensors, &count);

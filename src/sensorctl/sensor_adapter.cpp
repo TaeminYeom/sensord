@@ -42,7 +42,7 @@ bool sensor_adapter::is_supported(sensor_type_t type)
 
 int sensor_adapter::get_count(sensor_type_t type)
 {
-	sensor_t *sensors;
+	sensor_t *sensors = nullptr;
 	int count = 0;
 
 	if (sensord_get_sensors(type, &sensors, &count) == 0)

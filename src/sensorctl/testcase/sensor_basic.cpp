@@ -50,7 +50,7 @@ TESTCASE(sensor_basic, all_sensor_p)
 {
 	int err, count, handle;
 	bool ret;
-	sensor_t *sensors;
+	sensor_t *sensors = nullptr;
 	sensor_type_t type;
 
 	err = sensord_get_sensors(ALL_SENSOR, &sensors, &count);

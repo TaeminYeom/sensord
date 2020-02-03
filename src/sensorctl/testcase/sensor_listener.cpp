@@ -55,7 +55,7 @@ TESTCASE(sensor_listener, get_sensors_p_1)
 {
 	int err;
 	int count;
-	sensor_t *sensors;
+	sensor_t *sensors = nullptr;
 
 	err = sensord_get_sensors(ACCELEROMETER_SENSOR, &sensors, &count);
 	ASSERT_EQ(err, 0);

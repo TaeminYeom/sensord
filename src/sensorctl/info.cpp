@@ -31,7 +31,7 @@
 bool info_manager::run(int argc, char *argv[])
 {
 	sensor_type_t type;
-	sensor_t *sensors;
+	sensor_t *sensors = nullptr;
 	int count;
 
 	if (argc < INFO_ARGC) {
