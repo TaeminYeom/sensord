@@ -92,8 +92,10 @@ static gboolean publish(gpointer gdata)
 
 static gboolean publish_batch_event(gpointer gdata)
 {
-	if (!started) return FALSE;
-
+	if (!started) {
+		_N("[ WAITING ] ...\n");
+		return TRUE;
+	}
 	sensord_provider_h *provider = reinterpret_cast<sensord_provider_h *>(gdata);
 
 	sensor_data_t data[NUMBER_OF_EVENT];

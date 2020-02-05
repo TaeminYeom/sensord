@@ -503,7 +503,9 @@ int sensor_listener::set_attribute(int attribute, int value)
 	if (reply.header()->err < 0)
 		return reply.header()->err;
 
-	update_attribute(attribute, value);
+	if (attribute != SENSORD_ATTRIBUTE_FLUSH) {
+		update_attribute(attribute, value);
+	}
 
 	return OP_SUCCESS;
 }
