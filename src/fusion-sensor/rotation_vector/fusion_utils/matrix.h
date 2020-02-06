@@ -38,19 +38,19 @@ public:
 	matrix(const matrix<TYPE, ROW, COL>& m);
 	~matrix();
 
-	matrix<TYPE, ROW, COL> operator =(const matrix<TYPE, ROW, COL>& m);
+	matrix<TYPE, ROW, COL> operator =(const matrix<TYPE, ROW, COL> &m);
 
-	T_R_C friend ostream& operator << (ostream& dout, matrix<T, R, C>& m);
-	T_R_C friend matrix<T, R, C> operator +(const matrix<T, R, C> m1, const matrix<T, R, C> m2);
-	T_R_C friend matrix<T, R, C> operator +(const matrix<T, R, C> m, const T val);
-	T_R_C friend matrix<T, R, C> operator -(const matrix<T, R, C> m1, const matrix<T, R, C> m2);
-	T_R_C friend matrix<T, R, C> operator -(const matrix<T, R, C> m, const T val);
-	T_R_C_C2 friend matrix<T, R, C2> operator *(const matrix<T, R, C> m1, const matrix<T, C, C2> m2);
-	T_R_C friend matrix<T, R, C> operator *(const matrix<T, R, C> m, const T val);
-	T_R_C friend matrix<T, R, C> operator /(const matrix<T, R, C> m1, const T val);
-	T_R1_C1_R2_C2 friend bool operator ==(const matrix<T, R1, C1> m1, const matrix<T, R2, C2> m2);
-	T_R1_C1_R2_C2 friend bool operator !=(const matrix<T, R1, C1> m1, const matrix<T, R2, C2> m2);
-	T_R_C friend matrix<T, R, C> tran(const matrix<T, R, C> m);
+	T_R_C friend ostream& operator << (ostream& dout, matrix<T, R, C> &m);
+	T_R_C friend matrix<T, R, C> operator +(const matrix<T, R, C> &m1, const matrix<T, R, C> &m2);
+	T_R_C friend matrix<T, R, C> operator +(const matrix<T, R, C> &m, const T &val);
+	T_R_C friend matrix<T, R, C> operator -(const matrix<T, R, C> &m1, const matrix<T, R, C> &m2);
+	T_R_C friend matrix<T, R, C> operator -(const matrix<T, R, C> &m, const T &val);
+	T_R_C_C2 friend matrix<T, R, C2> operator *(const matrix<T, R, C> &m1, const matrix<T, C, C2> &m2);
+	T_R_C friend matrix<T, R, C> operator *(const matrix<T, R, C> &m, const T &val);
+	T_R_C friend matrix<T, R, C> operator /(const matrix<T, R, C> &m1, const T &val);
+	T_R1_C1_R2_C2 friend bool operator ==(const matrix<T, R1, C1> &m1, const matrix<T, R2, C2> &m2);
+	T_R1_C1_R2_C2 friend bool operator !=(const matrix<T, R1, C1> &m1, const matrix<T, R2, C2> &m2);
+	T_R_C friend matrix<T, R, C> tran(const matrix<T, R, C> &m);
 };
 
 #include "matrix.cpp"
