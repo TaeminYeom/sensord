@@ -63,7 +63,7 @@ orientation_filter<TYPE>::orientation_filter()
 	m_var_roll = vec;
 	m_var_pitch = vec;
 	m_var_azimuth = vec;
-
+	m_gyro_dt = TYPE();
 }
 
 template <typename TYPE>

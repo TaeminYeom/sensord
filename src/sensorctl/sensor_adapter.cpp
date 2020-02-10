@@ -95,6 +95,7 @@ bool sensor_adapter::start(sensor_info info, int &handle)
 	} else {
 		ret = sensord_register_event(handle, SENSOR_EVENT(info.type), info.interval, info.batch_latency, info.cb, NULL);
 	}
+	ASSERT_FREE((ret != true), sensors);
 	ASSERT_TRUE(ret);
 
 	ret = sensord_start(handle, info.powersave);
