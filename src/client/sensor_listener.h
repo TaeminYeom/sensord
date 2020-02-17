@@ -100,7 +100,7 @@ private:
 	ipc::channel_handler *m_attr_int_changed_handler;
 	ipc::channel_handler *m_attr_str_changed_handler;
 
-	ipc::event_loop *m_loop;
+	ipc::event_loop *m_loop { nullptr };
 	std::atomic<bool> m_connected;
 	std::atomic<bool> m_started;
 	std::map<int, int> m_attributes_int;

@@ -103,8 +103,8 @@ static gboolean sensor_accuracy_changed_callback_dispatcher(gpointer data)
 	AUTOLOCK(lock);
 
 	if (info->cb && info->sensor && listeners.find(info->listener_id) != listeners.end()) {
-		sensor_data_t * data = (sensor_data_t *)info->data;
-		((sensor_accuracy_changed_cb_t)info->cb)(info->sensor, data->timestamp, data->accuracy, info->user_data);
+		sensor_data_t * sensor_data = (sensor_data_t *)info->data;
+		((sensor_accuracy_changed_cb_t)info->cb)(info->sensor, sensor_data->timestamp, sensor_data->accuracy, info->user_data);
 	}
 
 	delete [] info->data;

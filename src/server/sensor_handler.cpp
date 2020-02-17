@@ -168,7 +168,11 @@ bool sensor_handler::notify_attribute_changed(uint32_t id, int32_t attribute, co
 	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
 
 	auto msg = ipc::message::create();
-	retvm_if(!msg, OP_ERROR, "Failed to allocate memory");
+	if (!msg) {
+		delete[] buf;
+		_E("Failed to allocate memory");
+		return OP_ERROR;
+	}
 
 	buf->listener_id = id;
 	buf->attribute = attribute;

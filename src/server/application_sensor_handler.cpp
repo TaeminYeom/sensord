@@ -156,7 +156,8 @@ int application_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr,
 
 	size = sizeof(cmd_provider_attr_str_t) + len;
 
-	buf = (cmd_provider_attr_str_t *) malloc(sizeof(char) * size);
+	buf = (cmd_provider_attr_str_t *) new(std::nothrow) char[size];
+
 	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
 
 	msg.set_type(CMD_PROVIDER_ATTR_STR);
@@ -170,6 +171,9 @@ int application_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr,
 
 	_I("Set attribute[%d] to sensor[%s]", attr, m_info.get_uri().c_str());
 	update_attribute(attr, value, len);
+
+	delete[] buf;
+
 	return OP_SUCCESS;
 }
 

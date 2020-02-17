@@ -170,7 +170,7 @@ int sensor_listener_proxy::get_interval(int32_t& interval)
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
-	_D("Listener[%d] try to get interval[%d]", get_id());
+	_D("Listener[%d] try to get interval", get_id());
 
 	return sensor->get_interval(this, interval);
 }
@@ -192,7 +192,7 @@ int sensor_listener_proxy::get_max_batch_latency(int32_t& max_batch_latency)
 	sensor_handler *sensor = m_manager->get_sensor(m_uri);
 	retv_if(!sensor, -EINVAL);
 
-	_D("Listener[%d] try to get max batch latency[%d]", get_id());
+	_D("Listener[%d] try to get max batch latency", get_id());
 
 	return sensor->get_batch_latency(this, max_batch_latency);
 }

@@ -116,7 +116,11 @@ int sensor_manager::serialize(sensor_info *info, char **bytes)
 	info->serialize(*raw);
 
 	*bytes = (char *) malloc(raw->size());
-	retvm_if(!*bytes, -ENOMEM, "Failed to allocate memory");
+	if (!(*bytes)) {
+		delete raw;
+		_E("Failed to allocate memory");
+		return -ENOMEM;
+	}
 
 	std::copy(raw->begin(), raw->end(), *bytes);
 

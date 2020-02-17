@@ -80,7 +80,7 @@ void cbase_lock::lock(lock_type type, const char* expr, const char *module, cons
 	waiting_time = lock_acquired_time - lock_waiting_start_time;
 
 	pthread_mutex_lock(&m_history_mutex);
-	_I("%s acquires lock after waiting %lluus, %s(%#x) was previously owned in %s",
+	_I("%s acquires lock after waiting %lluus, %s(%#p) was previously owned in %s",
 		m_curent_info, waiting_time, expr, this, m_owner_info);
 	snprintf(m_owner_info, OWNER_INFO_LEN, "%s", m_curent_info);
 	pthread_mutex_unlock(&m_history_mutex);

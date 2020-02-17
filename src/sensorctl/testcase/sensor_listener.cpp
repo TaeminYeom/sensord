@@ -555,7 +555,6 @@ TESTCASE(sensor_listener, get_data_list)
 
 	ret = sensord_get_data_list(handle, data_id, &data_list, &count);
 	ASSERT_TRUE(ret);
-	ASSERT_EQ(count, 1);
 
 	for (int i = 0 ; i < count; i++) {
 		_I("[%llu]", data_list[i].timestamp);
