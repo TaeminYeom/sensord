@@ -68,6 +68,9 @@ public:
 				m_listener->get_attribute_str_changed_handler()->read(ch, msg);
 			}
 		} break;
+		case CMD_LISTENER_CONNECTED: {
+			// Do nothing
+		} break;
 		default:
 			_W("Invalid command message");
 		}

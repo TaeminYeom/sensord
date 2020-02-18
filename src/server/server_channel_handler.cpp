@@ -158,6 +158,7 @@ int server_channel_handler::listener_connect(channel *ch, message &msg)
 	buf.listener_id = listener_id;
 
 	message reply;
+	reply.set_type(CMD_LISTENER_CONNECTED);
 	reply.enclose((const char *)&buf, sizeof(buf));
 	reply.header()->err = OP_SUCCESS;
 
