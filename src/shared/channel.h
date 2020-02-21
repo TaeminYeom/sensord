@@ -28,6 +28,7 @@
 #include "message.h"
 #include "event_loop.h"
 #include "channel_handler.h"
+#include "cmutex.h"
 
 namespace ipc {
 
@@ -68,6 +69,7 @@ private:
 	std::vector<uint64_t> m_pending_event_id;
 
 	std::atomic<bool> m_connected;
+	cmutex m_cmutex;
 };
 
 }

@@ -116,7 +116,9 @@ channel::channel(socket *sock)
 channel::~channel()
 {
 	_D("Destroyed[%llu]", m_event_id);
-	disconnect();
+	if (is_connected()) {
+		disconnect();
+	}
 }
 
 uint64_t channel::bind(void)
@@ -158,6 +160,7 @@ uint64_t channel::connect(channel_handler *handler, event_loop *loop, bool loop_
 
 void channel::disconnect(void)
 {
+	AUTOLOCK(m_cmutex);
 	if (!is_connected()) {
 		_D("Channel is not connected");
 		return;
@@ -224,6 +227,12 @@ bool channel::send(std::shared_ptr<message> msg)
 
 bool channel::send_sync(message &msg)
 {
+	AUTOLOCK(m_cmutex);
+	if (!is_connected()) {
+		_D("Channel is not connected");
+		return false;
+	}
+
 	retvm_if(msg.size() >= MAX_MSG_CAPACITY, true, "Invaild message size[%u]", msg.size());
 
 	ssize_t size = 0;
@@ -264,6 +273,12 @@ bool channel::read(void)
 
 bool channel::read_sync(message &msg, bool select)
 {
+	AUTOLOCK(m_cmutex);
+	if (!is_connected()) {
+		_D("Channel is not connected");
+		return false;
+	}
+
 	message_header header;
 	ssize_t size = 0;
 	char buf[MAX_MSG_CAPACITY];
