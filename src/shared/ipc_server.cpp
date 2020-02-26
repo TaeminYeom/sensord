@@ -84,7 +84,7 @@ void ipc_server::register_channel(int fd, channel *ch)
 	if (id == 0)
 		delete ev_handler;
 
-	_D("Registered event[%llu]", id);
+	_D("Register channel[%p] : event_id[%llu]", ch, id);
 }
 
 void ipc_server::register_acceptor(void)

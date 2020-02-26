@@ -43,11 +43,13 @@ sensor_listener_proxy::sensor_listener_proxy(uint32_t id,
 , m_last_accuracy(SENSOR_ACCURACY_UNDEFINED)
 , m_need_to_notify_attribute_changed(false)
 {
+	_D("Create [%p][%s]", this, m_uri.data());
 	sensor_policy_monitor::get_instance().add_listener(this);
 }
 
 sensor_listener_proxy::~sensor_listener_proxy()
 {
+	_D("Delete [%p][%s]", this, m_uri.data());
 	sensor_policy_monitor::get_instance().remove_listener(this);
 	stop();
 }

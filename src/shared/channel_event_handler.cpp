@@ -29,10 +29,12 @@ channel_event_handler::channel_event_handler(channel *ch, channel_handler *handl
 : m_ch(ch)
 , m_handler(handler)
 {
+	_D("Create[%p]", this);
 }
 
 channel_event_handler::~channel_event_handler()
 {
+	_D("Destroy[%p]", this);
 	m_ch = NULL;
 	m_handler = NULL;
 }
@@ -45,7 +47,7 @@ bool channel_event_handler::handle(int fd, event_condition condition)
 		return false;
 
 	if (condition & (EVENT_HUP)) {
-		_D("The other proccess is dead");
+		_D("Disconnect[%p] : The other proccess is dead", this);
 		m_ch->disconnect();
 		m_ch = NULL;
 		return false;

@@ -110,12 +110,12 @@ channel::channel(socket *sock)
 , m_loop(NULL)
 , m_connected(false)
 {
-	_D("Created");
+	_D("Create[%p]", this);
 }
 
 channel::~channel()
 {
-	_D("Destroyed[%llu]", m_event_id);
+	_D("Destroy[%p]", this);
 	if (is_connected()) {
 		disconnect();
 	}
@@ -128,7 +128,7 @@ uint64_t channel::bind(void)
 			(EVENT_IN | EVENT_HUP | EVENT_NVAL),
 			dynamic_cast<channel_event_handler *>(m_handler));
 
-	_D("Bound[%llu]", m_event_id);
+	_D("Bind channel[%p] : handler[%p] event_id[%llu]", this, m_handler, m_event_id);
 	return m_event_id;
 }
 
@@ -154,7 +154,7 @@ uint64_t channel::connect(channel_handler *handler, event_loop *loop, bool loop_
 
 	bind(handler, loop, loop_bind);
 
-	_D("Connected[%llu]", m_event_id);
+	_D("Connect channel[%p] : event id[%llu]", this, m_event_id);
 	return m_event_id;
 }
 
@@ -162,37 +162,36 @@ void channel::disconnect(void)
 {
 	AUTOLOCK(m_cmutex);
 	if (!is_connected()) {
-		_D("Channel is not connected");
+		_D("Channel[%p] is not connected", this);
 		return;
 	}
 
 	m_connected.store(false);
 
-	_D("Disconnecting..[%llu]", m_event_id);
+	_D("Disconnect channel[%p]", this);
 
 	if (m_handler) {
+		_D("Disconnect channel[%p] handler[%p]", this, m_handler);
 		m_handler->disconnected(this);
 		m_handler = NULL;
 	}
 
 	if (m_loop) {
 		for(auto id : m_pending_event_id) {
-			_D("Remove pending event id[%llu]", id);
+			_D("Remove channel[%p] pending event id[%llu]", this, id);
 			m_loop->remove_event(id, true);
 		}
-		_D("Remove event[%llu]", m_event_id);
+		_D("Remove channel[%p] event[%llu]",this, m_event_id);
 		m_loop->remove_event(m_event_id, true);
-		m_loop = NULL;
 		m_event_id = 0;
 	}
 
 	if (m_socket) {
-		_D("Release socket[%d]", m_socket->get_fd());
+		_D("Release channel[%p] socket[%d]", this, m_socket->get_fd());
 		delete m_socket;
 		m_socket = NULL;
 	}
-
-	_D("Disconnected");
+	_D("Channel[%p] is disconnected");
 }
 
 bool channel::send(std::shared_ptr<message> msg)

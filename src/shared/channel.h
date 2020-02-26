@@ -60,6 +60,11 @@ public:
 	int get_fd(void) const;
 	void remove_pending_event_id(uint64_t id);
 
+	event_loop *loop()
+	{
+		return m_loop;
+	}
+
 private:
 	int m_fd;
 	uint64_t m_event_id;

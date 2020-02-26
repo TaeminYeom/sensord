@@ -25,6 +25,7 @@
 #include <sensor_utils.h>
 #include <sensor_types_private.h>
 #include <command_types.h>
+#include <event_loop.h>
 
 #include "permission_checker.h"
 #include "application_sensor_handler.h"
@@ -40,10 +41,12 @@ std::unordered_map<ipc::channel *, application_sensor_handler *> server_channel_
 server_channel_handler::server_channel_handler(sensor_manager *manager)
 : m_manager(manager)
 {
+	_I("Create[%p]", this);
 }
 
 server_channel_handler::~server_channel_handler()
 {
+	_I("Destroy[%p]", this);
 }
 
 void server_channel_handler::connected(channel *ch)
@@ -52,6 +55,7 @@ void server_channel_handler::connected(channel *ch)
 
 void server_channel_handler::disconnected(channel *ch)
 {
+	_I("Disconnect[%p] using channel[%p]", this, ch);
 	m_manager->deregister_channel(ch);
 
 	auto it_asensor = m_app_sensors.find(ch);
@@ -71,6 +75,15 @@ void server_channel_handler::disconnected(channel *ch)
 		delete m_listeners[it_listener->second];
 		m_listeners.erase(it_listener->second);
 		m_listener_ids.erase(ch);
+	}
+
+	if (ch->loop()) {
+		ch->loop()->add_idle_event(0, [](size_t, void* data) {
+			channel* ch = (channel*)data;
+			delete ch;
+		},  ch);
+	} else {
+		_D("Should not be here : channel[%p]", ch);
 	}
 }
 

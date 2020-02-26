@@ -25,6 +25,7 @@
 #include <time.h>
 #include <sys/eventfd.h>
 #include <glib.h>
+#include "channel_event_handler.h"
 
 #include "sensor_log.h"
 #include "event_handler.h"
@@ -58,16 +59,16 @@ static gboolean g_io_handler(GIOChannel *ch, GIOCondition condition, gpointer da
 	term = loop->is_terminator(fd);
 
 	if (cond & G_IO_NVAL)
-		return FALSE;
+		return G_SOURCE_REMOVE;
 
 	ret = handler->handle(fd, (event_condition)cond);
 
 	if (!ret && !term) {
 		loop->remove_event(id);
-		return FALSE;
+		return G_SOURCE_REMOVE;
 	}
 
-	return TRUE;
+	return G_SOURCE_CONTINUE;
 }
 
 static gint on_timer(gpointer data)
@@ -146,7 +147,12 @@ uint64_t event_loop::add_event(const int fd, const event_condition cond, event_h
 	return id;
 }
 
-uint64_t event_loop::add_idle_event(unsigned int priority, idle_handler *handler)
+struct idler_data {
+	void (*m_fn)(size_t, void*);
+	void* m_data;
+};
+
+size_t event_loop::add_idle_event(unsigned int priority, void (*fn)(size_t, void*), void* data)
 {
 	GSource *src;
 
@@ -156,10 +162,21 @@ uint64_t event_loop::add_idle_event(unsigned int priority, idle_handler *handler
 	src = g_idle_source_new();
 	retvm_if(!src, 0, "Failed to allocate memory");
 
+	idler_data *id = new idler_data();
+	id->m_fn = fn;
+	id->m_data = data;
+
+	g_source_set_callback(src, [](gpointer data) -> gboolean {
+		idler_data *id = (idler_data *)data;
+		id->m_fn((size_t)id, id->m_data);
+		delete id;
+		return G_SOURCE_REMOVE;
+	}, id, NULL);
+
+	g_source_attach(src, g_main_loop_get_context (m_mainloop));
 	g_source_unref(src);
 
-	/* Not Supported yet */
-	return 0;
+	return (size_t)id;
 }
 
 bool event_loop::remove_event(uint64_t id, bool close_channel)
@@ -195,9 +212,21 @@ void event_loop::release_info(handler_info *info)
 	g_source_unref(info->g_src);
 
 	g_io_channel_unref(info->g_ch);
-	info->g_ch = NULL;
 
-	delete info->handler;
+	info->g_ch = NULL;
+	channel_event_handler *ce_handler = nullptr;
+	ce_handler = dynamic_cast<channel_event_handler *>(info->handler);
+	if (ce_handler) {
+		_D("Add idle event for lazy release : handler[%p]", ce_handler);
+		add_idle_event(0, [](size_t, void *data) {
+			channel_event_handler *handler = (channel_event_handler *)data;
+			delete handler;
+		}, ce_handler);
+	} else {
+		_D("Release handler[%p]", info->handler);
+		delete info->handler;
+	}
+
 	info->handler = NULL;
 
 	delete info;
