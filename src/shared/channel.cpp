@@ -191,7 +191,7 @@ void channel::disconnect(void)
 		delete m_socket;
 		m_socket = NULL;
 	}
-	_D("Channel[%p] is disconnected");
+	_D("Channel[%p] is disconnected", this);
 }
 
 bool channel::send(std::shared_ptr<message> msg)

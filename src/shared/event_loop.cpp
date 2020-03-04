@@ -166,8 +166,8 @@ size_t event_loop::add_idle_event(unsigned int priority, void (*fn)(size_t, void
 	id->m_fn = fn;
 	id->m_data = data;
 
-	g_source_set_callback(src, [](gpointer data) -> gboolean {
-		idler_data *id = (idler_data *)data;
+	g_source_set_callback(src, [](gpointer gdata) -> gboolean {
+		idler_data *id = (idler_data *)gdata;
 		id->m_fn((size_t)id, id->m_data);
 		delete id;
 		return G_SOURCE_REMOVE;

@@ -79,8 +79,8 @@ void server_channel_handler::disconnected(channel *ch)
 
 	if (ch->loop()) {
 		ch->loop()->add_idle_event(0, [](size_t, void* data) {
-			channel* ch = (channel*)data;
-			delete ch;
+			channel* c = (channel*)data;
+			delete c;
 		},  ch);
 	} else {
 		_D("Should not be here : channel[%p]", ch);
