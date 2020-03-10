@@ -78,6 +78,7 @@ bool sensor_loader::load(const std::string &dir_path, std::vector<std::shared_pt
 	retv_if(!ret, false);
 
 	for (auto &path : module_paths) {
+		_I("Load sensor devices from %s", path.c_str());
 		handle = dlopen(path.c_str(), RTLD_NOW);
 		retvm_if(!handle, false, "Failed to dlopen from %s because %s", path.c_str(), dlerror());
 
@@ -100,6 +101,7 @@ bool sensor_loader::load(const std::string &dir_path, std::vector<std::shared_pt
 			sensors.emplace_back(static_cast<T *>(results[i]));
 
 		m_modules[path.c_str()] = handle;
+		_I("Success to load sensor devices from %s", path.c_str());
 	}
 
 	return true;

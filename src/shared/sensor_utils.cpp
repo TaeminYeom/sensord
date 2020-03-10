@@ -64,6 +64,8 @@ static std::map<sensor_type_t, const char *> types = {
 
 	{SIGNIFICANT_MOTION_SENSOR,      "http://tizen.org/sensor/general/significant_motion"},
 
+	{HRM_BATCH_SENSOR,               "http://tizen.org/sensor/healthinfo/hrm_batch"},
+
 	{HUMAN_PEDOMETER_SENSOR,         "http://tizen.org/sensor/healthinfo/human_pedometer"},
 	{HUMAN_SLEEP_MONITOR_SENSOR,     "http://tizen.org/sensor/healthinfo/human_sleep_monitor"},
 	{HUMAN_SLEEP_DETECTOR_SENSOR,    "http://tizen.org/sensor/healthinfo/human_sleep_detector"},
