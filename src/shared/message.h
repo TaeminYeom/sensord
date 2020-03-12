@@ -24,7 +24,7 @@
 #include <atomic>
 #include <memory>
 
-#define MAX_MSG_CAPACITY (16*1024)
+#define MAX_MSG_CAPACITY (32*1024)
 #define MAX_HEADER_RESERVED 3
 
 namespace ipc {
