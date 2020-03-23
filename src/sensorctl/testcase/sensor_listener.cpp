@@ -29,6 +29,8 @@
 #include "mainloop.h"
 #include "test_bench.h"
 
+
+typedef Deleter<char> Deleter_char;
 static bool called = false;
 static int count = 0;
 
@@ -369,7 +371,7 @@ TESTCASE(sensor_listener, set_get_attribute_string_1)
 	int err = 0;
 	bool ret = true;
 	int handle = 0;
-	char *value = NULL;
+	Deleter_char value;
 	int len = 0;
 	sensor_t sensor = NULL;
 	int attr = 1;
@@ -381,15 +383,14 @@ TESTCASE(sensor_listener, set_get_attribute_string_1)
 	err = sensord_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
 	ASSERT_EQ(err, 0);
 
-	err = sensord_get_attribute_str(handle, attr, &value, &len);
+	err = sensord_get_attribute_str(handle, attr, &(value.get()), &len);
 	ASSERT_EQ(err, 0);
 	ASSERT_EQ(len, TEST_STRING_LEN);
-	ASSERT_EQ(strncmp(value, TEST_STRING, len), 0);
+	ASSERT_EQ(strncmp(value.get(), TEST_STRING, len), 0);
 
 	ret = sensord_disconnect(handle);
 	ASSERT_TRUE(ret);
 
-	free(value);
 	return true;
 }
 
@@ -399,7 +400,7 @@ TESTCASE(sensor_listener, set_get_attribute_string_2)
 	int err = 0;
 	bool ret = true;
 	int handle = 0;
-	char *value = NULL;
+	Deleter_char value;
 	int len = 0;
 	sensor_t sensor = NULL;
 	int attr = 1;
@@ -413,14 +414,13 @@ TESTCASE(sensor_listener, set_get_attribute_string_2)
 	err = sensord_set_attribute_str(handle, attr, attr_value, BUF_SIZE);
 	ASSERT_EQ(err, 0);
 
-	err = sensord_get_attribute_str(handle, attr, &value, &len);
+	err = sensord_get_attribute_str(handle, attr, &(value.get()), &len);
 	ASSERT_EQ(err, 0);
 	ASSERT_EQ(len, BUF_SIZE);
 
 	ret = sensord_disconnect(handle);
 	ASSERT_TRUE(ret);
 
-	free(value);
 	return true;
 }
 
@@ -429,7 +429,7 @@ TESTCASE(sensor_listener, set_get_attribute_string_3)
 	int err = 0;
 	bool ret = true;
 	int handle = 0;
-	char *value = NULL;
+	Deleter_char value;
 	int len = 0;
 	sensor_t sensor = NULL;
 	int attr = 1;
@@ -442,16 +442,15 @@ TESTCASE(sensor_listener, set_get_attribute_string_3)
 	ASSERT_EQ(err, 0);
 
 	for (int i = 0; i < 10; i++) {
-		err = sensord_get_attribute_str(handle, attr, &value, &len);
+		err = sensord_get_attribute_str(handle, attr, &(value.get()), &len);
 		ASSERT_EQ(err, 0);
 		ASSERT_EQ(len, TEST_STRING_LEN);
-		ASSERT_EQ(strncmp(value, TEST_STRING, len), 0);
+		ASSERT_EQ(strncmp(value.get(), TEST_STRING, len), 0);
 	}
 
 	ret = sensord_disconnect(handle);
 	ASSERT_TRUE(ret);
 
-	free(value);
 	return true;
 }
 
@@ -460,7 +459,8 @@ TESTCASE(sensor_listener, set_get_get_attribute_string_1)
 	int err;
 	bool ret;
 	int handle;
-	char *value = NULL;
+	Deleter_char value;
+	Deleter_char value2;
 	int len = 0;
 	sensor_t sensor;
 	int attr = 1;
@@ -472,17 +472,14 @@ TESTCASE(sensor_listener, set_get_get_attribute_string_1)
 	err = sensord_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
 	ASSERT_EQ(err, 0);
 
-	err = sensord_get_attribute_str(handle, attr, &value, &len);
+	err = sensord_get_attribute_str(handle, attr, &(value.get()), &len);
 	ASSERT_EQ(err, 0);
 	ASSERT_EQ(len, TEST_STRING_LEN);
-	ASSERT_EQ(strncmp(value, TEST_STRING, len), 0);
+	ASSERT_EQ(strncmp(value.get(), TEST_STRING, len), 0);
 
 	ret = sensord_disconnect(handle);
 	ASSERT_TRUE(ret);
 
-	free(value);
-
-	value = NULL;
 	len = 0;
 
 	err = sensord_get_default_sensor(ACCELEROMETER_SENSOR, &sensor);
@@ -490,15 +487,14 @@ TESTCASE(sensor_listener, set_get_get_attribute_string_1)
 
 	handle = sensord_connect(sensor);
 
-	err = sensord_get_attribute_str(handle, attr, &value, &len);
+	err = sensord_get_attribute_str(handle, attr, &(value2.get()), &len);
 	ASSERT_EQ(err, 0);
 	ASSERT_EQ(len, TEST_STRING_LEN);
-	ASSERT_EQ(strncmp(value, TEST_STRING, len), 0);
+	ASSERT_EQ(strncmp(value2.get(), TEST_STRING, len), 0);
 
 	ret = sensord_disconnect(handle);
 	ASSERT_TRUE(ret);
 
-	free(value);
 	return true;
 }
 
@@ -507,7 +503,7 @@ TESTCASE(sensor_listener, get_attribute_string_2)
 	int err;
 	bool ret;
 	int handle;
-	char *value;
+	Deleter_char value;
 	int len;
 	sensor_t sensor;
 	int attr = 100;
@@ -518,7 +514,7 @@ TESTCASE(sensor_listener, get_attribute_string_2)
 	handle = sensord_connect(sensor);
 
 	// attr 100 value is never set in these tests.
-	err = sensord_get_attribute_str(handle, attr, &value, &len);
+	err = sensord_get_attribute_str(handle, attr, &(value.get()), &len);
 	ASSERT_EQ(err, -EIO);
 
 	ret = sensord_disconnect(handle);

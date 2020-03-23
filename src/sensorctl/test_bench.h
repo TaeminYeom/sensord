@@ -110,6 +110,23 @@ public: \
 } test_case_##group##_##name##_instance; \
 bool test_case_##group##_##name::test(void)
 
+template<typename T>
+class Deleter {
+public:
+	T*& get()
+	{
+		return storage;
+	}
+    ~Deleter() {
+        if(storage) {
+            free(storage);
+        }
+    }
+
+private:
+	T *storage{nullptr};
+};
+
 /*
  * Declaration of test_option
  */
