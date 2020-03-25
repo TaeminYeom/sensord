@@ -18,6 +18,7 @@
  */
 
 #include "fusion_sensor_handler.h"
+#include "fusion_sensor.h"
 
 #include <message.h>
 #include <sensor_log.h>
@@ -85,7 +86,7 @@ int fusion_sensor_handler::start(sensor_observer *ob)
 
 	_I("Started[%s]", m_info.get_uri().c_str());
 
-	return start_internal();
+	return start_required_sensors();
 }
 
 int fusion_sensor_handler::stop(sensor_observer *ob)
@@ -106,7 +107,7 @@ int fusion_sensor_handler::stop(sensor_observer *ob)
 
 	_I("Stopped[%s]", m_info.get_uri().c_str());
 
-	return stop_internal();
+	return stop_required_sensors();
 }
 
 int fusion_sensor_handler::get_min_interval(void)
@@ -256,7 +257,7 @@ int fusion_sensor_handler::flush(sensor_observer *ob)
 	return OP_SUCCESS;
 }
 
-int fusion_sensor_handler::start_internal(void)
+int fusion_sensor_handler::start_required_sensors(void)
 {
 	auto it = m_required_sensors.begin();
 	for (; it != m_required_sensors.end(); ++it) {
@@ -267,7 +268,7 @@ int fusion_sensor_handler::start_internal(void)
 	return OP_SUCCESS;
 }
 
-int fusion_sensor_handler::stop_internal(void)
+int fusion_sensor_handler::stop_required_sensors(void)
 {
 	auto it = m_required_sensors.begin();
 	for (; it != m_required_sensors.end(); ++it) {

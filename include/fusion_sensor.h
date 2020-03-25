@@ -41,6 +41,10 @@
 #define OP_DEFAULT 1
 #endif
 
+namespace sensor {
+class fusion_sensor_handler;
+}
+
 /*
  * Create sensor
  */
@@ -74,7 +78,7 @@ public:
 	{
 		return OP_DEFAULT;
 	}
-;
+
 	virtual int stop(observer_h ob)
 	{
 		return OP_DEFAULT;
@@ -103,6 +107,10 @@ public:
 	virtual int flush(observer_h ob)
 	{
 		return OP_DEFAULT;
+	}
+
+	virtual void set_fusion_sensor_handler(sensor::fusion_sensor_handler* handler)
+	{
 	}
 };
 

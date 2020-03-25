@@ -22,11 +22,12 @@
 
 #include <message.h>
 #include <sensor_types.h>
-#include <fusion_sensor.h>
 #include <unordered_map>
 
 #include "sensor_handler.h"
 #include "sensor_observer.h"
+
+class fusion_sensor;
 
 namespace sensor {
 
@@ -69,9 +70,9 @@ public:
 	int flush(sensor_observer *ob);
 	int get_data(sensor_data_t **data, int *len);
 
+	int start_required_sensors(void);
+	int stop_required_sensors(void);
 private:
-	int start_internal(void);
-	int stop_internal(void);
 	int set_interval_internal(int32_t interval);
 	int set_batch_latency_internal(int32_t latency);
 	int set_attribute_internal(int32_t attr, int32_t value);

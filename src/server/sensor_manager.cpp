@@ -315,6 +315,8 @@ void sensor_manager::create_fusion_sensors(fusion_sensor_registry_t &fsensors)
 
 		sensor_info sinfo = fsensor->get_sensor_info();
 		m_sensors[sinfo.get_uri()] = fsensor;
+
+		(*it)->set_fusion_sensor_handler(fsensor);
 	}
 }
 
