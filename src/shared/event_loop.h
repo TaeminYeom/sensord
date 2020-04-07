@@ -26,6 +26,7 @@
 #include <map>
 
 #include "event_handler.h"
+#include "cmutex.h"
 
 namespace ipc {
 
@@ -97,6 +98,7 @@ private:
 	std::map<uint64_t, handler_info *> m_handlers;
 
 	int m_term_fd;
+	cmutex m_cmutex;
 };
 
 }

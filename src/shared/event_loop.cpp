@@ -113,6 +113,7 @@ void event_loop::set_mainloop(GMainLoop *mainloop)
 
 uint64_t event_loop::add_event(const int fd, const event_condition cond, event_handler *handler)
 {
+	AUTOLOCK(m_cmutex);
 	GIOChannel *ch = NULL;
 	GSource *src = NULL;
 
@@ -154,6 +155,7 @@ struct idler_data {
 
 size_t event_loop::add_idle_event(unsigned int priority, void (*fn)(size_t, void*), void* data)
 {
+	AUTOLOCK(m_cmutex);
 	GSource *src;
 
 	retvm_if(m_terminating.load(), 0,
@@ -181,6 +183,7 @@ size_t event_loop::add_idle_event(unsigned int priority, void (*fn)(size_t, void
 
 bool event_loop::remove_event(uint64_t id, bool close_channel)
 {
+	AUTOLOCK(m_cmutex);
 	auto it = m_handlers.find(id);
 	retv_if(it == m_handlers.end(), false);
 
@@ -196,6 +199,7 @@ bool event_loop::remove_event(uint64_t id, bool close_channel)
 
 void event_loop::remove_all_events(void)
 {
+	AUTOLOCK(m_cmutex);
 	auto it = m_handlers.begin();
 	while (it != m_handlers.end()) {
 		release_info(it->second);
@@ -217,13 +221,13 @@ void event_loop::release_info(handler_info *info)
 	channel_event_handler *ce_handler = nullptr;
 	ce_handler = dynamic_cast<channel_event_handler *>(info->handler);
 	if (ce_handler) {
-		_D("Add idle event for lazy release : handler[%p]", ce_handler);
+		// _D("Add idle event for lazy release : handler[%p] event[%llu]", ce_handler, info->id);
 		add_idle_event(0, [](size_t, void *data) {
 			channel_event_handler *handler = (channel_event_handler *)data;
 			delete handler;
 		}, ce_handler);
 	} else {
-		_D("Release handler[%p]", info->handler);
+		// _D("Release handler[%p] event[%llu]", info->handler, info->id);
 		delete info->handler;
 	}
 
