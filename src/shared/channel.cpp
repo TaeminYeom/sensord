@@ -284,8 +284,12 @@ bool channel::read_sync(message &msg, bool select)
 
 	/* header */
 	size = m_socket->recv(&header, sizeof(message_header), select);
-	retv_if(size <= 0, false);
-
+	if (size <= 0) {
+		if (size == -1) {
+			disconnect();
+		}
+		return false;
+	}
 	/* check error from header */
 	if (m_handler && header.err != 0) {
 		m_handler->error_caught(this, header.err);
@@ -301,7 +305,12 @@ bool channel::read_sync(message &msg, bool select)
 
 	if (header.length > 0) {
 		size = m_socket->recv(&buf, header.length, select);
-		retv_if(size <= 0, false);
+		if (size <= 0) {
+			if (size == -1) {
+				disconnect();
+			}
+			return false;
+		}
 	}
 
 	buf[header.length] = '\0';
