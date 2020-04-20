@@ -39,6 +39,13 @@ public:
 	, m_msg(msg)
 	{ }
 
+	virtual ~send_event_handler()
+	{
+		if (m_ch) {
+			m_ch->remove_pending_event_id(m_event_id);
+		}
+	}
+
 	bool handle(int fd, event_condition condition)
 	{
 		if (!m_ch) {

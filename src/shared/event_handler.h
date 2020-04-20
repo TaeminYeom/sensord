@@ -35,13 +35,13 @@ public:
 	virtual ~event_handler() {}
 
 	virtual bool handle(int fd, event_condition condition) = 0;
-	void set_event_id(int64_t event_id)
+	void set_event_id(uint64_t event_id)
 	{
-		m_event_id = 0;
+		m_event_id = event_id;
 	}
 
 protected:
-	int64_t m_event_id;
+	uint64_t m_event_id;
 };
 
 }
