@@ -296,7 +296,7 @@ bool sensor_manager::get_sensors_internal(void)
 	ret = m_cmd_channel->read_sync(reply);
 	retvm_if(!ret, false, "Failed to receive message");
 
-	reply.disclose(buf);
+	reply.disclose(buf, MAX_BUF_SIZE);
 
 	decode_sensors(buf, m_sensors);
 

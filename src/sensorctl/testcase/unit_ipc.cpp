@@ -64,7 +64,7 @@ public:
 		auto reply = message::create();
 		RETM_IF(!reply, "Failed to allocate memory");
 
-		msg.disclose(buf);
+		msg.disclose(buf, MAX_BUF_SIZE);
 		reply->enclose(buf, MAX_BUF_SIZE);
 
 		ch->send(reply);
@@ -123,7 +123,7 @@ static bool run_ipc_client_sleep_1s(const char *str, int size, int count)
 	SLEEP_1S;
 
 	ch->read_sync(reply);
-	reply.disclose(buf);
+	reply.disclose(buf, MAX_BUF_SIZE);
 
 	int ret = strncmp(buf, "111", 3);
 	ASSERT_EQ(ret, 0);
@@ -166,7 +166,7 @@ static bool run_ipc_client_small_buffer(const char *str, int size, int count)
 		ch->read_sync(reply);
 	}
 
-	reply.disclose(buf);
+	reply.disclose(buf, MAX_BUF_SIZE);
 
 	ret = strncmp(buf, "111", 3);
 	ASSERT_EQ(ret, 0);
@@ -201,7 +201,7 @@ static bool run_ipc_client_1M(const char *str, int size, int count)
 		ch->read_sync(reply);
 	}
 
-	reply.disclose(buf);
+	reply.disclose(buf, MAX_BUF_SIZE);
 
 	ret = strncmp(buf, "111", 3);
 	ASSERT_EQ(ret, 0);
@@ -222,7 +222,7 @@ public:
 	void read(channel *ch, message &msg)
 	{
 		char buf[MAX_BUF_SIZE];
-		msg.disclose(buf);
+		msg.disclose(buf, MAX_BUF_SIZE);
 
 		auto reply = message::create();
 		if (!reply) return;
@@ -281,7 +281,7 @@ static bool run_ipc_client_2_channel_message(const char *str, int size, int coun
 	ch[0]->send_sync(msg);
 	SLEEP_1S;
 	ch[0]->read_sync(reply);
-	reply.disclose(buf);
+	reply.disclose(buf, MAX_BUF_SIZE);
 	ret = strncmp(buf, "TEXTTEXTTEXTTEXT", 16);
 	ASSERT_EQ(ret, 0);
 
@@ -292,7 +292,7 @@ static bool run_ipc_client_2_channel_message(const char *str, int size, int coun
 	ch[1]->send_sync(msg);
 	SLEEP_1S;
 	ch[1]->read_sync(reply);
-	reply.disclose(buf);
+	reply.disclose(buf, MAX_BUF_SIZE);
 	ret = strncmp(buf, "TEXTTEXTTEXTTEXT", 16);
 	ASSERT_EQ(ret, 0);
 
@@ -343,7 +343,7 @@ static bool run_ipc_client(const char *str, int size, int count)
 	SLEEP_1S;
 
 	ch->read_sync(reply);
-	reply.disclose(buf);
+	reply.disclose(buf, MAX_BUF_SIZE);
 
 	ret = strncmp(buf, "TEXTTEXTTEXTTEXT", 16);
 	ASSERT_EQ(ret, 0);

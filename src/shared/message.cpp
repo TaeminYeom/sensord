@@ -98,9 +98,9 @@ void message::enclose(int error)
 	m_size = 0;
 }
 
-void message::disclose(void *msg)
+void message::disclose(void *msg, const size_t size)
 {
-	if (!msg || !m_msg)
+	if (!msg || !m_msg || m_size > size)
 		return;
 
 	::memcpy(msg, m_msg, m_size);

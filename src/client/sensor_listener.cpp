@@ -224,7 +224,7 @@ bool sensor_listener::connect(void)
 	m_evt_channel->send_sync(msg);
 
 	m_evt_channel->read_sync(reply);
-	reply.disclose((char *)&buf);
+	reply.disclose((char *)&buf, sizeof(buf));
 
 	m_id = buf.listener_id;
 	m_connected.store(true);
@@ -640,7 +640,7 @@ int sensor_listener::get_sensor_data(sensor_data_t *data)
 	m_cmd_channel->send_sync(msg);
 	m_cmd_channel->read_sync(reply);
 
-	reply.disclose((char *)&buf);
+	reply.disclose((char *)&buf, sizeof(buf));
 	int size = sizeof(sensor_data_t);
 
 	if (buf.len > size || buf.len < 0) {
@@ -681,7 +681,7 @@ int sensor_listener::get_sensor_data_list(sensor_data_t **data, int *count)
 
 	retvm_if(!reply_buf, -ENOMEM, "Failed to allocate memory");
 
-	reply.disclose((char *)reply_buf);
+	reply.disclose((char *)reply_buf, size);
 
 	if (reply_buf->len <= 0) {
 		delete [] reply_buf;

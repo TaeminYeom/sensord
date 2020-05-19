@@ -54,7 +54,7 @@ public:
 
 	void enclose(const void *msg, const size_t size);
 	void enclose(int error);
-	void disclose(void *msg);
+	void disclose(void *msg, const size_t size);
 
 	uint32_t type(void);
 	void set_type(uint32_t type);

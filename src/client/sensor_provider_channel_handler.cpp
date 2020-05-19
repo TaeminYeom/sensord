@@ -62,7 +62,7 @@ void sensor_provider::channel_handler::read(ipc::channel *ch, ipc::message &msg)
 		break;
 	case CMD_PROVIDER_ATTR_INT:
 		cmd_provider_attr_int_t buf;
-		msg.disclose((char *)&buf);
+		msg.disclose((char *)&buf, sizeof(buf));
 
 		if (buf.attribute == SENSORD_ATTRIBUTE_INTERVAL && m_interval_changed_cb)
 			m_interval_changed_cb(m_provider, buf.value, m_interval_changed_user_data);
@@ -73,7 +73,7 @@ void sensor_provider::channel_handler::read(ipc::channel *ch, ipc::message &msg)
 		attr = (cmd_provider_attr_str_t *) new(std::nothrow) char[msg.size()];
 		retm_if(!attr, "Failed to allocate memory");
 
-		msg.disclose((char *)attr);
+		msg.disclose((char *)attr, msg.size());
 
 		if (m_attribute_str_cb)
 			m_attribute_str_cb(m_provider, attr->attribute, attr->value, attr->len, m_attribute_str_user_data);

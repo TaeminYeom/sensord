@@ -82,7 +82,7 @@ void sensor_manager::channel_handler::on_sensor_removed(ipc::channel *ch, ipc::m
 	ret_if(msg.header()->err < 0);
 	char uri[NAME_MAX] = {0, };
 
-	msg.disclose(uri);
+	msg.disclose(uri, NAME_MAX);
 	m_manager->remove_sensor(uri);
 
 	auto it = m_sensor_removed_callbacks.begin();

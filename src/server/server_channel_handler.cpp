@@ -158,7 +158,7 @@ int server_channel_handler::listener_connect(channel *ch, message &msg)
 	static uint32_t listener_id = 1;
 	cmd_listener_connect_t buf;
 
-	msg.disclose((char *)&buf);
+	msg.disclose((char *)&buf, sizeof(buf));
 
 	sensor_listener_proxy *listener;
 	listener = new(std::nothrow) sensor_listener_proxy(listener_id,
@@ -189,7 +189,7 @@ int server_channel_handler::listener_connect(channel *ch, message &msg)
 int server_channel_handler::listener_start(channel *ch, message &msg)
 {
 	cmd_listener_start_t buf;
-	msg.disclose((char *)&buf);
+	msg.disclose((char *)&buf, sizeof(buf));
 	uint32_t id = buf.listener_id;
 
 	auto it = m_listeners.find(id);
@@ -207,7 +207,7 @@ int server_channel_handler::listener_start(channel *ch, message &msg)
 int server_channel_handler::listener_stop(channel *ch, message &msg)
 {
 	cmd_listener_stop_t buf;
-	msg.disclose((char *)&buf);
+	msg.disclose((char *)&buf, sizeof(buf));
 	uint32_t id = buf.listener_id;
 
 	auto it = m_listeners.find(id);
@@ -225,7 +225,7 @@ int server_channel_handler::listener_stop(channel *ch, message &msg)
 int server_channel_handler::listener_set_attr_int(channel *ch, message &msg)
 {
 	cmd_listener_attr_int_t buf;
-	msg.disclose((char *)&buf);
+	msg.disclose((char *)&buf, sizeof(buf));
 	uint32_t id = buf.listener_id;
 
 	int ret = OP_SUCCESS;
@@ -270,7 +270,7 @@ int server_channel_handler::listener_set_attr_str(channel *ch, message &msg)
 	buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[msg.size()];
 	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
 
-	msg.disclose((char *)buf);
+	msg.disclose((char *)buf, msg.size());
 
 	id = buf->listener_id;
 	auto it = m_listeners.find(id);
@@ -305,7 +305,7 @@ int server_channel_handler::listener_set_attr_str(channel *ch, message &msg)
 int server_channel_handler::listener_get_attr_int(ipc::channel *ch, ipc::message &msg)
 {
 	cmd_listener_attr_int_t buf;
-	msg.disclose((char *)&buf);
+	msg.disclose((char *)&buf, sizeof(buf));
 	uint32_t id = buf.listener_id;
 	int attr = buf.attribute;
 	int value = 0;
@@ -359,7 +359,7 @@ int server_channel_handler::listener_get_attr_str(ipc::channel *ch, ipc::message
 	buf = (cmd_listener_attr_str_t *) new(std::nothrow) char[msg.size()];
 	retvm_if(!buf, -ENOMEM, "Failed to allocate memory");
 
-	msg.disclose((char *)buf);
+	msg.disclose((char *)buf, msg.size());
 
 	id = buf->listener_id;
 	auto it = m_listeners.find(id);
@@ -412,7 +412,7 @@ int server_channel_handler::listener_get_data(channel *ch, message &msg)
 	int len;
 	uint32_t id;
 
-	msg.disclose((char *)&buf);
+	msg.disclose((char *)&buf, sizeof(buf));
 	id = buf.listener_id;
 
 	auto it = m_listeners.find(id);
@@ -446,7 +446,7 @@ int server_channel_handler::listener_get_data_list(ipc::channel *ch, ipc::messag
 	int len;
 	uint32_t id;
 
-	msg.disclose((char *)&buf);
+	msg.disclose((char *)&buf, sizeof(buf));
 	id = buf.listener_id;
 
 	auto it = m_listeners.find(id);
@@ -514,7 +514,7 @@ int server_channel_handler::provider_publish(channel *ch, message &msg)
 	void *data = (void *)malloc(size);
 	retvm_if(!data, -ENOMEM, "Failed to allocate memory");
 
-	msg.disclose(data);
+	msg.disclose(data, size);
 
 	it->second->publish((sensor_data_t*)data, size);
 	return OP_SUCCESS;
@@ -524,7 +524,7 @@ int server_channel_handler::has_privileges(channel *ch, message &msg)
 {
 	sensor_handler *sensor;
 	cmd_has_privilege_t buf;
-	msg.disclose((char *)&buf);
+	msg.disclose((char *)&buf, sizeof(buf));
 
 	sensor = m_manager->get_sensor(buf.sensor);
 	retv_if(!sensor, OP_ERROR);
