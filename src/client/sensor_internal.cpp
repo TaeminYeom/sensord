@@ -38,6 +38,7 @@
 
 #define CONVERT_OPTION_TO_PAUSE_POLICY(option) ((option) ^ 0b11)
 #define MAX_LISTENER 100
+#define MAX_PROVIDER 20
 
 using namespace sensor;
 
@@ -55,6 +56,7 @@ typedef GSourceFunc callback_dispatcher_t;
 static sensor::sensor_manager manager;
 static std::unordered_map<int, sensor::sensor_listener *> listeners;
 static cmutex lock;
+static uint providerCnt = 0;
 
 static gboolean sensor_events_callback_dispatcher(gpointer data)
 {
@@ -896,6 +898,7 @@ API int sensord_remove_sensor_removed_cb(sensord_removed_cb callback)
 /* Sensor provider */
 API int sensord_create_provider(const char *uri, sensord_provider_h *provider)
 {
+	retvm_if(providerCnt >= MAX_PROVIDER, -EPERM, "Exceeded the maximum provider");
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 
 	std::string str_uri(uri);
@@ -912,6 +915,7 @@ API int sensord_create_provider(const char *uri, sensord_provider_h *provider)
 	retvm_if(!p, -ENOMEM, "Failed to allocate memory");
 
 	*provider = static_cast<sensord_provider_h>(p);
+	providerCnt++;
 	return OP_SUCCESS;
 }
 
@@ -920,6 +924,7 @@ API int sensord_destroy_provider(sensord_provider_h provider)
 	retvm_if(!provider, -EINVAL, "Invalid paramter");
 
 	delete static_cast<sensor::sensor_provider *>(provider);
+	providerCnt--;
 	return OP_SUCCESS;
 }
 
