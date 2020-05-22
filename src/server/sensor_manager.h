@@ -74,7 +74,7 @@ private:
 
 	int serialize(sensor_info *info, char **bytes);
 
-	void send(ipc::message &msg);
+	void send(std::shared_ptr<ipc::message> msg);
 	void send_added_msg(sensor_info *info);
 	void send_removed_msg(const std::string &uri);
 

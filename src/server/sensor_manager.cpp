@@ -130,10 +130,10 @@ int sensor_manager::serialize(sensor_info *info, char **bytes)
 	return size;
 }
 
-void sensor_manager::send(ipc::message &msg)
+void sensor_manager::send(std::shared_ptr<ipc::message> msg)
 {
 	for (auto it = m_channels.begin(); it != m_channels.end(); ++it)
-		(*it)->send_sync(msg);
+		(*it)->send(msg);
 }
 
 void sensor_manager::send_added_msg(sensor_info *info)
@@ -143,17 +143,17 @@ void sensor_manager::send_added_msg(sensor_info *info)
 
 	size = serialize(info, &bytes);
 
-	ipc::message msg((const char *)bytes, size);
-	msg.set_type(CMD_MANAGER_SENSOR_ADDED);
+	auto msg = ipc::message::create((const char *)bytes, size);
+	msg->set_type(CMD_MANAGER_SENSOR_ADDED);
 
 	send(msg);
 }
 
 void sensor_manager::send_removed_msg(const std::string &uri)
 {
-	ipc::message msg;
-	msg.set_type(CMD_MANAGER_SENSOR_REMOVED);
-	msg.enclose(uri.c_str(), uri.size());
+	auto msg = ipc::message::create();
+	msg->set_type(CMD_MANAGER_SENSOR_REMOVED);
+	msg->enclose(uri.c_str(), uri.size());
 
 	send(msg);
 }
