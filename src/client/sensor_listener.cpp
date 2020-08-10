@@ -203,6 +203,10 @@ void sensor_listener::restore(void)
 	if (latency != m_attributes_int.end())
 		set_max_batch_latency(m_attributes_int[SENSORD_ATTRIBUTE_MAX_BATCH_LATENCY]);
 
+	auto power = m_attributes_int.find(SENSORD_ATTRIBUTE_PAUSE_POLICY);
+	if (power != m_attributes_int.end())
+		set_attribute(SENSORD_ATTRIBUTE_PAUSE_POLICY, m_attributes_int[SENSORD_ATTRIBUTE_PAUSE_POLICY]);
+
 	_D("Restored listener[%d]", get_id());
 }
 
