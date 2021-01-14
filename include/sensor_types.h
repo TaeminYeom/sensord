@@ -25,7 +25,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <sensor_hal_types.h>
+#include <hal/hal-sensor-interface.h>
 
 #ifdef __cplusplus
 extern "C"

@@ -20,7 +20,6 @@
 #ifndef __SENSOR_LOADER_H__
 #define __SENSOR_LOADER_H__
 
-#include <sensor_hal.h>
 #include <physical_sensor.h>
 #include <fusion_sensor.h>
 #include <external_sensor.h>
@@ -41,7 +40,8 @@ public:
 	sensor_loader();
 	virtual ~sensor_loader();
 
-	void load_hal(const std::string &path, device_sensor_registry_t &devices);
+	void load_hal(device_sensor_registry_t &devices);
+	void load_hal_legacy(const std::string &path, device_sensor_registry_t &devices);
 	void load_physical_sensor(const std::string &path, physical_sensor_registry_t &sensors);
 	void load_fusion_sensor(const std::string &path, fusion_sensor_registry_t &sensors);
 	void load_external_sensor(const std::string &path, external_sensor_registry_t &sensors);

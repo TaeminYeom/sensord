@@ -19,28 +19,50 @@
 
 #include "sensor_loader.h"
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dlfcn.h>
 #include <dirent.h>
-#include <sensor_log.h>
-#include <sensor_hal.h>
-#include <physical_sensor.h>
+#include <dlfcn.h>
 #include <fusion_sensor.h>
+#include <hal/hal-sensor-interface.h>
+#include <hal/hal-sensor.h>
+#include <physical_sensor.h>
+#include <sensor_log.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <memory>
 
 using namespace sensor;
 
-sensor_loader::sensor_loader()
-{
+sensor_loader::sensor_loader() {
+  if (hal_sensor_get_backend() != 0) {
+    _E("Failed to load hal sensor backend");
+  }
 }
 
-sensor_loader::~sensor_loader()
-{
+sensor_loader::~sensor_loader() {
+  if (hal_sensor_put_backend() != 0) {
+    _E("Failed to clear hal sensor backend");
+  }
 }
 
-void sensor_loader::load_hal(const std::string &path, device_sensor_registry_t &devices)
+void sensor_loader::load_hal(device_sensor_registry_t &devices) {
+  void **results = nullptr;
+
+  int size = hal_sensor_create(&results);
+  if (size <= 0 || !results) {
+    _E("Failed to get sensor from hal sensor backend");
+    return;
+  }
+
+  for (int i = 0; i < size; ++i) {
+    devices.emplace_back(static_cast<sensor_device *>(results[i]));
+  }
+  _I("Success to load sensor from hal sensor backend");
+}
+
+
+void sensor_loader::load_hal_legacy(const std::string &path, device_sensor_registry_t &devices)
 {
 	load<sensor_device>(path, devices);
 }

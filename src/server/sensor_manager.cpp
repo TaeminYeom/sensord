@@ -37,8 +37,9 @@
 
 using namespace sensor;
 
-#define DEVICE_HAL_DIR_PATH_LEGACY LIBDIR "/sensor"
-#define DEVICE_HAL_DIR_PATH LIBDIR "/sensor/hal"
+#define DEVICE_HAL_DIR_PATH_LEGACY1 LIBDIR "/sensor"
+#define DEVICE_HAL_DIR_PATH_LEGACY2 HAL_LIBDIR "/sensorhub/" // only for emulator
+#define DEVICE_HAL_DIR_PATH_LEGACY3 LIBDIR "/sensor/hal"
 #define PHYSICAL_SENSOR_DIR_PATH LIBDIR "/sensor/physical"
 #define VIRTUAL_SENSOR_DIR_PATH LIBDIR "/sensor/fusion"
 #define EXTERNAL_SENSOR_DIR_PATH LIBDIR "/sensor/external"
@@ -59,8 +60,10 @@ sensor_manager::~sensor_manager()
 
 bool sensor_manager::init(void)
 {
-	m_loader.load_hal(DEVICE_HAL_DIR_PATH_LEGACY, devices);
-	m_loader.load_hal(DEVICE_HAL_DIR_PATH, devices);
+	m_loader.load_hal(devices);
+	m_loader.load_hal_legacy(DEVICE_HAL_DIR_PATH_LEGACY1, devices);
+	m_loader.load_hal_legacy(DEVICE_HAL_DIR_PATH_LEGACY2, devices);
+	m_loader.load_hal_legacy(DEVICE_HAL_DIR_PATH_LEGACY3, devices);
 	m_loader.load_physical_sensor(PHYSICAL_SENSOR_DIR_PATH, physical_sensors);
 	m_loader.load_fusion_sensor(VIRTUAL_SENSOR_DIR_PATH, fusion_sensors);
 	m_loader.load_external_sensor(EXTERNAL_SENSOR_DIR_PATH, external_sensors);

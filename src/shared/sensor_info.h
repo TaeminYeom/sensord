@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include <sensor_hal.h>
+#include <hal/hal-sensor-interface.h>
 #include <sensor_types.h>
 
 namespace sensor {

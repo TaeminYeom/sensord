@@ -1,13 +1,14 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(sensord CXX)
 
-SET(DEPENDENTS "glib-2.0 gio-2.0 dlog libsystemd-daemon cynara-client cynara-creds-socket cynara-session vconf")
+SET(DEPENDENTS "glib-2.0 gio-2.0 dlog libsystemd-daemon cynara-client cynara-creds-socket cynara-session vconf hal-api-sensor hal-api-common")
 
 INCLUDE(FindPkgConfig)
 PKG_CHECK_MODULES(SERVER_PKGS REQUIRED ${DEPENDENTS})
 
 ADD_DEFINITIONS(${SENSOR_DEFINITIONS})
 ADD_DEFINITIONS(-DLIBDIR="${CMAKE_INSTALL_LIBDIR}")
+ADD_DEFINITIONS(-DHAL_LIBDIR="${CMAKE_HAL_LIBDIR_PREFIX}")
 
 FOREACH(flag ${SERVER_PKGS_CFLAGS})
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")

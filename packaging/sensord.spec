@@ -18,6 +18,8 @@ BuildRequires:  pkgconfig(libtzplatform-config)
 BuildRequires:  pkgconfig(cynara-creds-socket)
 BuildRequires:  pkgconfig(cynara-client)
 BuildRequires:  pkgconfig(cynara-session)
+BuildRequires:  pkgconfig(hal-api-sensor)
+BuildRequires:  pkgconfig(hal-api-common)
 
 Requires:   %{name}-dummy = %{version}-%{release}
 Provides:   %{name}-profile_mobile = %{version}-%{release}
@@ -52,15 +54,6 @@ Requires:   %{name}-dummy = %{version}-%{release}
 %description devel
 Internal Sensor API (Development)
 
-
-%package -n sensor-hal-devel
-Summary:    Sensord HAL interface
-Group:      System/Development
-
-%description -n sensor-hal-devel
-Sensord HAL interface
-
-
 %package -n sensor-test
 Summary:    Sensord library
 Group:      System/Testing
@@ -74,7 +67,7 @@ Sensor functional testing
 %build
 MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 
-%cmake . -DMAJORVER=${MAJORVER} -DFULLVER=%{version}
+%cmake . -DMAJORVER=${MAJORVER} -DFULLVER=%{version} -DCMAKE_HAL_LIBDIR_PREFIX=%{_hal_libdir}
 make %{?_smp_mflags}
 
 %install
@@ -130,11 +123,6 @@ echo "You need to reinstall %{name}-dummy to keep using the APIs after uninstall
 %{_includedir}/sensor/*.h
 %{_libdir}/libsensor.so
 %{_libdir}/pkgconfig/sensor.pc
-
-
-%files -n sensor-hal-devel
-%manifest packaging/sensord.manifest
-%{_includedir}/sensor/sensor_hal*.h
 
 
 %files -n sensor-test
