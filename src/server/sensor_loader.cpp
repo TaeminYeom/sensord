@@ -22,7 +22,6 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fusion_sensor.h>
-#include <hal/hal-sensor-interface.h>
 #include <hal/hal-sensor.h>
 #include <physical_sensor.h>
 #include <sensor_log.h>

@@ -19,7 +19,7 @@
 #ifndef __FUSION_H__
 #define __FUSION_H__
 
-#include <hal/hal-sensor-interface.h>
+#include <hal/hal-sensor-types.h>
 
 class fusion {
 public:

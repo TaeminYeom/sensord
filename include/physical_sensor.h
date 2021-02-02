@@ -25,7 +25,7 @@
 #include <string>
 #include <sensor_types.h>
 
-#include <hal/hal-sensor-interface.h>
+#include <hal/hal-sensor-types.h>
 
 #ifndef SENSOR_VERSION
 #define PHYSICAL_SENSOR_VERSION(maj, min) \
