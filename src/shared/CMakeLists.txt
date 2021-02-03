@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(sensord-shared CXX)
 
-SET(DEPENDENTS "dlog libsystemd-daemon glib-2.0 gio-2.0 vconf libtzplatform-config")
+SET(DEPENDENTS "dlog libsystemd glib-2.0 gio-2.0 vconf libtzplatform-config")
 
 INCLUDE(FindPkgConfig)
 PKG_CHECK_MODULES(SHARED_PKGS REQUIRED ${DEPENDENTS})
