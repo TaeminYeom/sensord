@@ -116,7 +116,7 @@ static gboolean publish_batch_event(gpointer gdata)
 
 static void add_mysensor(void)
 {
-	sensord_provider_h provider;
+	sensord_provider_h provider = nullptr;
 
 	sensord_create_provider(MYSENSOR_URI, &provider);
 	sensord_provider_set_name(provider, MYSENSOR_NAME);

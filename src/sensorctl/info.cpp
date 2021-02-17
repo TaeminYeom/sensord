@@ -32,7 +32,7 @@ bool info_manager::run(int argc, char *argv[])
 {
 	sensor_type_t type;
 	sensor_t *sensors = nullptr;
-	int count;
+	int count = 0;
 
 	if (argc < INFO_ARGC) {
 		usage();
@@ -51,16 +51,16 @@ bool info_manager::run(int argc, char *argv[])
 
 void info_manager::show_info(sensor_t *sensors, int count)
 {
-	sensor_type_t type;
-	sensor_t sensor;
-	char *vendor;
-	char *name;
-	float min_range;
-	float max_range;
-	float resolution;
-	int min_interval;
-	int fifo_count;
-	int max_batch_count;
+	sensor_type_t type = UNKNOWN_SENSOR;
+	sensor_t sensor = nullptr;
+	char *vendor = nullptr;
+	char *name = nullptr;
+	float min_range = 0;
+	float max_range = 0;
+	float resolution = 0;
+	int min_interval = 0;
+	int fifo_count = 0;
+	int max_batch_count = 0;
 
 	for (int i = 0; i < count; ++i) {
 		sensor = sensors[i];
