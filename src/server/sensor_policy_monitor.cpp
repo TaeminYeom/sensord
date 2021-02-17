@@ -62,14 +62,26 @@ sensor_policy_monitor& sensor_policy_monitor::get_instance(void)
 
 sensor_policy_monitor::sensor_policy_monitor()
 {
-	vconf_notify_key_changed(VCONFKEY_PM_STATE, power_save_state_cb, NULL);
-	vconf_notify_key_changed(VCONFKEY_SETAPPL_PSMODE, power_save_state_cb, NULL);
+	int ret = vconf_notify_key_changed(VCONFKEY_PM_STATE, power_save_state_cb, NULL);
+	if (ret != 0) {
+		_D("Could not add notify callback to VCONFKEY_PM_STATE");
+	}
+	ret = vconf_notify_key_changed(VCONFKEY_SETAPPL_PSMODE, power_save_state_cb, NULL);
+	if (ret != 0) {
+		_D("Could not add notify callback to VCONFKEY_SETAPPL_PSMODE");
+	}
 }
 
 sensor_policy_monitor::~sensor_policy_monitor()
 {
-	vconf_ignore_key_changed(VCONFKEY_PM_STATE, power_save_state_cb);
-	vconf_ignore_key_changed(VCONFKEY_SETAPPL_PSMODE, power_save_state_cb);
+	int ret = vconf_ignore_key_changed(VCONFKEY_PM_STATE, power_save_state_cb);
+	if (ret != 0) {
+		_D("Failed to vconf_ignore_key_changed[VCONFKEY_PM_STATE]");
+	}
+	ret = vconf_ignore_key_changed(VCONFKEY_SETAPPL_PSMODE, power_save_state_cb);
+		if (ret != 0) {
+		_D("Failed to vconf_ignore_key_changed[VCONFKEY_SETAPPL_PSMODE]");
+	}
 }
 
 void sensor_policy_monitor::add_listener(sensor_policy_listener *listener)

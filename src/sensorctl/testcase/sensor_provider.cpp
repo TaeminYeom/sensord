@@ -116,18 +116,25 @@ static gboolean publish_batch_event(gpointer gdata)
 
 static void add_mysensor(void)
 {
+	int err = 0;
 	sensord_provider_h provider = nullptr;
 
-	sensord_create_provider(MYSENSOR_URI, &provider);
-	sensord_provider_set_name(provider, MYSENSOR_NAME);
-	sensord_provider_set_vendor(provider, MYSENSOR_VENDOR);
-	sensord_provider_set_range(provider, 0.0f, 1.0f);
-	sensord_provider_set_resolution(provider, 0.01f);
-
-	sensord_add_provider(provider);
-
-	sensord_remove_provider(provider);
-	sensord_destroy_provider(provider);
+	err = sensord_create_provider(MYSENSOR_URI, &provider);
+	EXPECT_EQ(err, 0);
+	err = sensord_provider_set_name(provider, MYSENSOR_NAME);
+	EXPECT_EQ(err, 0);
+	err = sensord_provider_set_vendor(provider, MYSENSOR_VENDOR);
+	EXPECT_EQ(err, 0);
+	err = sensord_provider_set_range(provider, 0.0f, 1.0f);
+	EXPECT_EQ(err, 0);
+	err = sensord_provider_set_resolution(provider, 0.01f);
+	EXPECT_EQ(err, 0);
+	err = sensord_add_provider(provider);
+	EXPECT_EQ(err, 0);
+	err = sensord_remove_provider(provider);
+	EXPECT_EQ(err, 0);
+	err = sensord_destroy_provider(provider);
+	EXPECT_EQ(err, 0);
 }
 
 static void added_cb(const char *uri, void *user_data)

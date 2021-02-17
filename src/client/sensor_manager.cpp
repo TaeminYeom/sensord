@@ -50,6 +50,7 @@ int sensor_manager::get_sensor(const char *uri, sensor_t *sensor)
 {
 	if (!is_supported(uri)) {
 		*sensor = NULL;
+		_D("Not supported URI [%s]\n", uri);
 		return -ENODATA;
 	}
 
