@@ -249,6 +249,10 @@ void sensor_manager::restore(void)
 {
 	ret_if(!is_connected());
 
+	m_cmd_channel->disconnect();
+	delete m_cmd_channel;
+	m_cmd_channel = NULL;
+
 	m_connected.store(false);
 	retm_if(!connect_channel(), "Failed to restore manager");
 

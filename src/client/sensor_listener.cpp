@@ -187,6 +187,11 @@ sensor_t sensor_listener::get_sensor(void)
 void sensor_listener::restore(void)
 {
 	ret_if(!is_connected());
+
+	m_cmd_channel->disconnect();
+	delete m_cmd_channel;
+	m_cmd_channel = NULL;
+
 	retm_if(!connect(), "Failed to restore listener");
 
 	_D("Restoring sensor listener");

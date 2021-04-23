@@ -364,6 +364,9 @@ API bool sensord_disconnect(int handle)
 	delete listener;
 	listeners.erase(handle);
 
+	if (listeners.empty())
+		manager.disconnect();
+
 	return true;
 }
 
