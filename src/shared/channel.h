@@ -74,7 +74,7 @@ private:
 	std::vector<uint64_t> m_pending_event_id;
 
 	std::atomic<bool> m_connected;
-	cmutex m_cmutex;
+	sensor::cmutex m_cmutex;
 };
 
 }

@@ -30,6 +30,7 @@
 #define SYSTEMD_SOCK_BUF_SIZE (128*1024)
 
 using namespace ipc;
+using namespace sensor;
 
 class send_event_handler : public event_handler
 {

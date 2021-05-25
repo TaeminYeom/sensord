@@ -24,6 +24,8 @@
 #include <cbase_lock.h>
 #include <sensor_log.h>
 
+using namespace sensor;
+
 cbase_lock::cbase_lock()
 {
 	m_history_mutex = PTHREAD_MUTEX_INITIALIZER;

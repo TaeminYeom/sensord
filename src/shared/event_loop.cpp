@@ -33,6 +33,7 @@
 #define BAD_HANDLE 0
 
 using namespace ipc;
+using namespace sensor;
 
 static gboolean g_io_handler(GIOChannel *ch, GIOCondition condition, gpointer data)
 {

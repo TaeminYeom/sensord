@@ -20,6 +20,8 @@
 #include <cmutex.h>
 #include <sensor_log.h>
 
+using namespace sensor;
+
 cmutex::cmutex()
 {
 	pthread_mutexattr_t mutex_attr;

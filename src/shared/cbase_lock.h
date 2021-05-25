@@ -22,6 +22,8 @@
 
 #include <pthread.h>
 
+namespace sensor {
+
 enum lock_type {
 	LOCK_TYPE_MUTEX,
 	LOCK_TYPE_READ,
@@ -83,5 +85,6 @@ public:
 	Autolock(cbase_lock &m, lock_type type);
 	~Autolock();
 };
+}
 
 #endif /* _CBASE_LOCK_H_ */

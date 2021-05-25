@@ -21,6 +21,7 @@
 #define _CMUTEX_H_
 
 #include "cbase_lock.h"
+namespace sensor {
 
 class cmutex : public cbase_lock {
 public:
@@ -39,4 +40,5 @@ private:
 	pthread_mutex_t m_mutex;
 };
 
+}
 #endif /* _CMUTEX_H_ */
