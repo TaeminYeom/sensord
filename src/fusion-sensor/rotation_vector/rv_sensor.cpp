@@ -40,7 +40,7 @@ static sensor_info2_t sensor_info = {
 	type: ROTATION_VECTOR_SENSOR,
 	uri: NAME_SENSOR,
 	vendor: NAME_VENDOR,
-	min_range: 0,
+	min_range: -1,
 	max_range: 1,
 	resolution: 1,
 	min_interval: 10,
