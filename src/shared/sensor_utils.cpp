@@ -61,6 +61,8 @@ static std::map<sensor_type_t, const char *> types = {
 	{GEOMAGNETIC_UNCAL_SENSOR,       "http://tizen.org/sensor/general/geomagnetic.uncalibrated"},
 	{GYROSCOPE_RV_SENSOR,            "http://tizen.org/sensor/general/gyroscope_rotation_vector"},
 	{GEOMAGNETIC_RV_SENSOR,          "http://tizen.org/sensor/general/geomagnetic_rotation_vector"},
+	{GYROSCOPE_ORIENTATION_SENSOR,   "http://tizen.org/sensor/general/gyroscope_orientation"},
+	{GEOMAGNETIC_ORIENTATION_SENSOR, "http://tizen.org/sensor/general/geomagnetic_orientation"},
 
 	{SIGNIFICANT_MOTION_SENSOR,      "http://tizen.org/sensor/general/significant_motion"},
 
