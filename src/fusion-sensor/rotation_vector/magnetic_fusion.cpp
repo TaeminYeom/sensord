@@ -21,19 +21,9 @@
 
 magnetic_fusion::magnetic_fusion()
 {
+	m_orientation_filter.init(2);
 }
 
 magnetic_fusion::~magnetic_fusion()
 {
-}
-
-bool magnetic_fusion::get_orientation(void)
-{
-	//_I("[fusion_sensor] : enable values are %d %d %d", m_enable_accel, m_enable_magnetic, m_enable_magnetic);
-	if (!m_enable_accel || !m_enable_magnetic)
-		return false;
-
-	m_orientation_filter.get_device_orientation(&m_accel, NULL, &m_magnetic);
-	m_timestamp = fmax(m_accel.m_time_stamp, m_magnetic.m_time_stamp);
-	return true;
 }

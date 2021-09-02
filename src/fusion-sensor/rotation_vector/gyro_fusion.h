@@ -26,8 +26,6 @@ class gyro_fusion : public fusion_base {
 public:
 	gyro_fusion();
 	~gyro_fusion();
-private:
-	bool get_orientation();
 };
 
 #endif /* __GYRO_FUSION_H__ */

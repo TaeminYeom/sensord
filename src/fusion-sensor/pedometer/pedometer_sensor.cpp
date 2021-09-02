@@ -19,7 +19,6 @@
 
 #include <sensor_log.h>
 #include <sensor_types.h>
-#include <fusion_util.h>
 #include <cmath>
 
 #define NAME_SENSOR "http://samsung.com/sensor/healthinfo/pedometer/samsung_pedometer"

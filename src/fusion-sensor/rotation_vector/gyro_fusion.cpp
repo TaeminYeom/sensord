@@ -21,19 +21,9 @@
 
 gyro_fusion::gyro_fusion()
 {
+	m_orientation_filter.init(1);
 }
 
 gyro_fusion::~gyro_fusion()
 {
-}
-
-bool gyro_fusion::get_orientation(void)
-{
-	//_I("[fusion_sensor] : enable values are %d %d %d", m_enable_accel, m_enable_gyro, m_enable_magnetic);
-	if (!m_enable_accel || !m_enable_gyro)
-		return false;
-
-	m_orientation_filter.get_device_orientation(&m_accel, &m_gyro, NULL);
-	m_timestamp = fmax(m_accel.m_time_stamp, m_gyro.m_time_stamp);
-	return true;
 }

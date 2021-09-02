@@ -21,7 +21,6 @@
 
 #include <sensor_log.h>
 #include <sensor_types.h>
-#include <fusion_util.h>
 
 #define NAME_SENSOR  "http://tizen.org/sensor/general/rotation_vector/tizen_default"
 #define NAME_VENDOR  "tizen.org"

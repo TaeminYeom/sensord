@@ -1,94 +1,103 @@
 /*
- * sensord
- *
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-#ifndef _ORIENTATION_FILTER_H_
-#define _ORIENTATION_FILTER_H_
+// released in android-11.0.0_r9
 
-#include "matrix.h"
-#include "vector.h"
-#include "sensor_data.h"
-#include "quaternion.h"
-#include "euler_angles.h"
-#include "rotation_matrix.h"
+#ifndef ANDROID_FUSION_H
+#define ANDROID_FUSION_H
 
-#define MOVING_AVERAGE_WINDOW_LENGTH	20
+#include "quat.h"
+#include "mat.h"
+#include "vec.h"
+#include "errors.h"
 
-#define M3X3R	3
-#define M3X3C	3
-#define M6X6R	6
-#define M6X6C	6
-#define V1x3S	3
-#define V1x4S	4
-#define V1x6S	6
-#define ACCEL_SCALE 1
-#define GYRO_SCALE 1146
-#define GEOMAGNETIC_SCALE 1
+namespace android {
 
-template <typename TYPE>
-class orientation_filter {
-public:
-	sensor_data<TYPE> m_accel;
-	sensor_data<TYPE> m_gyro;
-	sensor_data<TYPE> m_magnetic;
-	vect<TYPE, MOVING_AVERAGE_WINDOW_LENGTH> m_var_gyr_x;
-	vect<TYPE, MOVING_AVERAGE_WINDOW_LENGTH> m_var_gyr_y;
-	vect<TYPE, MOVING_AVERAGE_WINDOW_LENGTH> m_var_gyr_z;
-	vect<TYPE, MOVING_AVERAGE_WINDOW_LENGTH> m_var_roll;
-	vect<TYPE, MOVING_AVERAGE_WINDOW_LENGTH> m_var_pitch;
-	vect<TYPE, MOVING_AVERAGE_WINDOW_LENGTH> m_var_azimuth;
-	matrix<TYPE, M6X6R, M6X6C> m_driv_cov;
-	matrix<TYPE, M6X6R, M6X6C> m_aid_cov;
-	matrix<TYPE, M6X6R, M6X6C> m_tran_mat;
-	matrix<TYPE, M6X6R, M6X6C> m_measure_mat;
-	matrix<TYPE, M6X6R, M6X6C> m_pred_cov;
-	vect<TYPE, V1x6S> m_state_new;
-	vect<TYPE, V1x6S> m_state_old;
-	vect<TYPE, V1x6S> m_state_error;
-	vect<TYPE, V1x3S> m_bias_correction;
-	vect<TYPE, V1x3S> m_gyro_bias;
-	quaternion<TYPE> m_quat_aid;
-	quaternion<TYPE> m_quat_driv;
-	rotation_matrix<TYPE> m_rot_matrix;
-	euler_angles<TYPE> m_orientation;
-	quaternion<TYPE> m_quat_9axis;
-	quaternion<TYPE> m_quat_gaming_rv;
-	quaternion<TYPE> m_quaternion;
-	quaternion<TYPE>  m_quat_output;
-	euler_angles<TYPE> m_euler_error;
-	TYPE m_gyro_dt;
+typedef mat<float, 3, 4> mat34_t;
 
-	orientation_filter(void);
-	~orientation_filter(void);
-
-	inline void initialize_sensor_data(const sensor_data<TYPE> *accel,
-			const sensor_data<TYPE> *gyro, const sensor_data<TYPE> *magnetic);
-	inline void orientation_triad_algorithm(void);
-	inline void compute_accel_orientation(void);
-	inline void compute_covariance(void);
-	inline void time_update(void);
-	inline void time_update_gaming_rv(void);
-	inline void measurement_update(void);
-
-	void get_device_orientation(const sensor_data<TYPE> *accel,
-			const sensor_data<TYPE> *gyro, const sensor_data<TYPE> *magnetic);
+enum FUSION_MODE{
+    FUSION_9AXIS, // use accel gyro mag
+    FUSION_NOMAG, // use accel gyro (game rotation, gravity)
+    FUSION_NOGYRO, // use accel mag (geomag rotation)
+    NUM_FUSION_MODE
 };
 
-#include "orientation_filter.cpp"
+class orientation_filter {
+    /*
+     * the state vector is made of two sub-vector containing respectively:
+     * - modified Rodrigues parameters
+     * - the estimated gyro bias
+     */
+    quat_t  x0;
+    vec3_t  x1;
 
-#endif /* _ORIENTATION_FILTER_H_ */
+    /*
+     * the predicated covariance matrix is made of 4 3x3 sub-matrices and it is
+     * semi-definite positive.
+     *
+     * P = | P00  P10 | = | P00  P10 |
+     *     | P01  P11 |   | P10t P11 |
+     *
+     * Since P01 = transpose(P10), the code below never calculates or
+     * stores P01.
+     */
+    mat<mat33_t, 2, 2> P;
+
+    /*
+     * the process noise covariance matrix
+     */
+    mat<mat33_t, 2, 2> GQGt;
+
+public:
+    orientation_filter();
+    void init(int mode = FUSION_9AXIS);
+    void handleGyro(const vec3_t& w, float dT);
+    status_t handleAcc(const vec3_t& a, float dT);
+    status_t handleMag(const vec3_t& m);
+    vec4_t getAttitude() const;
+    vec3_t getBias() const;
+    mat33_t getRotationMatrix() const;
+    bool hasEstimate() const;
+
+private:
+    struct Parameter {
+        float gyroVar;
+        float gyroBiasVar;
+        float accStdev;
+        float magStdev;
+    } mParam;
+
+    mat<mat33_t, 2, 2> Phi;
+    vec3_t Ba, Bm;
+    uint32_t mInitState;
+    float mGyroRate;
+    vec<vec3_t, 3> mData;
+    size_t mCount[3];
+    int mMode;
+
+    enum { ACC=0x1, MAG=0x2, GYRO=0x4 };
+    bool checkInitComplete(int, const vec3_t& w, float d = 0);
+    void initFusion(const vec4_t& q0, float dT);
+    void checkState();
+    void predict(const vec3_t& w, float dT);
+    void update(const vec3_t& z, const vec3_t& Bi, float sigma);
+    static mat34_t getF(const vec4_t& p);
+    static vec3_t getOrthogonal(const vec3_t &v);
+};
+
+}
+
+#endif // ANDROID_FUSION_H

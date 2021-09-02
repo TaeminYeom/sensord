@@ -33,12 +33,7 @@ public:
 	virtual bool get_rv(unsigned long long &timestamp, float &w, float &x, float &y, float &z);
 
 protected:
-
-	sensor_data<float> m_accel;
-	sensor_data<float> m_gyro;
-	sensor_data<float> m_magnetic;
-
-	orientation_filter<float> m_orientation_filter;
+	android::orientation_filter m_orientation_filter;
 
 	bool m_enable_accel;
 	bool m_enable_gyro;
@@ -48,11 +43,14 @@ protected:
 	float m_y;
 	float m_z;
 	float m_w;
+
 	float m_timestamp;
+	float m_timestamp_accel;
+	float m_timestamp_gyro;
+	float m_timestamp_mag;
 
 	void clear();
 	void store_orientation(void);
-	virtual bool get_orientation(void) = 0;
 };
 
 

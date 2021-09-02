@@ -1,367 +1,560 @@
 /*
- * sensord
- *
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-
-#ifdef _ORIENTATION_FILTER_H_
+// released in android-11.0.0_r9
 
 #include "orientation_filter.h"
 
-//Windowing is used for buffering of previous samples for statistical analysis
-#define MOVING_AVERAGE_WINDOW_LENGTH	20
-//Earth's Gravity
-#define GRAVITY		9.80665
-#define PI		3.141593
-//Needed for non-zero initialization for statistical analysis
-#define NON_ZERO_VAL	0.1
-//microseconds to seconds
-#define US2S	(1.0 / 1000000.0)
-//Initialize sampling interval to 100000microseconds
-#define SAMPLE_INTV		100000
-#define ACCEL_THRESHOLD 0.2
-#define GYRO_THRESHOLD (0.01 * PI)
+using namespace android;
 
-// constants for computation of covariance and transition matrices
-#define ZIGMA_W		(0.05 * DEG2RAD)
-#define TAU_W		1000
-#define QWB_CONST	((2 * (ZIGMA_W * ZIGMA_W)) / TAU_W)
-#define F_CONST		(-1.0 / TAU_W)
-#define SQUARE(T)	(T * T)
+// -----------------------------------------------------------------------
 
-#define NEGLIGIBLE_VAL 0.0000001
+/*==================== BEGIN FUSION SENSOR PARAMETER =========================*/
 
-#define ABS(val) (((val) < 0) ? -(val) : (val))
+/* Note:
+ *   If a platform uses software fusion, it is necessary to tune the following
+ *   parameters to fit the hardware sensors prior to release.
+ *
+ *   The DEFAULT_ parameters will be used in FUSION_9AXIS and FUSION_NOMAG mode.
+ *   The GEOMAG_ parameters will be used in FUSION_NOGYRO mode.
+ */
+
+/*
+ * GYRO_VAR gives the measured variance of the gyro's output per
+ * Hz (or variance at 1 Hz). This is an "intrinsic" parameter of the gyro,
+ * which is independent of the sampling frequency.
+ *
+ * The variance of gyro's output at a given sampling period can be
+ * calculated as:
+ *      variance(T) = GYRO_VAR / T
+ *
+ * The variance of the INTEGRATED OUTPUT at a given sampling period can be
+ * calculated as:
+ *       variance_integrate_output(T) = GYRO_VAR * T
+ */
+static const float DEFAULT_GYRO_VAR = 1e-7;      // (rad/s)^2 / Hz
+static const float DEFAULT_GYRO_BIAS_VAR = 1e-12;  // (rad/s)^2 / s (guessed)
+static const float GEOMAG_GYRO_VAR = 1e-4;      // (rad/s)^2 / Hz
+static const float GEOMAG_GYRO_BIAS_VAR = 1e-8;  // (rad/s)^2 / s (guessed)
+
+/*
+ * Standard deviations of accelerometer and magnetometer
+ */
+static const float DEFAULT_ACC_STDEV  = 0.015f; // m/s^2 (measured 0.08 / CDD 0.05)
+static const float DEFAULT_MAG_STDEV  = 0.1f;   // uT    (measured 0.7  / CDD 0.5)
+static const float GEOMAG_ACC_STDEV  = 0.05f; // m/s^2 (measured 0.08 / CDD 0.05)
+static const float GEOMAG_MAG_STDEV  = 0.1f;   // uT    (measured 0.7  / CDD 0.5)
 
 
-template <typename TYPE>
-orientation_filter<TYPE>::orientation_filter()
-{
-	TYPE arr[MOVING_AVERAGE_WINDOW_LENGTH];
+/* ====================== END FUSION SENSOR PARAMETER ========================*/
 
-	std::fill_n(arr, MOVING_AVERAGE_WINDOW_LENGTH, NON_ZERO_VAL);
+static const float SYMMETRY_TOLERANCE = 1e-10f;
 
-	vect<TYPE, MOVING_AVERAGE_WINDOW_LENGTH> vec(arr);
+/*
+ * Accelerometer updates will not be performed near free fall to avoid
+ * ill-conditioning and div by zeros.
+ * Threshhold: 10% of g, in m/s^2
+ */
+static const float NOMINAL_GRAVITY = 9.81f;
+static const float FREE_FALL_THRESHOLD = 0.1f * (NOMINAL_GRAVITY);
 
-	m_var_gyr_x = vec;
-	m_var_gyr_y = vec;
-	m_var_gyr_z = vec;
-	m_var_roll = vec;
-	m_var_pitch = vec;
-	m_var_azimuth = vec;
-	m_gyro_dt = TYPE();
+/*
+ * The geomagnetic-field should be between 30uT and 60uT.
+ * Fields strengths greater than this likely indicate a local magnetic
+ * disturbance which we do not want to update into the fused frame.
+ */
+static const float MAX_VALID_MAGNETIC_FIELD = 100; // uT
+static const float MAX_VALID_MAGNETIC_FIELD_SQ =
+        MAX_VALID_MAGNETIC_FIELD*MAX_VALID_MAGNETIC_FIELD;
+
+/*
+ * Values of the field smaller than this should be ignored in fusion to avoid
+ * ill-conditioning. This state can happen with anomalous local magnetic
+ * disturbances canceling the Earth field.
+ */
+static const float MIN_VALID_MAGNETIC_FIELD = 10; // uT
+static const float MIN_VALID_MAGNETIC_FIELD_SQ =
+        MIN_VALID_MAGNETIC_FIELD*MIN_VALID_MAGNETIC_FIELD;
+
+/*
+ * If the cross product of two vectors has magnitude squared less than this,
+ * we reject it as invalid due to alignment of the vectors.
+ * This threshold is used to check for the case where the magnetic field sample
+ * is parallel to the gravity field, which can happen in certain places due
+ * to magnetic field disturbances.
+ */
+static const float MIN_VALID_CROSS_PRODUCT_MAG = 1.0e-3;
+static const float MIN_VALID_CROSS_PRODUCT_MAG_SQ =
+    MIN_VALID_CROSS_PRODUCT_MAG*MIN_VALID_CROSS_PRODUCT_MAG;
+
+static const float SQRT_3 = 1.732f;
+static const float WVEC_EPS = 1e-4f/SQRT_3;
+// -----------------------------------------------------------------------
+
+template <typename TYPE, size_t C, size_t R>
+static mat<TYPE, R, R> scaleCovariance(
+        const mat<TYPE, C, R>& A,
+        const mat<TYPE, C, C>& P) {
+    // A*P*transpose(A);
+    mat<TYPE, R, R> APAt;
+    for (size_t r=0 ; r<R ; r++) {
+        for (size_t j=r ; j<R ; j++) {
+            double apat(0);
+            for (size_t c=0 ; c<C ; c++) {
+                double v(A[c][r]*P[c][c]*0.5);
+                for (size_t k=c+1 ; k<C ; k++)
+                    v += A[k][r] * P[c][k];
+                apat += 2 * v * A[c][j];
+            }
+            APAt[j][r] = apat;
+            APAt[r][j] = apat;
+        }
+    }
+    return APAt;
 }
 
-template <typename TYPE>
-orientation_filter<TYPE>::~orientation_filter()
-{
+template <typename TYPE, typename OTHER_TYPE>
+static mat<TYPE, 3, 3> crossMatrix(const vec<TYPE, 3>& p, OTHER_TYPE diag) {
+    mat<TYPE, 3, 3> r;
+    r[0][0] = diag;
+    r[1][1] = diag;
+    r[2][2] = diag;
+    r[0][1] = p.z;
+    r[1][0] =-p.z;
+    r[0][2] =-p.y;
+    r[2][0] = p.y;
+    r[1][2] = p.x;
+    r[2][1] =-p.x;
+    return r;
 }
 
-template <typename TYPE>
-inline void orientation_filter<TYPE>::initialize_sensor_data(const sensor_data<TYPE> *accel,
-		const sensor_data<TYPE> *gyro, const sensor_data<TYPE> *magnetic)
-{
-	m_accel.m_data = accel->m_data;
-	m_accel.m_time_stamp = accel->m_time_stamp;
-	normalize(m_accel);
 
-	if (gyro != NULL) {
-		unsigned long long sample_interval_gyro = SAMPLE_INTV;
+template<typename TYPE, size_t SIZE>
+class Covariance {
+    mat<TYPE, SIZE, SIZE> mSumXX;
+    vec<TYPE, SIZE> mSumX;
+    size_t mN;
+public:
+    Covariance() : mSumXX(0.0f), mSumX(0.0f), mN(0) { }
+    void update(const vec<TYPE, SIZE>& x) {
+        mSumXX += x*transpose(x);
+        mSumX  += x;
+        mN++;
+    }
+    mat<TYPE, SIZE, SIZE> operator()() const {
+        const float N = 1.0f / mN;
+        return mSumXX*N - (mSumX*transpose(mSumX))*(N*N);
+    }
+    void reset() {
+        mN = 0;
+        mSumXX = 0;
+        mSumX = 0;
+    }
+    size_t getCount() const {
+        return mN;
+    }
+};
 
-		if (m_gyro.m_time_stamp != 0 && gyro->m_time_stamp != 0)
-			sample_interval_gyro = gyro->m_time_stamp - m_gyro.m_time_stamp;
+// -----------------------------------------------------------------------
 
-		m_gyro_dt = sample_interval_gyro * US2S;
-		m_gyro.m_time_stamp = gyro->m_time_stamp;
+orientation_filter::orientation_filter() {
+    Phi[0][1] = 0;
+    Phi[1][1] = 1;
 
-		m_gyro.m_data = gyro->m_data * (TYPE) PI;
+    Ba.x = 0;
+    Ba.y = 0;
+    Ba.z = 1;
 
-		m_gyro.m_data = m_gyro.m_data - m_bias_correction;
-	}
+    Bm.x = 0;
+    Bm.y = 1;
+    Bm.z = 0;
 
-	if (magnetic != NULL) {
-		m_magnetic.m_data = magnetic->m_data;
-		m_magnetic.m_time_stamp = magnetic->m_time_stamp;
-	}
+    x0 = 0;
+    x1 = 0;
+
+    init();
 }
 
-template <typename TYPE>
-inline void orientation_filter<TYPE>::orientation_triad_algorithm()
-{
-	TYPE arr_acc_e[V1x3S] = {0.0, 0.0, 1.0};
-	TYPE arr_mag_e[V1x3S] = {0.0, 1.0, 0.0};
+void orientation_filter::init(int mode) {
+    mInitState = 0;
 
-	vect<TYPE, V1x3S> acc_e(arr_acc_e);
-	vect<TYPE, V1x3S> mag_e(arr_mag_e);
+    mGyroRate = 0;
 
-	vect<TYPE, SENSOR_DATA_SIZE> acc_b_x_mag_b = cross(m_accel.m_data, m_magnetic.m_data);
-	vect<TYPE, V1x3S> acc_e_x_mag_e = cross(acc_e, mag_e);
+    mCount[0] = 0;
+    mCount[1] = 0;
+    mCount[2] = 0;
 
-	vect<TYPE, SENSOR_DATA_SIZE> cross1 = cross(acc_b_x_mag_b, m_accel.m_data);
-	vect<TYPE, V1x3S> cross2 = cross(acc_e_x_mag_e, acc_e);
+    mData = 0;
+    mMode = mode;
 
-	matrix<TYPE, M3X3R, M3X3C> mat_b;
-	matrix<TYPE, M3X3R, M3X3C> mat_e;
-
-	for(int i = 0; i < M3X3R; i++)
-	{
-		mat_b.m_mat[i][0] = m_accel.m_data.m_vec[i];
-		mat_b.m_mat[i][1] = acc_b_x_mag_b.m_vec[i];
-		mat_b.m_mat[i][2] = cross1.m_vec[i];
-		mat_e.m_mat[i][0] = acc_e.m_vec[i];
-		mat_e.m_mat[i][1] = acc_e_x_mag_e.m_vec[i];
-		mat_e.m_mat[i][2] = cross2.m_vec[i];
-	}
-
-	matrix<TYPE, M3X3R, M3X3C> mat_b_t = tran(mat_b);
-	rotation_matrix<TYPE> rot_mat(mat_e * mat_b_t);
-
-	m_quat_aid = rot_mat2quat(rot_mat);
+    if (mMode != FUSION_NOGYRO) { //normal or game rotation
+        mParam.gyroVar = DEFAULT_GYRO_VAR;
+        mParam.gyroBiasVar = DEFAULT_GYRO_BIAS_VAR;
+        mParam.accStdev = DEFAULT_ACC_STDEV;
+        mParam.magStdev = DEFAULT_MAG_STDEV;
+    } else {
+        mParam.gyroVar = GEOMAG_GYRO_VAR;
+        mParam.gyroBiasVar = GEOMAG_GYRO_BIAS_VAR;
+        mParam.accStdev = GEOMAG_ACC_STDEV;
+        mParam.magStdev = GEOMAG_MAG_STDEV;
+    }
 }
 
-template <typename TYPE>
-inline void orientation_filter<TYPE>::compute_accel_orientation()
+void orientation_filter::initFusion(const vec4_t& q, float dT)
 {
-	TYPE arr_acc_e[V1x3S] = {0.0, 0.0, 1.0};
+    // initial estimate: E{ x(t0) }
+    x0 = q;
+    x1 = 0;
 
-	vect<TYPE, V1x3S> acc_e(arr_acc_e);
+    // process noise covariance matrix: G.Q.Gt, with
+    //
+    //  G = | -1 0 |        Q = | q00 q10 |
+    //      |  0 1 |            | q01 q11 |
+    //
+    // q00 = sv^2.dt + 1/3.su^2.dt^3
+    // q10 = q01 = 1/2.su^2.dt^2
+    // q11 = su^2.dt
+    //
 
-	m_quat_aid = sensor_data2quat(m_accel, acc_e);
+    const float dT2 = dT*dT;
+    const float dT3 = dT2*dT;
+
+    // variance of integrated output at 1/dT Hz (random drift)
+    const float q00 = mParam.gyroVar * dT + 0.33333f * mParam.gyroBiasVar * dT3;
+
+    // variance of drift rate ramp
+    const float q11 = mParam.gyroBiasVar * dT;
+    const float q10 = 0.5f * mParam.gyroBiasVar * dT2;
+    const float q01 = q10;
+
+    GQGt[0][0] =  q00;      // rad^2
+    GQGt[1][0] = -q10;
+    GQGt[0][1] = -q01;
+    GQGt[1][1] =  q11;      // (rad/s)^2
+
+    // initial covariance: Var{ x(t0) }
+    // TODO: initialize P correctly
+    P = 0;
 }
 
-template <typename TYPE>
-inline void orientation_filter<TYPE>::compute_covariance()
-{
-	TYPE var_gyr_x, var_gyr_y, var_gyr_z;
-	TYPE var_roll, var_pitch, var_azimuth;
-	quaternion<TYPE> quat_diff, quat_error;
-
-	if(!is_initialized(m_quat_driv.m_quat))
-		m_quat_driv = m_quat_aid;
-
-	quaternion<TYPE> quat_rot_inc(0, m_gyro.m_data.m_vec[0], m_gyro.m_data.m_vec[1],
-			m_gyro.m_data.m_vec[2]);
-
-	quat_diff = (m_quat_driv * quat_rot_inc) * (TYPE) 0.5;
-
-	m_quat_driv = m_quat_driv + (quat_diff * (TYPE) m_gyro_dt * (TYPE) PI);
-	m_quat_driv.quat_normalize();
-
-	m_quat_output = phase_correction(m_quat_driv, m_quat_aid);
-
-	m_orientation = quat2euler(m_quat_output);
-
-	quat_error = m_quat_aid * m_quat_driv;
-
-	m_euler_error = (quat2euler(quat_error)).m_ang;
-
-	m_gyro.m_data = m_gyro.m_data - m_euler_error.m_ang;
-
-	m_euler_error.m_ang = m_euler_error.m_ang / (TYPE) PI;
-
-	m_gyro_bias = m_euler_error.m_ang * (TYPE) PI;
-
-	insert_end(m_var_gyr_x, m_gyro.m_data.m_vec[0]);
-	insert_end(m_var_gyr_y, m_gyro.m_data.m_vec[1]);
-	insert_end(m_var_gyr_z, m_gyro.m_data.m_vec[2]);
-	insert_end(m_var_roll, m_orientation.m_ang.m_vec[0]);
-	insert_end(m_var_pitch, m_orientation.m_ang.m_vec[1]);
-	insert_end(m_var_azimuth, m_orientation.m_ang.m_vec[2]);
-
-	var_gyr_x = var(m_var_gyr_x);
-	var_gyr_y = var(m_var_gyr_y);
-	var_gyr_z = var(m_var_gyr_z);
-	var_roll = var(m_var_roll);
-	var_pitch = var(m_var_pitch);
-	var_azimuth = var(m_var_azimuth);
-
-	m_driv_cov.m_mat[0][0] = var_gyr_x;
-	m_driv_cov.m_mat[1][1] = var_gyr_y;
-	m_driv_cov.m_mat[2][2] = var_gyr_z;
-	m_driv_cov.m_mat[3][3] = (TYPE) QWB_CONST;
-	m_driv_cov.m_mat[4][4] = (TYPE) QWB_CONST;
-	m_driv_cov.m_mat[5][5] = (TYPE) QWB_CONST;
-
-	m_aid_cov.m_mat[0][0] = var_roll;
-	m_aid_cov.m_mat[1][1] = var_pitch;
-	m_aid_cov.m_mat[2][2] = var_azimuth;
+bool orientation_filter::hasEstimate() const {
+    return ((mInitState & MAG) || (mMode == FUSION_NOMAG)) &&
+           ((mInitState & GYRO) || (mMode == FUSION_NOGYRO)) &&
+           (mInitState & ACC);
 }
 
-template <typename TYPE>
-inline void orientation_filter<TYPE>::time_update()
-{
-	euler_angles<TYPE> orientation;
+bool orientation_filter::checkInitComplete(int what, const vec3_t& d, float dT) {
+    if (hasEstimate())
+        return true;
 
-	m_tran_mat.m_mat[0][1] = m_gyro.m_data.m_vec[2];
-	m_tran_mat.m_mat[0][2] = -m_gyro.m_data.m_vec[1];
-	m_tran_mat.m_mat[1][0] = -m_gyro.m_data.m_vec[2];
-	m_tran_mat.m_mat[1][2] = m_gyro.m_data.m_vec[0];
-	m_tran_mat.m_mat[2][0] = m_gyro.m_data.m_vec[1];
-	m_tran_mat.m_mat[2][1] = -m_gyro.m_data.m_vec[0];
-	m_tran_mat.m_mat[3][3] = (TYPE) F_CONST;
-	m_tran_mat.m_mat[4][4] = (TYPE) F_CONST;
-	m_tran_mat.m_mat[5][5] = (TYPE) F_CONST;
+    if (what == ACC) {
+        mData[0] += d * (1/length(d));
+        mCount[0]++;
+        mInitState |= ACC;
+        if (mMode == FUSION_NOGYRO ) {
+            mGyroRate = dT;
+        }
+    } else if (what == MAG) {
+        mData[1] += d * (1/length(d));
+        mCount[1]++;
+        mInitState |= MAG;
+    } else if (what == GYRO) {
+        mGyroRate = dT;
+        mData[2] += d*dT;
+        mCount[2]++;
+        mInitState |= GYRO;
+    }
 
-	m_measure_mat.m_mat[0][0] = 1;
-	m_measure_mat.m_mat[1][1] = 1;
-	m_measure_mat.m_mat[2][2] = 1;
+    if (hasEstimate()) {
+        // Average all the values we collected so far
+        mData[0] *= 1.0f/mCount[0];
+        if (mMode != FUSION_NOMAG) {
+            mData[1] *= 1.0f/mCount[1];
+        }
+        mData[2] *= 1.0f/mCount[2];
 
-	if (is_initialized(m_state_old))
-		m_state_new = transpose(m_tran_mat * transpose(m_state_old));
+        // calculate the MRPs from the data collection, this gives us
+        // a rough estimate of our initial state
+        mat33_t R;
+        vec3_t  up(mData[0]);
+        vec3_t  east;
 
-	m_pred_cov = (m_tran_mat * m_pred_cov * tran(m_tran_mat)) + m_driv_cov;
+        if (mMode != FUSION_NOMAG) {
+            east = normalize(cross_product(mData[1], up));
+        } else {
+            east = getOrthogonal(up);
+        }
 
-	for (int j = 0; j < M6X6C; ++j) {
-		for (int i = 0; i < M6X6R; ++i) {
-			if (ABS(m_pred_cov.m_mat[i][j]) < NEGLIGIBLE_VAL)
-				m_pred_cov.m_mat[i][j] = NEGLIGIBLE_VAL;
-		}
-		if (ABS(m_state_new.m_vec[j]) < NEGLIGIBLE_VAL)
-			m_state_new.m_vec[j] = NEGLIGIBLE_VAL;
-	}
+        vec3_t north(cross_product(up, east));
+        R << east << north << up;
+        const vec4_t q = matrixToQuat(R);
 
-	m_quat_9axis = m_quat_output;
-	m_quat_gaming_rv = m_quat_9axis;
+        initFusion(q, mGyroRate);
+    }
 
-	m_rot_matrix = quat2rot_mat(m_quat_driv);
-
-	quaternion<TYPE> quat_eu_er(1, m_euler_error.m_ang.m_vec[0], m_euler_error.m_ang.m_vec[1],
-			m_euler_error.m_ang.m_vec[2]);
-
-	m_quat_driv = (m_quat_driv * quat_eu_er) * (TYPE) PI;
-	m_quat_driv.quat_normalize();
-
-	if (is_initialized(m_state_new)) {
-		m_state_error.m_vec[0] = m_euler_error.m_ang.m_vec[0];
-		m_state_error.m_vec[1] = m_euler_error.m_ang.m_vec[1];
-		m_state_error.m_vec[2] = m_euler_error.m_ang.m_vec[2];
-		m_state_error.m_vec[3] = m_state_new.m_vec[3];
-		m_state_error.m_vec[4] = m_state_new.m_vec[4];
-		m_state_error.m_vec[5] = m_state_new.m_vec[5];
-	}
+    return false;
 }
 
-template <typename TYPE>
-inline void orientation_filter<TYPE>::time_update_gaming_rv()
-{
-	euler_angles<TYPE> orientation;
-	euler_angles<TYPE> euler_aid;
-	euler_angles<TYPE> euler_driv;
+void orientation_filter::handleGyro(const vec3_t& w, float dT) {
+    if (!checkInitComplete(GYRO, w, dT))
+        return;
 
-	m_tran_mat.m_mat[0][1] = m_gyro.m_data.m_vec[2];
-	m_tran_mat.m_mat[0][2] = -m_gyro.m_data.m_vec[1];
-	m_tran_mat.m_mat[1][0] = -m_gyro.m_data.m_vec[2];
-	m_tran_mat.m_mat[1][2] = m_gyro.m_data.m_vec[0];
-	m_tran_mat.m_mat[2][0] = m_gyro.m_data.m_vec[1];
-	m_tran_mat.m_mat[2][1] = -m_gyro.m_data.m_vec[0];
-	m_tran_mat.m_mat[3][3] = (TYPE) F_CONST;
-	m_tran_mat.m_mat[4][4] = (TYPE) F_CONST;
-	m_tran_mat.m_mat[5][5] = (TYPE) F_CONST;
-
-	m_measure_mat.m_mat[0][0] = 1;
-	m_measure_mat.m_mat[1][1] = 1;
-	m_measure_mat.m_mat[2][2] = 1;
-
-	if (is_initialized(m_state_old))
-		m_state_new = transpose(m_tran_mat * transpose(m_state_old));
-
-	m_pred_cov = (m_tran_mat * m_pred_cov * tran(m_tran_mat)) + m_driv_cov;
-
-	euler_aid = quat2euler(m_quat_aid);
-	euler_driv = quat2euler(m_quat_output);
-
-	euler_angles<TYPE> euler_gaming_rv(euler_aid.m_ang.m_vec[0], euler_aid.m_ang.m_vec[1],
-			euler_driv.m_ang.m_vec[2]);
-	m_quat_gaming_rv = euler2quat(euler_gaming_rv);
-
-	if (is_initialized(m_state_new)) {
-		m_state_error.m_vec[0] = m_euler_error.m_ang.m_vec[0];
-		m_state_error.m_vec[1] = m_euler_error.m_ang.m_vec[1];
-		m_state_error.m_vec[2] = m_euler_error.m_ang.m_vec[2];
-		m_state_error.m_vec[3] = m_state_new.m_vec[3];
-		m_state_error.m_vec[4] = m_state_new.m_vec[4];
-		m_state_error.m_vec[5] = m_state_new.m_vec[5];
-	}
+    predict(w, dT);
 }
 
-template <typename TYPE>
-inline void orientation_filter<TYPE>::measurement_update()
-{
-	matrix<TYPE, M6X6R, M6X6C> gain;
-	matrix<TYPE, M6X6R, M6X6C> iden;
-	iden.m_mat[0][0] = iden.m_mat[1][1] = iden.m_mat[2][2] = 1;
-	iden.m_mat[3][3] = iden.m_mat[4][4] = iden.m_mat[5][5] = 1;
+status_t orientation_filter::handleAcc(const vec3_t& a, float dT) {
+    if (!checkInitComplete(ACC, a, dT))
+        return BAD_VALUE;
 
-	for (int j = 0; j < M6X6C; ++j) {
-		for (int i = 0; i < M6X6R; ++i) {
-			gain.m_mat[i][j] = m_pred_cov.m_mat[j][i] / (m_pred_cov.m_mat[j][j] + m_aid_cov.m_mat[j][j]);
-			m_state_new.m_vec[i] = m_state_new.m_vec[i] + gain.m_mat[i][j] * m_state_error.m_vec[j];
-		}
+    // ignore acceleration data if we're close to free-fall
+    const float l = length(a);
+    if (l < FREE_FALL_THRESHOLD) {
+        return BAD_VALUE;
+    }
 
-		matrix<TYPE, M6X6R, M6X6C> temp = iden;
+    const float l_inv = 1.0f/l;
 
-		for (int i = 0; i < M6X6R; ++i)
-			temp.m_mat[i][j] = iden.m_mat[i][j] - (gain.m_mat[i][j] * m_measure_mat.m_mat[j][i]);
+    if ( mMode == FUSION_NOGYRO ) {
+        //geo mag
+        vec3_t w_dummy;
+        w_dummy = x1; //bias
+        predict(w_dummy, dT);
+    }
 
-		m_pred_cov = temp * m_pred_cov;
-	}
+    if ( mMode == FUSION_NOMAG) {
+        vec3_t m;
+        m = getRotationMatrix()*Bm;
+        update(m, Bm, mParam.magStdev);
+    }
 
-	for (int j = 0; j < M6X6C; ++j) {
-		for (int i = 0; i < M6X6R; ++i) {
-			if (ABS(m_pred_cov.m_mat[i][j]) < NEGLIGIBLE_VAL)
-				m_pred_cov.m_mat[i][j] = NEGLIGIBLE_VAL;
-		}
-	}
+    vec3_t unityA = a * l_inv;
+    const float d = sqrtf(fabsf(l- NOMINAL_GRAVITY));
+    const float p = l_inv * mParam.accStdev*expf(d);
 
-	m_state_old = m_state_new;
-
-	TYPE arr_bias[V1x3S] = {m_state_new.m_vec[3], m_state_new.m_vec[4], m_state_new.m_vec[5]};
-	vect<TYPE, V1x3S> vec(arr_bias);
-
-	m_bias_correction = vec;
-
-	m_gyro_bias = m_gyro_bias + vec;
+    update(unityA, Ba, p);
+    return NO_ERROR;
 }
 
-template <typename TYPE>
-void orientation_filter<TYPE>::get_device_orientation(const sensor_data<TYPE> *accel,
-		const sensor_data<TYPE> *gyro, const sensor_data<TYPE> *magnetic)
-{
-	initialize_sensor_data(accel, gyro, magnetic);
+status_t orientation_filter::handleMag(const vec3_t& m) {
+    if (!checkInitComplete(MAG, m))
+        return BAD_VALUE;
 
-	if (gyro != NULL && magnetic != NULL) {
-		orientation_triad_algorithm();
-		compute_covariance();
-		time_update();
-		measurement_update();
-		m_quaternion = m_quat_9axis;
-	} else if (!gyro && !magnetic) {
-		compute_accel_orientation();
-		m_quaternion = m_quat_aid;
-	} else if (!gyro) {
-		orientation_triad_algorithm();
-		m_quaternion = m_quat_aid;
-	} else if (!magnetic) {
-		compute_accel_orientation();
-		compute_covariance();
-		time_update_gaming_rv();
-		measurement_update();
-		m_quaternion = m_quat_gaming_rv;
-	}
+    // the geomagnetic-field should be between 30uT and 60uT
+    // reject if too large to avoid spurious magnetic sources
+    const float magFieldSq = length_squared(m);
+    if (magFieldSq > MAX_VALID_MAGNETIC_FIELD_SQ) {
+        return BAD_VALUE;
+    } else if (magFieldSq < MIN_VALID_MAGNETIC_FIELD_SQ) {
+        // Also reject if too small since we will get ill-defined (zero mag)
+        // cross-products below
+        return BAD_VALUE;
+    }
+
+    // Orthogonalize the magnetic field to the gravity field, mapping it into
+    // tangent to Earth.
+    const vec3_t up( getRotationMatrix() * Ba );
+    const vec3_t east( cross_product(m, up) );
+
+    // If the m and up vectors align, the cross product magnitude will
+    // approach 0.
+    // Reject this case as well to avoid div by zero problems and
+    // ill-conditioning below.
+    if (length_squared(east) < MIN_VALID_CROSS_PRODUCT_MAG_SQ) {
+        return BAD_VALUE;
+    }
+
+    // If we have created an orthogonal magnetic field successfully,
+    // then pass it in as the update.
+    vec3_t north( cross_product(up, east) );
+
+    const float l_inv = 1 / length(north);
+    north *= l_inv;
+
+    update(north, Bm,  mParam.magStdev*l_inv);
+    return NO_ERROR;
 }
 
-#endif  //_ORIENTATION_FILTER_H_
+void orientation_filter::checkState() {
+    // P needs to stay positive semidefinite or the fusion diverges. When we
+    // detect divergence, we reset the fusion.
+    // TODO(braun): Instead, find the reason for the divergence and fix it.
+
+    if (!isPositiveSemidefinite(P[0][0], SYMMETRY_TOLERANCE) ||
+        !isPositiveSemidefinite(P[1][1], SYMMETRY_TOLERANCE)) {
+        P = 0;
+    }
+}
+
+vec4_t orientation_filter::getAttitude() const {
+    return x0;
+}
+
+vec3_t orientation_filter::getBias() const {
+    return x1;
+}
+
+mat33_t orientation_filter::getRotationMatrix() const {
+    return quatToMatrix(x0);
+}
+
+mat34_t orientation_filter::getF(const vec4_t& q) {
+    mat34_t F;
+
+    // This is used to compute the derivative of q
+    // F = | [q.xyz]x |
+    //     |  -q.xyz  |
+
+    F[0].x = q.w;   F[1].x =-q.z;   F[2].x = q.y;
+    F[0].y = q.z;   F[1].y = q.w;   F[2].y =-q.x;
+    F[0].z =-q.y;   F[1].z = q.x;   F[2].z = q.w;
+    F[0].w =-q.x;   F[1].w =-q.y;   F[2].w =-q.z;
+    return F;
+}
+
+void orientation_filter::predict(const vec3_t& w, float dT) {
+    const vec4_t q  = x0;
+    const vec3_t b  = x1;
+    vec3_t we = w - b;
+
+    if (length(we) < WVEC_EPS) {
+        we = (we[0]>0.f)?WVEC_EPS:-WVEC_EPS;
+    }
+    // q(k+1) = O(we)*q(k)
+    // --------------------
+    //
+    // O(w) = | cos(0.5*||w||*dT)*I33 - [psi]x                   psi |
+    //        | -psi'                              cos(0.5*||w||*dT) |
+    //
+    // psi = sin(0.5*||w||*dT)*w / ||w||
+    //
+    //
+    // P(k+1) = Phi(k)*P(k)*Phi(k)' + G*Q(k)*G'
+    // ----------------------------------------
+    //
+    // G = | -I33    0 |
+    //     |    0  I33 |
+    //
+    //  Phi = | Phi00 Phi10 |
+    //        |   0     1   |
+    //
+    //  Phi00 =   I33
+    //          - [w]x   * sin(||w||*dt)/||w||
+    //          + [w]x^2 * (1-cos(||w||*dT))/||w||^2
+    //
+    //  Phi10 =   [w]x   * (1        - cos(||w||*dt))/||w||^2
+    //          - [w]x^2 * (||w||*dT - sin(||w||*dt))/||w||^3
+    //          - I33*dT
+
+    const mat33_t I33(1);
+    const mat33_t I33dT(dT);
+    const mat33_t wx(crossMatrix(we, 0));
+    const mat33_t wx2(wx*wx);
+    const float lwedT = length(we)*dT;
+    const float hlwedT = 0.5f*lwedT;
+    const float ilwe = 1.f/length(we);
+    const float k0 = (1-cosf(lwedT))*(ilwe*ilwe);
+    const float k1 = sinf(lwedT);
+    const float k2 = cosf(hlwedT);
+    const vec3_t psi(sinf(hlwedT)*ilwe*we);
+    const mat33_t O33(crossMatrix(-psi, k2));
+    mat44_t O;
+    O[0].xyz = O33[0];  O[0].w = -psi.x;
+    O[1].xyz = O33[1];  O[1].w = -psi.y;
+    O[2].xyz = O33[2];  O[2].w = -psi.z;
+    O[3].xyz = psi;     O[3].w = k2;
+
+    Phi[0][0] = I33 - wx*(k1*ilwe) + wx2*k0;
+    Phi[1][0] = wx*k0 - I33dT - wx2*(ilwe*ilwe*ilwe)*(lwedT-k1);
+
+    x0 = O*q;
+
+    if (x0.w < 0)
+        x0 = -x0;
+
+    P = Phi*P*transpose(Phi) + GQGt;
+
+    checkState();
+}
+
+void orientation_filter::update(const vec3_t& z, const vec3_t& Bi, float sigma) {
+    vec4_t q(x0);
+    // measured vector in body space: h(p) = A(p)*Bi
+    const mat33_t A(quatToMatrix(q));
+    const vec3_t Bb(A*Bi);
+
+    // Sensitivity matrix H = dh(p)/dp
+    // H = [ L 0 ]
+    const mat33_t L(crossMatrix(Bb, 0));
+
+    // gain...
+    // K = P*Ht / [H*P*Ht + R]
+    vec<mat33_t, 2> K;
+    const mat33_t R(sigma*sigma);
+    const mat33_t S(scaleCovariance(L, P[0][0]) + R);
+    const mat33_t Si(invert(S));
+    const mat33_t LtSi(transpose(L)*Si);
+    K[0] = P[0][0] * LtSi;
+    K[1] = transpose(P[1][0])*LtSi;
+
+    // update...
+    // P = (I-K*H) * P
+    // P -= K*H*P
+    // | K0 | * | L 0 | * P = | K0*L  0 | * | P00  P10 | = | K0*L*P00  K0*L*P10 |
+    // | K1 |                 | K1*L  0 |   | P01  P11 |   | K1*L*P00  K1*L*P10 |
+    // Note: the Joseph form is numerically more stable and given by:
+    //     P = (I-KH) * P * (I-KH)' + K*R*R'
+    const mat33_t K0L(K[0] * L);
+    const mat33_t K1L(K[1] * L);
+    P[0][0] -= K0L*P[0][0];
+    P[1][1] -= K1L*P[1][0];
+    P[1][0] -= K0L*P[1][0];
+    P[0][1] = transpose(P[1][0]);
+
+    const vec3_t e(z - Bb);
+    const vec3_t dq(K[0]*e);
+
+    q += getF(q)*(0.5f*dq);
+    x0 = normalize_quat(q);
+
+    if (mMode != FUSION_NOMAG) {
+        const vec3_t db(K[1]*e);
+        x1 += db;
+    }
+
+    checkState();
+}
+
+vec3_t orientation_filter::getOrthogonal(const vec3_t &v) {
+    vec3_t w;
+    if (fabsf(v[0])<= fabsf(v[1]) && fabsf(v[0]) <= fabsf(v[2]))  {
+        w[0]=0.f;
+        w[1] = v[2];
+        w[2] = -v[1];
+    } else if (fabsf(v[1]) <= fabsf(v[2])) {
+        w[0] = v[2];
+        w[1] = 0.f;
+        w[2] = -v[0];
+    }else {
+        w[0] = v[1];
+        w[1] = -v[0];
+        w[2] = 0.f;
+    }
+    return normalize(w);
+}
+
+
+// -----------------------------------------------------------------------
+

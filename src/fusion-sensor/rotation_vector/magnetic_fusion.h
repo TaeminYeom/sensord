@@ -26,8 +26,6 @@ class magnetic_fusion: public fusion_base {
 public:
 	magnetic_fusion();
 	~magnetic_fusion();
-private:
-	bool get_orientation();
 };
 
 #endif /* __MAGNETIC_FUSION_H__ */

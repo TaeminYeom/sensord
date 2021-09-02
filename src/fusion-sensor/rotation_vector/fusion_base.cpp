@@ -25,9 +25,8 @@
 #include <cmath>
 #include "fusion_base.h"
 
-#define ACCEL_COMPENSATION -1
-#define GYRO_COMPENSATION 1
-#define MAG_COMPENSATION -1
+const float RAD2DEG = 57.29577951;
+const float US2S = 1000000.0f;
 
 fusion_base::fusion_base()
 : m_enable_accel(false)
@@ -38,6 +37,9 @@ fusion_base::fusion_base()
 , m_z(0)
 , m_w(0)
 , m_timestamp(0)
+, m_timestamp_accel(0)
+, m_timestamp_gyro(0)
+, m_timestamp_mag(0)
 {
 }
 
@@ -55,31 +57,45 @@ void fusion_base::clear(void)
 void fusion_base::push_accel(sensor_data_t &data)
 {
 	//_I("[fusion_sensor] : Pushing accel");
-	pre_process_data(m_accel, data.values, ACCEL_COMPENSATION, ACCEL_SCALE);
-	m_accel.m_time_stamp = data.timestamp;
+	android::vec3_t v(data.values);
+
+	float dT = (data.timestamp - m_timestamp_accel) / US2S;
+	m_timestamp_accel = data.timestamp;
+	m_timestamp = data.timestamp;
+
 	m_enable_accel = true;
-	if (get_orientation())
-		store_orientation();
+	m_orientation_filter.handleAcc(v, dT);
+	store_orientation();
 }
 
 void fusion_base::push_gyro(sensor_data_t &data)
 {
-	//_I("[fusion_sensor] : Pushing mag");
-	pre_process_data(m_gyro, data.values, GYRO_COMPENSATION, GYRO_SCALE);
-	m_gyro.m_time_stamp = data.timestamp;
+	//_I("[fusion_sensor] : Pushing gyro");
+	android::vec3_t v(data.values);
+	v[0] /= RAD2DEG;
+	v[1] /= RAD2DEG;
+	v[2] /= RAD2DEG;
+
+	float dT = (data.timestamp - m_timestamp_gyro) / US2S;
+	m_timestamp_gyro = data.timestamp;
+	m_timestamp = data.timestamp;
+
 	m_enable_gyro = true;
-	if (get_orientation())
-		store_orientation();
+	m_orientation_filter.handleGyro(v, dT);
+	store_orientation();
 }
 
 void fusion_base::push_mag(sensor_data_t &data)
 {
-	//_I("[fusion_sensor] : Pushing gyro");
-	pre_process_data(m_magnetic, data.values, MAG_COMPENSATION, GEOMAGNETIC_SCALE);
-	m_magnetic.m_time_stamp = data.timestamp;
+	//_I("[fusion_sensor] : Pushing mag");
+	android::vec3_t v(data.values);
+
+	m_timestamp_mag = data.timestamp;
+	m_timestamp = data.timestamp;
+
 	m_enable_magnetic = true;
-	if (get_orientation())
-		store_orientation();
+	m_orientation_filter.handleMag(v);
+	store_orientation();
 }
 
 bool fusion_base::get_rv(unsigned long long &timestamp, float &x, float &y, float &z, float &w)
@@ -96,14 +112,15 @@ bool fusion_base::get_rv(unsigned long long &timestamp, float &x, float &y, floa
 
 void fusion_base::store_orientation(void)
 {
-	m_x = m_orientation_filter.m_quaternion.m_quat.m_vec[0];
-	m_y = m_orientation_filter.m_quaternion.m_quat.m_vec[1];
-	m_z = m_orientation_filter.m_quaternion.m_quat.m_vec[2];
-	m_w = m_orientation_filter.m_quaternion.m_quat.m_vec[3];
+	android::quat_t q = m_orientation_filter.getAttitude();
+	m_x = q[0];
+	m_y = q[1];
+	m_z = q[2];
+	m_w = q[3];
 
 	if (std::isnan(m_x) || std::isnan(m_y) || std::isnan(m_z) || std::isnan(m_w)) {
-		m_timestamp = 0;
-		m_orientation_filter = orientation_filter<float>();
+		m_timestamp = m_timestamp_accel = m_timestamp_gyro = m_timestamp_mag = 0;
+		m_orientation_filter = android::orientation_filter();
 	}
 	clear();
 }

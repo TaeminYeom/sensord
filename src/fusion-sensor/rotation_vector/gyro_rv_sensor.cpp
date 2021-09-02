@@ -21,7 +21,6 @@
 
 #include <sensor_log.h>
 #include <sensor_types.h>
-#include <fusion_util.h>
 
 #define NAME_SENSOR  "http://tizen.org/sensor/general/gyroscope_rotation_vector/tizen_default"
 #define NAME_VENDOR  "tizen.org"
@@ -109,10 +108,10 @@ int gyro_rv_sensor::get_data(sensor_data_t **data, int *length)
 	sensor_data->accuracy = m_accuracy;
 	sensor_data->timestamp = m_time;
 	sensor_data->value_count = 4;
-	sensor_data->values[0] = m_x;
-	sensor_data->values[1] = m_y;
-	sensor_data->values[2] = m_z;
-	sensor_data->values[3] = m_w;
+	sensor_data->values[0] = m_w;
+	sensor_data->values[1] = m_x;
+	sensor_data->values[2] = m_y;
+	sensor_data->values[3] = m_z;
 
 	*data = sensor_data;
 	*length = sizeof(sensor_data_t);

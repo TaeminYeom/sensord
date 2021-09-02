@@ -132,7 +132,6 @@ int calculate_rotation_matrix(float *accel, float *geo, float *R, float *I)
 int quat_to_orientation(const float *quat, float &azimuth, float &pitch, float &roll)
 {
 	int error;
-	float g[3];
 	float R[9];
 
 	error = quat_to_matrix(quat, R);
@@ -140,69 +139,11 @@ int quat_to_orientation(const float *quat, float &azimuth, float &pitch, float &
 	if (error < 0)
 		return error;
 
-	float xyz_z = ARCTAN(R[3], R[0]);
-	float yxz_x = asinf(R[7]);
-	float yxz_y = ARCTAN(-R[6], R[8]);
-	float yxz_z = ARCTAN(-R[1], R[4]);
-
-	float a = fabs(yxz_x / HALF);
-	a = a * a;
-
-	float p = (fabs(yxz_y) / HALF - 1.0);
-
-	if (p < 0)
-		p = 0;
-
-	float v = 1 + (1 - a) / a * p;
-
-	if (v > 20)
-		v = 20;
-
-	if (yxz_x * yxz_y > 0) {
-		if (yxz_z > 0 && xyz_z < 0)
-			xyz_z += M_PI * 2;
-	} else {
-		if (yxz_z < 0 && xyz_z > 0)
-			xyz_z -= M_PI * 2;
-	}
-
-	g[0] = (1 - a * v) * yxz_z + (a * v) * xyz_z;
-	g[0] *= -1;
-
-	float tmp = R[7];
-
-	if (tmp > 1.0f)
-		tmp = 1.0f;
-	else if (tmp < -1.0f)
-		tmp = -1.0f;
-
-	g[1] = -asinf(tmp);
-	if (R[8] < 0)
-		g[1] = M_PI - g[1];
-
-	if (g[1] > M_PI)
-		g[1] -= M_PI * 2;
-
-	if ((fabs(R[7]) > QUAT))
-		g[2] = (float) atan2f(R[6], R[7]);
-	else
-		g[2] = (float) atan2f(R[6], R[8]);
-
-	if (g[2] > HALF)
-		g[2] = M_PI - g[2];
-	else if (g[2] < -HALF)
-		g[2] = -M_PI - g[2];
-
-	g[0] *= RAD2DEGREE;
-	g[1] *= RAD2DEGREE;
-	g[2] *= RAD2DEGREE;
-
-	if (g[0] < 0)
-		g[0] += 360;
-
-	azimuth = g[0];
-	pitch = g[1];
-	roll = g[2];
+	azimuth = atan2f(-R[3], R[0])  * RAD2DEGREE;
+	pitch = atan2f(-R[7], R[8])    * RAD2DEGREE;
+	roll = asinf (R[6])            * RAD2DEGREE;
+	if (azimuth < 0)
+		azimuth += 360;
 
 	return 0;
 }
