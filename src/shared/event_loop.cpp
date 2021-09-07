@@ -102,6 +102,9 @@ event_loop::event_loop(GMainLoop *mainloop)
 
 event_loop::~event_loop()
 {
+	if (m_term_fd != -1)
+		close(m_term_fd);
+
 	_D("Destoryed");
 }
 
@@ -268,7 +271,7 @@ bool event_loop::run(int timeout)
 		g_source_unref(src);
 	}
 
-	m_term_fd = eventfd(0, 0);
+	m_term_fd = eventfd(0, EFD_CLOEXEC);
 	retv_if(m_term_fd == -1, false);
 
 	terminator *handler = new(std::nothrow) terminator(this);
