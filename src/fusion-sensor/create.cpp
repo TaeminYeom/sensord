@@ -36,6 +36,8 @@
 #endif
 #ifdef ENABLE_ORIENTATION
 #include "orientation/orientation_sensor.h"
+#include "orientation/magnetic_orientation_sensor.h"
+#include "orientation/gyro_orientation_sensor.h"
 #endif
 #ifdef ENABLE_PEDOMETER
 #include "pedometer/pedometer_sensor.h"
@@ -87,6 +89,8 @@ extern "C" int create(fusion_sensor_t **fsensors)
 
 #ifdef ENABLE_ORIENTATION
 	create_sensor<orientation_sensor>("Orientation Sensor");
+	create_sensor<magnetic_orientation_sensor>("Magnetic Orientation Sensor");
+	create_sensor<gyro_orientation_sensor>("Gyroscope Orientation Sensor");
 #endif
 
 #ifdef ENABLE_PEDOMETER
