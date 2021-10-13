@@ -64,9 +64,9 @@ class orientation_filter {
 public:
     orientation_filter();
     void init(int mode = FUSION_9AXIS);
-    void handleGyro(const vec3_t& w, float dT);
-    status_t handleAcc(const vec3_t& a, float dT);
-    status_t handleMag(const vec3_t& m);
+    void handleGyro(const vec3_t w, float dT);
+    status_t handleAcc(const vec3_t a, float dT);
+    status_t handleMag(const vec3_t m);
     vec4_t getAttitude() const;
     vec3_t getBias() const;
     mat33_t getRotationMatrix() const;

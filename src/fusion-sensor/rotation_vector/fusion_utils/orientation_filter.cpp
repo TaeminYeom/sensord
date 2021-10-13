@@ -68,7 +68,7 @@ static const float SYMMETRY_TOLERANCE = 1e-10f;
  * ill-conditioning and div by zeros.
  * Threshhold: 10% of g, in m/s^2
  */
-static const float NOMINAL_GRAVITY = 9.81f;
+static const float NOMINAL_GRAVITY = 9.80665f;
 static const float FREE_FALL_THRESHOLD = 0.1f * (NOMINAL_GRAVITY);
 
 /*
@@ -308,14 +308,14 @@ bool orientation_filter::checkInitComplete(int what, const vec3_t& d, float dT) 
     return false;
 }
 
-void orientation_filter::handleGyro(const vec3_t& w, float dT) {
+void orientation_filter::handleGyro(const vec3_t w, float dT) {
     if (!checkInitComplete(GYRO, w, dT))
         return;
 
     predict(w, dT);
 }
 
-status_t orientation_filter::handleAcc(const vec3_t& a, float dT) {
+status_t orientation_filter::handleAcc(const vec3_t a, float dT) {
     if (!checkInitComplete(ACC, a, dT))
         return BAD_VALUE;
 
@@ -348,7 +348,7 @@ status_t orientation_filter::handleAcc(const vec3_t& a, float dT) {
     return NO_ERROR;
 }
 
-status_t orientation_filter::handleMag(const vec3_t& m) {
+status_t orientation_filter::handleMag(const vec3_t m) {
     if (!checkInitComplete(MAG, m))
         return BAD_VALUE;
 
