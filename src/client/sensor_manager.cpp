@@ -303,6 +303,9 @@ bool sensor_manager::get_sensors_internal(void)
 
 	reply.disclose(buf, MAX_BUF_SIZE);
 
+	if (!m_sensors.empty())
+		m_sensors.clear();
+
 	decode_sensors(buf, m_sensors);
 
 	return true;
