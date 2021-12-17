@@ -57,6 +57,8 @@ public:
 	int delete_batch_latency(sensor_observer *ob);
 	int set_attribute(sensor_observer *ob, int32_t attr, int32_t value);
 	int set_attribute(sensor_observer *ob, int32_t attr, const char *value, int len);
+	int get_attribute(int32_t attr, int32_t *value);
+	int get_attribute(int32_t attr, char **value, int *len);
 	int flush(sensor_observer *ob);
 	int get_data(sensor_data_t **data, int *len);
 

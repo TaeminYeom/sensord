@@ -314,6 +314,28 @@ int physical_sensor_handler::set_attribute(sensor_observer *ob, int32_t attr, co
 	return (ret ? OP_SUCCESS : OP_ERROR);
 }
 
+int physical_sensor_handler::get_attribute(int32_t attr, int32_t *value)
+{
+	retv_if(!m_device, -EINVAL);
+
+	bool ret = false;
+	int policy = OP_DEFAULT;
+
+	ret = m_device->get_attribute_int(m_hal_id, attr, value);
+	return (ret ? OP_SUCCESS : OP_ERROR);
+}
+
+int physical_sensor_handler::get_attribute(int32_t attr, char **value, int *len)
+{
+	retv_if(!m_device, -EINVAL);
+
+	bool ret = false;
+	int policy = OP_DEFAULT;
+
+	ret = m_device->get_attribute_str(m_hal_id, attr, value, len);
+	return (ret ? OP_SUCCESS : OP_ERROR);
+}
+
 int physical_sensor_handler::flush(sensor_observer *ob)
 {
 	retv_if(!m_device, -EINVAL);
