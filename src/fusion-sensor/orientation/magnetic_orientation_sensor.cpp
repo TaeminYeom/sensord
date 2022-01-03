@@ -88,7 +88,7 @@ int magnetic_orientation_sensor::update(uint32_t id, sensor_data_t *data, int le
 	m_time = data->timestamp;
 	m_accuracy = data->accuracy;
 
-	_D("[magnetic_orientation] : [%10f] [%10f] [%10f]", m_azimuth, m_pitch, m_roll);
+	//_D("[magnetic_orientation] : [%10f] [%10f] [%10f]", m_azimuth, m_pitch, m_roll);
 	return OP_SUCCESS;
 }
 
