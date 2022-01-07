@@ -43,6 +43,7 @@ sensor_info::sensor_info()
 , m_max_range(0)
 , m_resolution(0)
 , m_min_interval(0)
+, m_max_interval(0)
 , m_max_batch_count(0)
 , m_wakeup_supported(false)
 , m_privilege("")
@@ -58,6 +59,7 @@ sensor_info::sensor_info(const sensor_info &info)
 , m_max_range(info.m_max_range)
 , m_resolution(info.m_resolution)
 , m_min_interval(info.m_min_interval)
+, m_max_interval(info.m_max_interval)
 , m_max_batch_count(info.m_max_batch_count)
 , m_wakeup_supported(info.m_wakeup_supported)
 , m_privilege(info.m_privilege)
@@ -79,6 +81,7 @@ sensor_info::sensor_info(const sensor_info_t &info)
 	set_max_range(info.max_range);
 	set_resolution(info.resolution);
 	set_min_interval(info.min_interval);
+	set_max_interval(info.max_interval);
 	set_max_batch_count(info.max_batch_count);
 	set_wakeup_supported(info.wakeup_supported);
 	/* TODO: sensor_info_t should have privilege string */
@@ -98,6 +101,7 @@ sensor_info::sensor_info(const sensor_info2_t &info)
 	set_max_range(info.max_range);
 	set_resolution(info.resolution);
 	set_min_interval(info.min_interval);
+	set_max_interval(info.max_interval);
 	set_max_batch_count(info.max_batch_count);
 	set_wakeup_supported(info.wakeup_supported);
 	set_privilege(info.privilege);
@@ -141,6 +145,11 @@ float sensor_info::get_resolution(void)
 int sensor_info::get_min_interval(void)
 {
 	return m_min_interval;
+}
+
+int sensor_info::get_max_interval(void)
+{
+	return m_max_interval;
 }
 
 int sensor_info::get_max_batch_count(void)
@@ -212,6 +221,11 @@ void sensor_info::set_min_interval(int min_interval)
 	m_min_interval = min_interval;
 }
 
+void sensor_info::set_max_interval(int max_interval)
+{
+	m_max_interval = max_interval;
+}
+
 void sensor_info::set_max_batch_count(int max_batch_count)
 {
 	m_max_batch_count = max_batch_count;
@@ -244,6 +258,7 @@ void sensor_info::serialize(raw_data_t &data)
 	put(data, m_max_range);
 	put(data, m_resolution);
 	put(data, m_min_interval);
+	//put(data, m_max_interval); to do
 	put(data, m_max_batch_count);
 	put(data, m_wakeup_supported);
 	put(data, m_privilege);
@@ -265,6 +280,7 @@ void sensor_info::deserialize(const char *data, int data_len)
 	it = get(it, m_max_range);
 	it = get(it, m_resolution);
 	it = get(it, m_min_interval);
+	//it = get(it, m_max_interval); to do
 	it = get(it, m_max_batch_count);
 	it = get(it, m_wakeup_supported);
 	it = get(it, m_privilege);
@@ -294,6 +310,7 @@ void sensor_info::clear(void)
 	m_max_range = 0.0f;
 	m_resolution = 0.0f;
 	m_min_interval = 0;
+	m_max_interval = 0;
 	m_max_batch_count = 0;
 	m_wakeup_supported = false;
 	m_privilege.clear();

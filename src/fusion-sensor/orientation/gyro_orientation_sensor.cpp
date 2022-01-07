@@ -23,10 +23,12 @@
 #include <sensor_types.h>
 #include <fusion_util.h>
 
-#define NAME_SENSOR "http://tizen.org/sensor/general/gyroscope_orientation/tizen_default"
-#define NAME_VENDOR "tizen.org"
-#define SRC_ID_RV   0x1
-#define SRC_STR_RV  "http://tizen.org/sensor/general/gyroscope_rotation_vector"
+#define NAME_SENSOR       "http://tizen.org/sensor/general/gyroscope_orientation/tizen_default"
+#define NAME_VENDOR       "tizen.org"
+#define SRC_ID_RV         0x1
+#define SRC_STR_RV        "http://tizen.org/sensor/general/gyroscope_rotation_vector"
+
+#define GYRO_MAX_INTERVAL 50
 
 static sensor_info2_t sensor_info = {
 	id: 0x1,
@@ -37,6 +39,7 @@ static sensor_info2_t sensor_info = {
 	max_range: 360,
 	resolution: 0.01,
 	min_interval: 10,
+	max_interval: (int) (GYRO_MAX_INTERVAL * 0.8),
 	max_batch_count: 0,
 	wakeup_supported: false,
 	privilege:"",

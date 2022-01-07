@@ -48,6 +48,7 @@ public:
 	float get_max_range(void);
 	float get_resolution(void);
 	int get_min_interval(void);
+	int get_max_interval(void);
 	int get_max_batch_count(void);
 	bool is_wakeup_supported(void);
 	std::string &get_privilege(void);
@@ -60,6 +61,7 @@ public:
 	void set_max_range(float max_range);
 	void set_resolution(float resolution);
 	void set_min_interval(int min_interval);
+	void set_max_interval(int max_interval);
 	void set_max_batch_count(int max_batch_count);
 	void set_wakeup_supported(bool supported);
 	void set_privilege(const char *privilege);
@@ -80,6 +82,7 @@ private:
 	float m_max_range;
 	float m_resolution;
 	int m_min_interval;
+	int m_max_interval;
 	int m_max_batch_count;
 	bool m_wakeup_supported;
 	std::string m_privilege;

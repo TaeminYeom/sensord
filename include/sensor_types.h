@@ -200,6 +200,7 @@ typedef struct sensor_info2_t {
 	float max_range;
 	float resolution;
 	int min_interval;
+	int max_interval;
 	int max_batch_count;
 	bool wakeup_supported;
 	const char *privilege;

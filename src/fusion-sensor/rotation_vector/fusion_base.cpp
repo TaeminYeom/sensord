@@ -28,6 +28,10 @@
 const float RAD2DEG = 57.29577951;
 const float US2S = 1000000.0f;
 
+const float ACCEL_MAX_INTERVAL = 0.1f; // 100ms
+const float GYRO_MAX_INTERVAL = 0.05f; // 50ms
+const float MAG_MAX_INTERVAL = 0.1f;   // 100ms
+
 fusion_base::fusion_base()
 : m_enable_accel(false)
 , m_enable_gyro(false)
@@ -61,10 +65,13 @@ void fusion_base::push_accel(sensor_data_t &data)
 
 	float dT = (data.timestamp - m_timestamp_accel) / US2S;
 	m_timestamp_accel = data.timestamp;
-	m_timestamp = data.timestamp;
+	if (m_timestamp < data.timestamp)
+		m_timestamp = data.timestamp;
 
 	m_enable_accel = true;
-	m_orientation_filter.handleAcc(v, dT);
+
+	if (0 < dT && dT < ACCEL_MAX_INTERVAL)
+		m_orientation_filter.handleAcc(v, dT);
 	store_orientation();
 }
 
@@ -78,10 +85,13 @@ void fusion_base::push_gyro(sensor_data_t &data)
 
 	float dT = (data.timestamp - m_timestamp_gyro) / US2S;
 	m_timestamp_gyro = data.timestamp;
-	m_timestamp = data.timestamp;
+	if (m_timestamp < data.timestamp)
+		m_timestamp = data.timestamp;
 
 	m_enable_gyro = true;
-	m_orientation_filter.handleGyro(v, dT);
+
+	if (0 < dT && dT < GYRO_MAX_INTERVAL)
+		m_orientation_filter.handleGyro(v, dT);
 	store_orientation();
 }
 
@@ -90,11 +100,15 @@ void fusion_base::push_mag(sensor_data_t &data)
 	//_I("[fusion_sensor] : Pushing mag");
 	android::vec3_t v(data.values);
 
+	float dT = (data.timestamp - m_timestamp_mag) / US2S;
 	m_timestamp_mag = data.timestamp;
-	m_timestamp = data.timestamp;
+	if (m_timestamp < data.timestamp)
+		m_timestamp = data.timestamp;
 
 	m_enable_magnetic = true;
-	m_orientation_filter.handleMag(v);
+
+	if (0 < dT && dT < MAG_MAX_INTERVAL)
+		m_orientation_filter.handleMag(v);
 	store_orientation();
 }
 

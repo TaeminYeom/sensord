@@ -34,6 +34,8 @@
 #define SRC_ID_MAG   0x3
 #define SRC_STR_MAG  "http://tizen.org/sensor/general/magnetic"
 
+#define GYRO_MAX_INTERVAL 50
+
 static sensor_info2_t sensor_info = {
 	id: 0x1,
 	type: ROTATION_VECTOR_SENSOR,
@@ -43,6 +45,7 @@ static sensor_info2_t sensor_info = {
 	max_range: 1,
 	resolution: 1,
 	min_interval: 10,
+	max_interval: (int) (GYRO_MAX_INTERVAL * 0.8),
 	max_batch_count: 0,
 	wakeup_supported: false,
 	privilege:"",

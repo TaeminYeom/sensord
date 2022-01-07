@@ -79,6 +79,7 @@ private:
 	int set_attribute_internal(int32_t attr, const char *value, int len);
 
 	int get_min_interval(void);
+	int get_max_interval(void);
 	int get_min_batch_latency(void);
 
 	fusion_sensor *m_sensor;
