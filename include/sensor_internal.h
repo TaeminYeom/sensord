@@ -26,11 +26,14 @@
 
 #include <stdbool.h>
 #include <sys/types.h>
+#include <limits.h>
 
 /*header for common sensor type*/
 #include <sensor_types.h>
 #include <sensor_deprecated.h>
 #include <sensor_internal_deprecated.h>
+
+const unsigned int SENSOR_BATCH_LATENCY_DEFAULT = UINT_MAX;
 
 #ifdef __cplusplus
 extern "C"

@@ -599,7 +599,8 @@ API bool sensord_start(int handle, int option)
 		listener->set_interval(interval);
 
 	batch_latency = listener->get_max_batch_latency();
-	listener->set_max_batch_latency(batch_latency);
+	if (batch_latency != SENSOR_BATCH_LATENCY_DEFAULT)
+		listener->set_max_batch_latency(batch_latency);
 
 	_D("Start[%d] with the interval[%d] batch_latency[%d]",
 		listener->get_id(), interval, batch_latency);
