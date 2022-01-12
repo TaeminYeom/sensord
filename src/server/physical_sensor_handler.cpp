@@ -24,8 +24,6 @@
 #include <message.h>
 #include <algorithm>
 
-const int MAX_INTERVAL = 255000;
-
 using namespace sensor;
 
 physical_sensor_handler::physical_sensor_handler(const sensor_info &info,
@@ -151,34 +149,25 @@ int physical_sensor_handler::get_min_interval(void)
 
 	interval = *std::min_element(temp.begin(), temp.end());
 
-	if (interval > m_info.get_min_interval())
+	if (interval < m_info.get_min_interval())
 		return m_info.get_min_interval();
 
 	return interval;
-}
-
-int physical_sensor_handler::get_max_interval(void)
-{
-	int ret = m_info.get_max_interval();
-	if (ret)
-		return ret;
-	return MAX_INTERVAL;
 }
 
 int physical_sensor_handler::set_interval(sensor_observer *ob, int32_t interval)
 {
 	retv_if(!m_device, -EINVAL);
 
-	int _interval = interval;
-	int max_interval = get_max_interval();
-	int min_interval = get_min_interval();
-
-	if (_interval > max_interval)
-		_interval = max_interval;
-	else if (_interval < min_interval)
-		_interval = min_interval;
-
+	bool ret = false;
+	int32_t _interval;
 	int policy = OP_DEFAULT;
+
+	int max_interval = m_info.get_max_interval();
+	if (0 < max_interval && max_interval < interval)
+		_interval = max_interval;
+	else
+		_interval = interval;
 
 	if (m_sensor) {
 		policy = m_sensor->set_interval(ob, _interval);
@@ -187,9 +176,11 @@ int physical_sensor_handler::set_interval(sensor_observer *ob, int32_t interval)
 
 	m_interval_map[ob] = _interval;
 
+	if (policy == OP_DEFAULT)
+		_interval = get_min_interval();
+
 	retv_if(m_prev_interval == _interval, OP_SUCCESS);
 
-	bool ret;
 	ret = m_device->set_interval(m_hal_id, _interval);
 
 	update_prev_interval(_interval);

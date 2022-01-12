@@ -24,8 +24,6 @@
 #include <sensor_log.h>
 #include <algorithm>
 
-const int MAX_INTERVAL = 255000;
-
 using namespace sensor;
 
 fusion_sensor_handler::fusion_sensor_handler(const sensor_info &info,
@@ -126,39 +124,32 @@ int fusion_sensor_handler::get_min_interval(void)
 
 	interval = *std::min_element(temp.begin(), temp.end());
 
-	if (interval > m_info.get_min_interval())
+	if (interval < m_info.get_min_interval())
 		return m_info.get_min_interval();
 
 	return interval;
-}
-
-int fusion_sensor_handler::get_max_interval(void)
-{
-	int ret = m_info.get_max_interval();
-	if (ret)
-		return ret;
-	return MAX_INTERVAL;
 }
 
 int fusion_sensor_handler::set_interval(sensor_observer *ob, int32_t interval)
 {
 	retv_if(!m_sensor, -EINVAL);
 
-	int _interval = interval;
-	int max_interval = get_max_interval();
-	int min_interval = get_min_interval();
-
-	if (max_interval > 0 && _interval > max_interval)
-		_interval = max_interval;
-	else if (min_interval > 0 && _interval < min_interval)
-		_interval = min_interval;
-
 	int policy = OP_DEFAULT;
+
+	int _interval;
+	int max_interval = m_info.get_max_interval();
+	if (0 < max_interval && max_interval < interval)
+		_interval = max_interval;
+	else
+		_interval = interval;
 
 	policy = m_sensor->set_interval(ob, _interval);
 	retv_if(policy <= OP_ERROR, policy);
 
 	m_interval_map[ob] = _interval;
+
+	if (policy == OP_DEFAULT)
+		_interval = get_min_interval();
 
 	update_prev_interval(_interval);
 

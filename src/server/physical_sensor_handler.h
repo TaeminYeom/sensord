@@ -64,7 +64,6 @@ public:
 
 private:
 	int get_min_interval(void);
-	int get_max_interval(void);
 	int get_min_batch_latency(void);
 
 	sensor_device *m_device;
