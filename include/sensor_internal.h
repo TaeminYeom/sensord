@@ -33,7 +33,7 @@
 #include <sensor_deprecated.h>
 #include <sensor_internal_deprecated.h>
 
-const unsigned int SENSOR_BATCH_LATENCY_DEFAULT = UINT_MAX;
+#define SENSOR_BATCH_LATENCY_DEFAULT UINT_MAX
 
 #ifdef __cplusplus
 extern "C"
