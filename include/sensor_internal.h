@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef __SENSOR_INTERNAL_H__
-#define __SENSOR_INTERNAL_H__
+#ifndef __SENSORD_INTERNAL_H__
+#define __SENSORD_INTERNAL_H__
 
 #ifndef API
 #define API __attribute__((visibility("default")))
@@ -544,4 +544,4 @@ bool sensord_external_post(int handle, unsigned long long timestamp, const float
 }
 #endif
 
-#endif
+#endif /* __SENSORD_INTERNAL_H__ */
