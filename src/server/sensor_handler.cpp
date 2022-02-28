@@ -125,6 +125,7 @@ int sensor_handler::get_cache(sensor_data_t **data, int *len)
 	*len = size;
 	*data = (sensor_data_t *)temp;
 
+	m_sensor_data_cache.clear();
 	return 0;
 }
 

@@ -649,14 +649,17 @@ int sensor_listener::get_sensor_data(sensor_data_t *data)
 	m_cmd_channel->send_sync(msg);
 	m_cmd_channel->read_sync(reply);
 
+	if (reply.header()->err < 0) {
+		return OP_ERROR;
+	}
+
 	reply.disclose((char *)&buf, sizeof(buf));
 	int size = sizeof(sensor_data_t);
 
-	if (buf.len > size || buf.len < 0) {
+	if (buf.len > size || buf.len <= 0) {
 		data->accuracy = -1;
 		data->value_count = 0;
-		/* TODO: it should return OP_ERROR */
-		return OP_SUCCESS;
+		return OP_ERROR;
 	}
 
 	memcpy(data, &buf.data, buf.len);
