@@ -181,6 +181,8 @@ void channel::disconnect(void)
 	if (m_handler) {
 		_D("Disconnect channel[%p] handler[%p]", this, m_handler);
 		m_handler->disconnected(this);
+		if (!m_loop)
+			delete m_handler;
 		m_handler = NULL;
 	}
 

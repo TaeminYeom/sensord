@@ -222,19 +222,7 @@ void event_loop::release_info(handler_info *info)
 	g_io_channel_unref(info->g_ch);
 
 	info->g_ch = NULL;
-	channel_event_handler *ce_handler = nullptr;
-	ce_handler = dynamic_cast<channel_event_handler *>(info->handler);
-	if (ce_handler) {
-		// _D("Add idle event for lazy release : handler[%p] event[%llu]", ce_handler, info->id);
-		add_idle_event(0, [](size_t, void *data) {
-			channel_event_handler *handler = (channel_event_handler *)data;
-			delete handler;
-		}, ce_handler);
-	} else {
-		// _D("Release handler[%p] event[%llu]", info->handler, info->id);
-		delete info->handler;
-	}
-
+	delete info->handler;
 	info->handler = NULL;
 
 	delete info;
