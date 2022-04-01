@@ -49,6 +49,7 @@ bool channel_event_handler::handle(int fd, event_condition condition)
 	if (condition & (EVENT_HUP)) {
 		_D("Disconnect[%p] : The other proccess is dead", this);
 		m_ch->disconnect();
+		delete m_ch;
 		m_ch = NULL;
 		return false;
 	}

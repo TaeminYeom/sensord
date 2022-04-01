@@ -77,14 +77,8 @@ void server_channel_handler::disconnected(channel *ch)
 		m_listener_ids.erase(ch);
 	}
 
-	if (ch->loop()) {
-		ch->loop()->add_idle_event(0, [](size_t, void* data) {
-			channel* c = (channel*)data;
-			delete c;
-		},  ch);
-	} else {
+	if (!ch->loop())
 		_D("Should not be here : channel[%p]", ch);
-	}
 }
 
 void server_channel_handler::read(channel *ch, message &msg)
