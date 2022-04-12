@@ -67,6 +67,7 @@ int application_sensor_handler::start(sensor_observer *ob)
 
 int application_sensor_handler::stop(sensor_observer *ob)
 {
+	m_interval_map.erase(ob);
 	remove_observer(ob);
 
 	if (observer_count() > 0 || !m_started.load())

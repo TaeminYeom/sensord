@@ -98,6 +98,7 @@ int fusion_sensor_handler::stop(sensor_observer *ob)
 	policy = m_sensor->stop(ob);
 	retv_if(policy <= OP_ERROR, policy);
 
+	m_interval_map.erase(ob);
 	remove_observer(ob);
 
 	if (policy == OP_DEFAULT) {

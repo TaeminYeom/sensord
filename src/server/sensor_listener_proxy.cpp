@@ -147,7 +147,6 @@ int sensor_listener_proxy::stop(bool policy)
 		return OP_SUCCESS;
 
 	/* unset attributes */
-	set_interval(POLL_MAX_HZ_MS);
 	delete_batch_latency();
 
 	m_started = false;

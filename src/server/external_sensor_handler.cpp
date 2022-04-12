@@ -112,6 +112,7 @@ int external_sensor_handler::stop(sensor_observer *ob)
 	int policy = m_sensor->stop(ob);
 	retv_if(policy <= OP_ERROR, policy);
 
+	m_interval_map.erase(ob);
 	remove_observer(ob);
 
 	_I("Stopped[%s]", m_info.get_uri().c_str());
