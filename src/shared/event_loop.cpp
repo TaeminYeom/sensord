@@ -185,14 +185,11 @@ size_t event_loop::add_idle_event(unsigned int priority, void (*fn)(size_t, void
 	return (size_t)id;
 }
 
-bool event_loop::remove_event(uint64_t id, bool close_channel)
+bool event_loop::remove_event(uint64_t id)
 {
 	AUTOLOCK(m_cmutex);
 	auto it = m_handlers.find(id);
 	retv_if(it == m_handlers.end(), false);
-
-	if (close_channel)
-		g_io_channel_shutdown(it->second->g_ch, TRUE, NULL);
 
 	release_info(it->second);
 	m_handlers.erase(id);

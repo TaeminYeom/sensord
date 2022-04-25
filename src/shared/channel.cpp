@@ -189,10 +189,10 @@ void channel::disconnect(void)
 	if (m_loop) {
 		for(auto id : m_pending_event_id) {
 			_D("Remove channel[%p] pending event id[%llu]", this, id);
-			m_loop->remove_event(id, true);
+			m_loop->remove_event(id);
 		}
 		_D("Remove channel[%p] event[%llu]",this, m_event_id);
-		m_loop->remove_event(m_event_id, true);
+		m_loop->remove_event(m_event_id);
 		m_event_id = 0;
 	}
 

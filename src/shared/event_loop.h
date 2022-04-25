@@ -78,7 +78,7 @@ public:
 	uint64_t add_event(const int fd, const event_condition cond, event_handler *handler);
 	size_t add_idle_event(unsigned int priority, void (*fn)(size_t, void*), void* data);
 
-	bool remove_event(uint64_t id, bool close_channel = false);
+	bool remove_event(uint64_t id);
 	void remove_all_events(void);
 
 	void release_info(handler_info *info);
