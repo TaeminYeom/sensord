@@ -47,7 +47,7 @@ public:
 		}
 	}
 
-	bool handle(int fd, event_condition condition)
+	bool handle(int fd, event_condition condition, void** data)
 	{
 		if (!m_ch) {
 			return false;
@@ -82,7 +82,7 @@ public:
 	: m_ch(ch)
 	{ }
 
-	bool handle(int fd, event_condition condition)
+	bool handle(int fd, event_condition condition, void **data)
 	{
 		if (!m_ch) {
 			return false;
@@ -160,7 +160,8 @@ uint64_t channel::connect(channel_handler *handler, event_loop *loop, bool loop_
 	if (!m_socket->connect())
 		return false;
 
-	bind(handler, loop, loop_bind);
+	if (handler)
+		bind(handler, loop, loop_bind);
 
 	_D("Connect channel[%p] : event id[%llu]", this, m_event_id);
 	return m_event_id;
@@ -294,12 +295,9 @@ bool channel::read_sync(message &msg, bool select)
 
 	/* header */
 	size = m_socket->recv(&header, sizeof(message_header), select);
-	if (size <= 0) {
-		if (size == -1) {
-			disconnect();
-		}
+	if (size <= 0)
 		return false;
-	}
+
 	/* check error from header */
 	if (m_handler && header.err != 0) {
 		m_handler->error_caught(this, header.err);
@@ -315,12 +313,8 @@ bool channel::read_sync(message &msg, bool select)
 
 	if (header.length > 0) {
 		size = m_socket->recv(&buf, header.length, select);
-		if (size <= 0) {
-			if (size == -1) {
-				disconnect();
-			}
+		if (size <= 0)
 			return false;
-		}
 	}
 
 	buf[header.length] = '\0';

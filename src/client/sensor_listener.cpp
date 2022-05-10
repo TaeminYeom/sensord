@@ -24,62 +24,73 @@
 #include <sensor_types.h>
 #include <command_types.h>
 #include <ipc_client.h>
-#include <cmutex.h>
 
 using namespace sensor;
-
-static cmutex lock;
 
 class listener_handler : public ipc::channel_handler
 {
 public:
 	listener_handler(sensor_listener *listener)
 	: m_listener(listener)
-	{}
+	{
+		evt_handler[0] = evt_handler[1] = evt_handler[2] = evt_handler[3] = NULL;
+	}
 
 	void connected(ipc::channel *ch) {}
 	void disconnected(ipc::channel *ch)
 	{
 		/* If channel->disconnect() is not explicitly called,
 		 * listener will be restored */
-		m_listener->restore();
+		if (m_listener)
+			m_listener->restore();
+	}
+
+	void disconnect(void)
+	{
+		m_listener = NULL;
 	}
 
 	void read(ipc::channel *ch, ipc::message &msg)
 	{
+		ipc::channel_handler *handler = NULL;
 		switch (msg.header()->type) {
 		case CMD_LISTENER_EVENT:
-			if (m_listener->get_event_handler()) {
-				m_listener->get_event_handler()->read(ch, msg);
-			}
+			handler = evt_handler[0];
+			if (handler)
+				handler->read(ch, msg);
 			break;
 		case CMD_LISTENER_ACC_EVENT:
-			if (m_listener->get_accuracy_handler()) {
-				m_listener->get_accuracy_handler()->read(ch, msg);
-			}
+			handler = evt_handler[1];
+			if (handler)
+				handler->read(ch, msg);
 			break;
-		case CMD_LISTENER_SET_ATTR_INT: {
-			if (m_listener->get_attribute_int_changed_handler()) {
-				m_listener->get_attribute_int_changed_handler()->read(ch, msg);
-			}
-		} break;
-		case CMD_LISTENER_SET_ATTR_STR: {
-			if (m_listener->get_attribute_str_changed_handler()) {
-				m_listener->get_attribute_str_changed_handler()->read(ch, msg);
-			}
-		} break;
-		case CMD_LISTENER_CONNECTED: {
+		case CMD_LISTENER_SET_ATTR_INT:
+			handler = evt_handler[2];
+			if (handler)
+				handler->read(ch, msg);
+			break;
+		case CMD_LISTENER_SET_ATTR_STR:
+			handler = evt_handler[3];
+			if (handler)
+				handler->read(ch, msg);
+			break;
+		case CMD_LISTENER_CONNECTED:
 			// Do nothing
-		} break;
+			break;
 		default:
 			_W("Invalid command message");
 		}
+	}
+
+	void set_handler(int num, ipc::channel_handler* handler) {
+		evt_handler[num] = handler;
 	}
 
 	void read_complete(ipc::channel *ch) {}
 	void error_caught(ipc::channel *ch, int error) {}
 
 private:
+	ipc::channel_handler *evt_handler[4];
 	sensor_listener *m_listener;
 };
 
@@ -147,27 +158,22 @@ bool sensor_listener::init(void)
 
 void sensor_listener::deinit(void)
 {
+	AUTOLOCK(lock);
 	_D("Deinitializing..");
 	stop();
 	disconnect();
 
-	delete m_handler;
+	m_handler->disconnect();
+	m_loop->add_channel_handler_release_list(m_handler);
 	m_handler = NULL;
 
 	delete m_client;
 	m_client = NULL;
 
-	delete m_evt_handler;
-	m_evt_handler = NULL;
-
-	delete m_acc_handler;
-	m_acc_handler = NULL;
-
-	delete m_attr_int_changed_handler;
-	m_attr_int_changed_handler = NULL;
-
-	delete m_attr_str_changed_handler;
-	m_attr_str_changed_handler = NULL;
+	unset_event_handler();
+	unset_accuracy_handler();
+	unset_attribute_int_changed_handler();
+	unset_attribute_str_changed_handler();
 
 	m_attributes_int.clear();
 	m_attributes_str.clear();
@@ -186,7 +192,8 @@ sensor_t sensor_listener::get_sensor(void)
 
 void sensor_listener::restore(void)
 {
-	ret_if(!is_connected());
+	if (lock.try_lock())
+		return;
 
 	m_cmd_channel->disconnect();
 	delete m_cmd_channel;
@@ -213,6 +220,7 @@ void sensor_listener::restore(void)
 		set_attribute(SENSORD_ATTRIBUTE_PAUSE_POLICY, m_attributes_int[SENSORD_ATTRIBUTE_PAUSE_POLICY]);
 
 	_D("Restored listener[%d]", get_id());
+	lock.unlock();
 }
 
 bool sensor_listener::connect(void)
@@ -252,8 +260,7 @@ void sensor_listener::disconnect(void)
 
 	_D("Disconnecting..");
 
-	m_evt_channel->disconnect();
-	delete m_evt_channel;
+	m_loop->add_channel_release_queue(m_evt_channel);
 	m_evt_channel = NULL;
 
 	m_cmd_channel->disconnect();
@@ -270,92 +277,90 @@ bool sensor_listener::is_connected(void)
 
 ipc::channel_handler *sensor_listener::get_event_handler(void)
 {
-	AUTOLOCK(lock);
-
 	return m_evt_handler;
 }
 
 void sensor_listener::set_event_handler(ipc::channel_handler *handler)
 {
-	AUTOLOCK(lock);
-	if (m_evt_handler) {
-		delete m_evt_handler;
-	}
+	m_handler->set_handler(0, handler);
+	if (m_evt_handler)
+		m_loop->add_channel_handler_release_list(m_evt_handler);
 	m_evt_handler = handler;
 }
 
 void sensor_listener::unset_event_handler(void)
 {
-	AUTOLOCK(lock);
-
-	delete m_evt_handler;
-	m_evt_handler = NULL;
+	if (m_evt_handler) {
+		m_handler->set_handler(0, NULL);
+		m_loop->add_channel_handler_release_list(m_evt_handler);
+		m_evt_handler = NULL;
+	}
 }
 
 ipc::channel_handler *sensor_listener::get_accuracy_handler(void)
 {
-	AUTOLOCK(lock);
 	return m_acc_handler;
 }
 
 void sensor_listener::set_accuracy_handler(ipc::channel_handler *handler)
 {
-	AUTOLOCK(lock);
-	if (m_acc_handler) {
-		delete m_acc_handler;
-	}
+	m_handler->set_handler(1, handler);
+	if (m_acc_handler)
+		m_loop->add_channel_handler_release_list(m_acc_handler);
 	m_acc_handler = handler;
 }
 
 void sensor_listener::unset_accuracy_handler(void)
 {
-	AUTOLOCK(lock);
-	delete m_acc_handler;
-	m_acc_handler = NULL;
+	if (m_acc_handler) {
+		m_handler->set_handler(1, NULL);
+		m_loop->add_channel_handler_release_list(m_acc_handler);
+		m_acc_handler = NULL;
+	}
 }
 
 ipc::channel_handler *sensor_listener::get_attribute_int_changed_handler(void)
 {
-	AUTOLOCK(lock);
 	return m_attr_int_changed_handler;
 }
 
 void sensor_listener::set_attribute_int_changed_handler(ipc::channel_handler *handler)
 {
-	AUTOLOCK(lock);
-	if (m_attr_int_changed_handler) {
-		delete m_attr_int_changed_handler;
-	}
+	m_handler->set_handler(2, handler);
+	if (m_attr_int_changed_handler)
+		m_loop->add_channel_handler_release_list(m_attr_int_changed_handler);
 	m_attr_int_changed_handler = handler;
 }
 
 void sensor_listener::unset_attribute_int_changed_handler(void)
 {
-	AUTOLOCK(lock);
-	delete m_attr_int_changed_handler;
-	m_attr_int_changed_handler = NULL;
+	if (m_attr_int_changed_handler) {
+		m_handler->set_handler(2, NULL);
+		m_loop->add_channel_handler_release_list(m_attr_int_changed_handler);
+		m_attr_int_changed_handler = NULL;
+	}
 }
 
 ipc::channel_handler *sensor_listener::get_attribute_str_changed_handler(void)
 {
-	AUTOLOCK(lock);
 	return m_attr_str_changed_handler;
 }
 
 void sensor_listener::set_attribute_str_changed_handler(ipc::channel_handler *handler)
 {
-	AUTOLOCK(lock);
-	if (m_attr_str_changed_handler) {
-		delete m_attr_str_changed_handler;
-	}
+	m_handler->set_handler(3, handler);
+	if (m_attr_str_changed_handler)
+		m_loop->add_channel_handler_release_list(m_attr_str_changed_handler);
 	m_attr_str_changed_handler = handler;
 }
 
 void sensor_listener::unset_attribute_str_changed_handler(void)
 {
-	AUTOLOCK(lock);
-	delete m_attr_str_changed_handler;
-	m_attr_str_changed_handler = NULL;
+	if (m_attr_str_changed_handler) {
+		m_handler->set_handler(3, NULL);
+		m_loop->add_channel_handler_release_list(m_attr_str_changed_handler);
+		m_attr_str_changed_handler = NULL;
+	}
 }
 
 int sensor_listener::start(void)

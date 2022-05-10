@@ -39,7 +39,7 @@ channel_event_handler::~channel_event_handler()
 	m_handler = NULL;
 }
 
-bool channel_event_handler::handle(int fd, event_condition condition)
+bool channel_event_handler::handle(int fd, event_condition condition, void **data)
 {
 	message msg;
 
@@ -47,9 +47,8 @@ bool channel_event_handler::handle(int fd, event_condition condition)
 		return false;
 
 	if (condition & (EVENT_HUP)) {
-		_D("Disconnect[%p] : The other proccess is dead", this);
-		m_ch->disconnect();
-		delete m_ch;
+		//delete m_ch in g_io_handler to prevent double delete.
+		*data = m_ch;
 		m_ch = NULL;
 		return false;
 	}

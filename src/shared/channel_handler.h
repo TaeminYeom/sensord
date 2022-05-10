@@ -24,6 +24,7 @@ namespace ipc {
 
 class channel;
 class message;
+class channel_handler;
 
 class channel_handler {
 public:
@@ -31,9 +32,11 @@ public:
 
 	virtual void connected(channel *ch) = 0;
 	virtual void disconnected(channel *ch) = 0;
+	virtual void disconnect(void) = 0;
 	virtual void read(channel *ch, message &msg) = 0;
 	virtual void read_complete(channel *ch) = 0;
 	virtual void error_caught(channel *ch, int error) = 0;
+	virtual void set_handler(int num, channel_handler* handler) = 0;
 };
 
 }

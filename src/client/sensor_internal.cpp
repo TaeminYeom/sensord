@@ -164,7 +164,8 @@ public:
 		callback_info_s *info;
 		auto size = msg.size();
 		char *data = new(std::nothrow) char[size];
-
+		if (data == NULL)
+			return;
 		memcpy(data, msg.body(), size);
 
 		info = new(std::nothrow) callback_info_s();
@@ -180,6 +181,8 @@ public:
 
 	void read_complete(ipc::channel *ch) {}
 	void error_caught(ipc::channel *ch, int error) {}
+	void set_handler(int num, ipc::channel_handler* handler) {}
+	void disconnect(void) {}
 
 private:
 	int m_listener_id;

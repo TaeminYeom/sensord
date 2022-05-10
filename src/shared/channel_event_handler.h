@@ -34,13 +34,16 @@ public:
 	channel_event_handler(channel *ch, channel_handler *handler);
 	virtual ~channel_event_handler();
 
-	bool handle(int fd, event_condition condition);
+	bool handle(int fd, event_condition condition, void **data);
 
 	void connected(channel *ch);
 	void disconnected(channel *ch);
 	void read(channel *ch, message &msg);
 	void read_complete(channel *ch);
 	void error_caught(channel *ch, int error);
+
+	void set_handler(int num, channel_handler* handler) {}
+	void disconnect(void) {}
 
 private:
 	channel *m_ch;

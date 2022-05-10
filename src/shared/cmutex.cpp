@@ -50,6 +50,11 @@ void cmutex::lock(const char* expr, const char *module, const char *func, int li
 	cbase_lock::lock(LOCK_TYPE_MUTEX, expr, module, func, line);
 }
 
+int cmutex::try_lock(void)
+{
+	return try_lock_impl();
+}
+
 int cmutex::lock_impl(void)
 {
 	return pthread_mutex_lock(&m_mutex);

@@ -25,15 +25,41 @@
 #include <time.h>
 #include <sys/eventfd.h>
 #include <glib.h>
-#include "channel_event_handler.h"
 
+#include <vector>
+#include <queue>
+
+#include "channel_event_handler.h"
 #include "sensor_log.h"
 #include "event_handler.h"
+#include "channel.h"
 
 #define BAD_HANDLE 0
 
 using namespace ipc;
 using namespace sensor;
+
+static std::vector<channel_handler*> channel_handler_release_list;
+static std::priority_queue<channel*> channel_release_queue;
+static sensor::cmutex release_lock;
+
+static void release_res()
+{
+	AUTOLOCK(release_lock);
+
+	channel *prev = NULL, *current = NULL;
+	while (!channel_release_queue.empty()) {
+		current = channel_release_queue.top();
+		if (prev != current)
+			delete current;
+		prev = current;
+		channel_release_queue.pop();
+	}
+
+	for (auto &it : channel_handler_release_list)
+		delete it;
+	channel_handler_release_list.clear();
+}
 
 static gboolean g_io_handler(GIOChannel *ch, GIOCondition condition, gpointer data)
 {
@@ -62,14 +88,23 @@ static gboolean g_io_handler(GIOChannel *ch, GIOCondition condition, gpointer da
 	if (cond & G_IO_NVAL)
 		return G_SOURCE_REMOVE;
 
-	ret = handler->handle(fd, (event_condition)cond);
+	void *addr = NULL;
+	ret = handler->handle(fd, (event_condition)cond, &addr);
 
 	if (!ret && !term) {
-		loop->remove_event(id);
-		return G_SOURCE_REMOVE;
+		LOCK(release_lock);
+		channel_release_queue.push((channel*)addr);
+		UNLOCK(release_lock);
+		if (!addr)
+			loop->remove_event(id);
+		ret = G_SOURCE_REMOVE;
+	} else {
+		ret = G_SOURCE_CONTINUE;
 	}
 
-	return G_SOURCE_CONTINUE;
+	release_res();
+
+	return ret;
 }
 
 static gint on_timer(gpointer data)
@@ -227,6 +262,18 @@ void event_loop::release_info(handler_info *info)
 	/* _D("Released event[%llu]", info->id); */
 }
 
+void event_loop::add_channel_release_queue(channel *ch)
+{
+	AUTOLOCK(release_lock);
+	channel_release_queue.push(ch);
+}
+
+void event_loop::add_channel_handler_release_list(channel_handler *handler)
+{
+	AUTOLOCK(release_lock);
+	channel_handler_release_list.push_back(handler);
+}
+
 class terminator : public event_handler
 {
 public:
@@ -234,7 +281,7 @@ public:
 	: m_loop(loop)
 	{ }
 
-	bool handle(int fd, event_condition condition)
+	bool handle(int fd, event_condition condition, void **data)
 	{
 		m_loop->terminate();
 		return false;

@@ -45,10 +45,10 @@ void sensor_event_handler::remove_sensor(physical_sensor_handler *sensor)
 	m_sensors.erase(sensor);
 }
 
-bool sensor_event_handler::handle(int fd, ipc::event_condition condition)
+bool sensor_event_handler::handle(int fd, ipc::event_condition condition, void **data)
 {
 	sensor_info info;
-	sensor_data_t *data;
+	sensor_data_t *sensor_data;
 	physical_sensor_handler *sensor;
 	int length = 0;
 	int remains;
@@ -74,22 +74,22 @@ bool sensor_event_handler::handle(int fd, ipc::event_condition condition)
 			continue;
 
 		while (remains > 0) {
-			remains = sensor->get_data(&data, &length);
+			remains = sensor->get_data(&sensor_data, &length);
 			if (remains < 0) {
 				_E("Failed to get sensor data");
 				break;
 			}
 
-			if (sensor->on_event(data, length, remains) < 0) {
-				free(data);
+			if (sensor->on_event(sensor_data, length, remains) < 0) {
+				free(sensor_data);
 				continue;
 			}
 
 			info = sensor->get_sensor_info();
 
-			//_I("[Data] allocate %p", data);
-			if (sensor->notify(info.get_uri().c_str(), data, length) < 0) {
-				free(data);
+			//_I("[Data] allocate %p", sensor_data);
+			if (sensor->notify(info.get_uri().c_str(), sensor_data, length) < 0) {
+				free(sensor_data);
 			}
 			info.clear();
 		}

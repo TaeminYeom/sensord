@@ -71,6 +71,8 @@ public:
 	}
 	void read_complete(channel *ch) {}
 	void error_caught(channel *ch, int error) {}
+	void set_handler(int num, channel_handler *handler) {}
+	void disconnect(void) {}
 };
 
 /* IPC Echo Server */
@@ -99,6 +101,8 @@ public:
 	void read(channel *ch, message &msg) {}
 	void read_complete(channel *ch) {}
 	void error_caught(channel *ch, int error) {}
+	void set_handler(int num, channel_handler *handler) {}
+	void disconnect(void) {}
 };
 
 /* IPC Client Sleep Test(4096Kb * 1024) */
@@ -232,6 +236,8 @@ public:
 	}
 	void read_complete(channel *ch) {}
 	void error_caught(channel *ch, int error) {}
+	void set_handler(int num, channel_handler *handler) {}
+	void disconnect(void) {}
 };
 
 static bool run_ipc_server(const char *str, int size, int count)
@@ -262,6 +268,8 @@ public:
 	void read(channel *ch, message &msg) {}
 	void read_complete(channel *ch) {}
 	void error_caught(channel *ch, int error) {}
+	void set_handler(int num, channel_handler *handler) {}
+	void disconnect(void) {}
 };
 
 static bool run_ipc_client_2_channel_message(const char *str, int size, int count)

@@ -47,6 +47,9 @@ public:
 	void add_sensor_removed_cb(sensord_removed_cb cb, void *user_data);
 	void remove_sensor_removed_cb(sensord_removed_cb cb);
 
+	void set_handler(int num, ipc::channel_handler* handler) {}
+	void disconnect(void) {}
+
 private:
 	typedef std::map<sensord_added_cb, void *> sensor_added_cb_list_t;
 	typedef std::map<sensord_removed_cb, void *> sensor_removed_cb_list_t;

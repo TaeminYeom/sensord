@@ -31,7 +31,7 @@ class accept_event_handler : public event_handler
 public:
 	accept_event_handler(ipc_server *server);
 
-	bool handle(int fd, event_condition condition);
+	bool handle(int fd, event_condition condition, void **data);
 
 private:
 	ipc_server *m_server;

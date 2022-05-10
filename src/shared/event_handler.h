@@ -34,7 +34,7 @@ public:
 
 	virtual ~event_handler() {}
 
-	virtual bool handle(int fd, event_condition condition) = 0;
+	virtual bool handle(int fd, event_condition condition, void **data) = 0;
 	void set_event_id(uint64_t event_id)
 	{
 		m_event_id = event_id;

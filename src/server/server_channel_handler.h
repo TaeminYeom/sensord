@@ -42,6 +42,8 @@ public:
 	void read(ipc::channel *ch, ipc::message &msg);
 	void read_complete(ipc::channel *ch) {}
 	void error_caught(ipc::channel *ch, int error) {}
+	void set_handler(int num, ipc::channel_handler* handler) {}
+	void disconnect(void) {}
 
 private:
 	int manager_connect(ipc::channel *ch, ipc::message &msg);

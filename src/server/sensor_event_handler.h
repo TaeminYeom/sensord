@@ -35,7 +35,7 @@ public:
 	void add_sensor(physical_sensor_handler *sensor);
 	void remove_sensor(physical_sensor_handler *sensor);
 
-	bool handle(int fd, ipc::event_condition condition);
+	bool handle(int fd, ipc::event_condition condition, void **data);
 
 private:
 	std::set<physical_sensor_handler *> m_sensors;

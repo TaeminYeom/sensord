@@ -30,6 +30,9 @@
 
 namespace ipc {
 
+class channel;
+class channel_handler;
+
 enum event_condition_e {
 	EVENT_IN =  G_IO_IN,
 	EVENT_OUT = G_IO_OUT,
@@ -80,8 +83,10 @@ public:
 
 	bool remove_event(uint64_t id);
 	void remove_all_events(void);
-
 	void release_info(handler_info *info);
+
+	void add_channel_release_queue(channel *ch);
+	void add_channel_handler_release_list(channel_handler *handler);
 
 	bool run(int timeout = 0);
 	void stop(void);

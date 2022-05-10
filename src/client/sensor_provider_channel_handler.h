@@ -42,7 +42,8 @@ public:
 	void set_stop_cb(sensord_provider_stop_cb cb, void *user_data);
 	void set_interval_cb(sensord_provider_interval_changed_cb cb, void *user_data);
 	void set_attribute_str_cb(sensord_provider_attribute_str_cb cb, void *user_data);
-
+	void set_handler(int num, ipc::channel_handler* handler) {}
+	void disconnect(void) {}
 private:
 	sensor_provider *m_provider;
 

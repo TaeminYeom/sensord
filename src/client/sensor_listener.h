@@ -26,6 +26,7 @@
 #include <event_loop.h>
 #include <sensor_info.h>
 #include <sensor_types.h>
+#include <cmutex.h>
 #include <map>
 #include <atomic>
 #include <vector>
@@ -105,6 +106,8 @@ private:
 	std::atomic<bool> m_started;
 	std::map<int, int> m_attributes_int;
 	std::map<int, std::vector<char>> m_attributes_str;
+
+	cmutex lock;
 };
 
 }

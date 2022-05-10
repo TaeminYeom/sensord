@@ -30,6 +30,7 @@ public:
 
 	void lock(void);
 	void lock(const char* expr, const char *module, const char *func, int line);
+	int try_lock(void);
 
 protected:
 	int lock_impl(void);

@@ -29,7 +29,7 @@ accept_event_handler::accept_event_handler(ipc_server *server)
 {
 }
 
-bool accept_event_handler::handle(int fd, event_condition condition)
+bool accept_event_handler::handle(int fd, event_condition condition, void **data)
 {
 	retv_if((condition & (EVENT_HUP)), false);
 
