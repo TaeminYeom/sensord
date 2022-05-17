@@ -58,7 +58,11 @@ static void release_res()
 
 	for (auto &it : channel_handler_release_list)
 		delete it;
-	channel_handler_release_list.clear();
+
+	/* To reduce memory allocation, swap to new data structure.
+	   This prevents occasional over-allocation of memory. */
+	std::priority_queue<channel*>().swap(channel_release_queue);
+	std::vector<channel_handler*>().swap(channel_handler_release_list);
 }
 
 static gboolean g_io_handler(GIOChannel *ch, GIOCondition condition, gpointer data)
