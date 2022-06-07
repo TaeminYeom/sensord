@@ -89,7 +89,7 @@ int magnetic_rv_sensor::update(uint32_t id, sensor_data_t *data, int len)
 	else if (id == SRC_ID_MAG)
 		m_fusion.push_mag(*data);
 
-	if (!m_fusion.get_rv(timestamp, m_w, m_x, m_y, m_z))
+	if (!m_fusion.get_rv(timestamp, m_x, m_y, m_z, m_w))
 		return OP_ERROR;
 
 	if (timestamp == m_time)
@@ -111,10 +111,10 @@ int magnetic_rv_sensor::get_data(sensor_data_t **data, int *length)
 	sensor_data->accuracy = m_accuracy;
 	sensor_data->timestamp = m_time;
 	sensor_data->value_count = 4;
-	sensor_data->values[0] = m_w;
-	sensor_data->values[1] = m_x;
-	sensor_data->values[2] = m_y;
-	sensor_data->values[3] = m_z;
+	sensor_data->values[0] = m_x;
+	sensor_data->values[1] = m_y;
+	sensor_data->values[2] = m_z;
+	sensor_data->values[3] = m_w;
 
 	*data = sensor_data;
 	*length = sizeof(sensor_data_t);
