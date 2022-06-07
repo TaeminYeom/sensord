@@ -110,6 +110,11 @@ int rv_sensor::update(uint32_t id, sensor_data_t *data, int len)
 
 int rv_sensor::get_data(sensor_data_t **data, int *length)
 {
+	if (m_w == 0.0f && m_x == 0.0f && m_y == 0.0f && m_z == 0.0f) {
+		_D("Rotation vector value is not calculated yet");
+		return -1;
+	}
+
 	sensor_data_t *sensor_data;
 	sensor_data = (sensor_data_t *)malloc(sizeof(sensor_data_t));
 	retvm_if(!sensor_data, -ENOMEM, "Failed to allocate memory");
