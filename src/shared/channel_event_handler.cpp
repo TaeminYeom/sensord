@@ -48,7 +48,8 @@ bool channel_event_handler::handle(int fd, event_condition condition, void **dat
 
 	if (condition & (EVENT_HUP)) {
 		//delete m_ch in g_io_handler to prevent double delete.
-		*data = m_ch;
+		if (data)
+			*data = m_ch;
 		m_ch = NULL;
 		return false;
 	}

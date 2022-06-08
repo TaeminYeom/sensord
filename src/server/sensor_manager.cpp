@@ -145,6 +145,10 @@ void sensor_manager::send_added_msg(sensor_info *info)
 	int size;
 
 	size = serialize(info, &bytes);
+	if (size < 0) {
+		_E("Failed to message serialize");
+		return;
+	}
 
 	auto msg = ipc::message::create((const char *)bytes, size);
 	msg->set_type(CMD_MANAGER_SENSOR_ADDED);

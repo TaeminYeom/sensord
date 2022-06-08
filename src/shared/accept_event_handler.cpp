@@ -39,7 +39,11 @@ bool accept_event_handler::handle(int fd, event_condition condition, void **data
 	m_server->accept(*cli_sock);
 
 	channel *_ch = new(std::nothrow) channel(cli_sock);
-	retvm_if(!_ch, false, "Failed to allocate memory");
+	if (!_ch) {
+		delete cli_sock;
+		_E("Failed to allocate memory");
+		return false;
+	}
 
 	m_server->register_channel(cli_sock->get_fd(), _ch);
 

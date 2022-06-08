@@ -44,10 +44,10 @@ protected:
 	float m_z;
 	float m_w;
 
-	float m_timestamp;
-	float m_timestamp_accel;
-	float m_timestamp_gyro;
-	float m_timestamp_mag;
+	unsigned long long m_timestamp;
+	unsigned long long m_timestamp_accel;
+	unsigned long long m_timestamp_gyro;
+	unsigned long long m_timestamp_mag;
 
 	void clear();
 	void store_orientation(void);

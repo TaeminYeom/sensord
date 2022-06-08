@@ -141,6 +141,7 @@ bool sensor_listener::init(void)
 
 	m_handler = new(std::nothrow) listener_handler(this);
 	if (!m_handler) {
+		_E("Failed to allocate memory");
 		delete m_client;
 		return false;
 	}
@@ -163,17 +164,17 @@ void sensor_listener::deinit(void)
 	stop();
 	disconnect();
 
+	unset_event_handler();
+	unset_accuracy_handler();
+	unset_attribute_int_changed_handler();
+	unset_attribute_str_changed_handler();
+
 	m_handler->disconnect();
 	m_loop->add_channel_handler_release_list(m_handler);
 	m_handler = NULL;
 
 	delete m_client;
 	m_client = NULL;
-
-	unset_event_handler();
-	unset_accuracy_handler();
-	unset_attribute_int_changed_handler();
-	unset_attribute_str_changed_handler();
 
 	m_attributes_int.clear();
 	m_attributes_str.clear();
@@ -367,7 +368,7 @@ int sensor_listener::start(void)
 {
 	ipc::message msg;
 	ipc::message reply;
-	cmd_listener_start_t buf;
+	cmd_listener_start_t buf = {0, };
 
 	retvm_if(!m_cmd_channel, -EINVAL, "Failed to connect to server");
 
@@ -394,7 +395,7 @@ int sensor_listener::stop(void)
 {
 	ipc::message msg;
 	ipc::message reply;
-	cmd_listener_stop_t buf;
+	cmd_listener_stop_t buf = {0, };
 
 	retvm_if(!m_cmd_channel, -EINVAL, "Failed to connect to server");
 	retvm_if(!m_started.load(), -EAGAIN, "Already stopped");
@@ -504,7 +505,7 @@ int sensor_listener::set_attribute(int attribute, int value)
 {
 	ipc::message msg;
 	ipc::message reply;
-	cmd_listener_attr_int_t buf;
+	cmd_listener_attr_int_t buf = {0, };
 
 	retvm_if(!m_cmd_channel, -EIO, "Failed to connect to server");
 
@@ -531,7 +532,7 @@ int sensor_listener::get_attribute(int attribute, int* value)
 {
 	ipc::message msg;
 	ipc::message reply;
-	cmd_listener_attr_int_t buf;
+	cmd_listener_attr_int_t buf = {0, };
 
 	retvm_if(!m_cmd_channel, -EIO, "Failed to connect to server");
 
@@ -605,7 +606,7 @@ int sensor_listener::get_attribute(int attribute, char **value, int* len)
 {
 	ipc::message msg;
 	ipc::message reply;
-	cmd_listener_attr_str_t buf;
+	cmd_listener_attr_str_t buf = {0, };
 
 	buf.listener_id = m_id;
 	buf.attribute = attribute;
@@ -643,7 +644,7 @@ int sensor_listener::get_sensor_data(sensor_data_t *data)
 {
 	ipc::message msg;
 	ipc::message reply;
-	cmd_listener_get_data_t buf;
+	cmd_listener_get_data_t buf = {0, };
 
 	retvm_if(!m_cmd_channel, -EIO, "Failed to connect to server");
 
@@ -678,7 +679,7 @@ int sensor_listener::get_sensor_data_list(sensor_data_t **data, int *count)
 {
 	ipc::message msg;
 	ipc::message reply;
-	cmd_listener_get_data_list_t buf;
+	cmd_listener_get_data_list_t buf = {0, };
 
 	retvm_if(!m_cmd_channel, -EIO, "Failed to connect to server");
 

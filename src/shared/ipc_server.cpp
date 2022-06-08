@@ -81,8 +81,11 @@ void ipc_server::register_channel(int fd, channel *ch)
 
 	uint64_t id = ch->bind(ev_handler, m_event_loop, true);
 
-	if (id == 0)
+	if (id == 0) {
+		_E("Failed to register channel");
 		delete ev_handler;
+		return;
+	}
 
 	_D("Register channel[%p] : event_id[%llu]", ch, id);
 }

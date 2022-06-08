@@ -122,6 +122,8 @@ int sensor_provider::send_sensor_info(sensor_info *info)
 	int size;
 
 	size = serialize(info, &bytes);
+	if (size < 0)
+		return OP_ERROR;
 
 	ipc::message msg((const char *)bytes, size);
 	msg.set_type(CMD_PROVIDER_CONNECT);

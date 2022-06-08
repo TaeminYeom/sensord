@@ -95,7 +95,7 @@ void sensor_listener_proxy::update_accuracy(std::shared_ptr<ipc::message> msg)
 
 	m_last_accuracy = data->accuracy;
 
-	sensor_data_t acc_data;
+	sensor_data_t acc_data = {0, };
 	acc_data.accuracy = m_last_accuracy;
 
 	auto acc_msg = ipc::message::create();

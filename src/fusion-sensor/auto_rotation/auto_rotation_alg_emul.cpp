@@ -43,7 +43,6 @@ auto_rotation_alg_emul::auto_rotation_alg_emul()
 
 auto_rotation_alg_emul::~auto_rotation_alg_emul()
 {
-	close();
 }
 
 int auto_rotation_alg_emul::convert_rotation(int prev_rotation,

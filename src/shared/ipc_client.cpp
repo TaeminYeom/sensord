@@ -74,7 +74,6 @@ channel *ipc_client::connect(channel_handler *handler, event_loop *loop, bool bi
 	ev_handler = new(std::nothrow) channel_event_handler(ch, handler);
 	if (!ev_handler) {
 		delete ch;
-		delete sock;
 		_E("Failed to allocate memory");
 		return NULL;
 	}

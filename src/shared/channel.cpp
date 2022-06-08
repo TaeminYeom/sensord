@@ -132,9 +132,15 @@ channel::~channel()
 uint64_t channel::bind(void)
 {
 	retv_if(!m_loop, 0);
+	channel_event_handler* handler = dynamic_cast<channel_event_handler *>(m_handler);
+
+	if (!handler) {
+		_E("Failed to bind channel[%p] : handler[%p]", this, m_handler);
+		m_event_id = 0;
+		return 0;
+	}
 	m_event_id = m_loop->add_event(m_socket->get_fd(),
-			(EVENT_IN | EVENT_HUP | EVENT_NVAL),
-			dynamic_cast<channel_event_handler *>(m_handler));
+			(EVENT_IN | EVENT_HUP | EVENT_NVAL), handler);
 
 	_D("Bind channel[%p] : handler[%p] event_id[%llu]", this, m_handler, m_event_id);
 	return m_event_id;
