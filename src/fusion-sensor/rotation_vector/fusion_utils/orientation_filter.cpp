@@ -17,6 +17,7 @@
 // released in android-11.0.0_r9
 
 #include "orientation_filter.h"
+#include "fusion_util.h"
 
 using namespace android;
 
@@ -300,7 +301,21 @@ bool orientation_filter::checkInitComplete(int what, const vec3_t& d, float dT) 
 
         vec3_t north(cross_product(up, east));
         R << east << north << up;
-        const vec4_t q = matrixToQuat(R);
+        vec4_t q = matrixToQuat(R);
+
+        if (mMode == FUSION_NOMAG) {
+            float temp[4] = {q[0], q[1], q[2], q[3]};
+            float azimuth, pitch, roll;
+
+            quat_to_orientation(temp, azimuth, pitch, roll);
+            azimuth = 0;
+            orientation_to_quat(temp, azimuth, pitch, roll);
+
+            q[0] = temp[0];
+            q[1] = temp[1];
+            q[2] = temp[2];
+            q[3] = temp[3];
+        }
 
         initFusion(q, mGyroRate);
     }

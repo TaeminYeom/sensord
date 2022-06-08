@@ -148,3 +148,31 @@ int quat_to_orientation(const float *quat, float &azimuth, float &pitch, float &
 	return 0;
 }
 
+/*
+	Euler angles to Quarternion conversion
+	q.w = cos(pitch / 2) * cos(roll / 2) * cos(yaw / 2) + sin(pitch / 2) * sin(roll / 2) * sin(yaw / 2)
+	q.x = sin(pitch / 2) * cos(roll / 2) * cos(yaw / 2) - cos(pitch / 2) * sin(roll / 2) * sin(yaw / 2)
+	q.y = cos(pitch / 2) * sin(roll / 2) * cos(yaw / 2) + sin(pitch / 2) * cos(roll / 2) * sin(yaw / 2)
+	q.z = cos(pitch / 2) * cos(roll / 2) * sin(yaw / 2) - sin(pitch / 2) * sin(roll / 2) * cos(yaw / 2)
+
+	Be careful about the definition of pitch and roll.
+	It can be different of axis direction each reference.
+*/
+
+void orientation_to_quat(float *quat, float azimuth, float pitch, float roll)
+{
+	azimuth /= -RAD2DEGREE;
+	pitch /= -RAD2DEGREE;
+	roll /= -RAD2DEGREE;
+	double cy = cos(azimuth * 0.5);
+	double sy = sin(azimuth * 0.5);
+	double cp = cos(pitch * 0.5);
+	double sp = sin(pitch * 0.5);
+	double cr = cos(roll * 0.5);
+	double sr = sin(roll * 0.5);
+
+	quat[3] = cp * cr * cy + sp * sr * sy;
+	quat[0] = sp * cr * cy - cp * sr * sy;
+	quat[1] = cp * sr * cy + sp * cr * sy;
+	quat[2] = cp * cr * sy - sp * sr * cy;
+}
