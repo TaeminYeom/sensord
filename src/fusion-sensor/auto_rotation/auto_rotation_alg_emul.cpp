@@ -106,13 +106,20 @@ bool auto_rotation_alg_emul::get_rotation(float acc[3],
 	realg = (double)sqrt((x * x) + (y * y) + (z * z));
 	acc_pitch = ROTATION_90 - abs((int) (asin(z / realg) * RADIAN));
 
-	cur_rotation = convert_rotation(prev_rotation, acc_pitch, acc_theta);
+	int new_rotation = convert_rotation(prev_rotation, acc_pitch, acc_theta);
 
-	if (cur_rotation == AUTO_ROTATION_DEGREE_UNKNOWN)
+	if (new_rotation == AUTO_ROTATION_DEGREE_UNKNOWN) {
+		if (prev_rotation == AUTO_ROTATION_DEGREE_UNKNOWN) {
+			cur_rotation = AUTO_ROTATION_DEGREE_0; /* default degree is 0 */
+			return true;
+		}
 		return false;
+	}
 
-	if (cur_rotation != prev_rotation)
+	if (new_rotation != prev_rotation) {
+		cur_rotation = new_rotation;
 		return true;
+	}
 
 	return false;
 }

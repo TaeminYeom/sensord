@@ -26,6 +26,8 @@
 #include <command_types.h>
 #include <sensor_listener_proxy.h>
 
+#define AUTO_ROTATION "http://tizen.org/sensor/general/auto_rotation/tizen_default"
+
 using namespace sensor;
 
 sensor_handler::sensor_handler(const sensor_info &info)
@@ -125,7 +127,9 @@ int sensor_handler::get_cache(sensor_data_t **data, int *len)
 	*len = size;
 	*data = (sensor_data_t *)temp;
 
-	m_sensor_data_cache.clear();
+	if (m_info.get_uri() != AUTO_ROTATION)
+		m_sensor_data_cache.clear();
+
 	return 0;
 }
 
