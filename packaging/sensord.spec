@@ -14,6 +14,7 @@ BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(vconf)
 BuildRequires:  pkgconfig(libsystemd)
+BuildRequires:  pkgconfig(libsyscommon)
 BuildRequires:  pkgconfig(libtzplatform-config)
 BuildRequires:  pkgconfig(cynara-creds-socket)
 BuildRequires:  pkgconfig(cynara-client)
@@ -78,6 +79,9 @@ mkdir -p %{buildroot}%{_unitdir}
 install -m 0644 %SOURCE1 %{buildroot}%{_unitdir}
 install -m 0644 %SOURCE2 %{buildroot}%{_unitdir}
 
+mkdir -p %{buildroot}%{_sysconfdir}/sensord
+install -m 644 conf/auto_rotation.conf   %{buildroot}/etc/sensord/auto_rotation.conf
+
 %install_service multi-user.target.wants sensord.service
 %install_service sockets.target.wants sensord.socket
 
@@ -105,6 +109,7 @@ echo "You need to reinstall %{name}-dummy to keep using the APIs after uninstall
 %{_unitdir}/sensord.socket
 %{_unitdir}/multi-user.target.wants/sensord.service
 %{_unitdir}/sockets.target.wants/sensord.socket
+%config %{_sysconfdir}/sensord/auto_rotation.conf
 %license LICENSE.APLv2
 
 

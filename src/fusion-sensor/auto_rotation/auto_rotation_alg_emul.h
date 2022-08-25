@@ -22,6 +22,11 @@
 
 #include "auto_rotation_alg.h"
 
+struct auto_rotation_config {
+	bool fix;
+	int value;
+};
+
 class auto_rotation_alg_emul : public auto_rotation_alg {
 public:
 	auto_rotation_alg_emul();
