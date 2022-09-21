@@ -77,6 +77,9 @@ gravity_comp_sensor::gravity_comp_sensor()
 , m_accel_mag(0)
 , m_time_new(0)
 {
+	m_angle[0] = m_angle[1] = m_angle[2] = 0;
+	m_velocity[0] = m_velocity[1] = m_velocity[2] = 0;
+	m_angle_n[0] = m_angle_n[1] = m_angle_n[2] = 0;
 }
 
 gravity_comp_sensor::~gravity_comp_sensor()
