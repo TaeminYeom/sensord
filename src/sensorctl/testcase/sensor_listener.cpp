@@ -61,10 +61,8 @@ TESTCASE(sensor_listener, get_sensors_p_1)
 
 	err = sensord_get_sensors(ACCELEROMETER_SENSOR, &sensors, &count);
 	ASSERT_EQ(err, 0);
-	ASSERT_FREE((count < 0), sensors);
-	ASSERT_GT(count, 0);
-
 	free(sensors);
+	ASSERT_GT(count, 0);
 
 	return true;
 }
@@ -618,8 +616,9 @@ static int attribute_value = 0;
 static gboolean change_attribute_int(gpointer gdata)
 {
 	int *handle = reinterpret_cast<int *>(gdata);
-
-	sensord_set_attribute_int(*handle, attribute, attribute_value);
+	int ret = sensord_set_attribute_int(*handle, attribute, attribute_value);
+	if (ret < 0)
+		return false;
 
 	_N("[ SET ATTRIBUTE INT ] attribute %d, value : %d\n", attribute, attribute_value);
 
@@ -627,7 +626,7 @@ static gboolean change_attribute_int(gpointer gdata)
 
 	attribute_value ? attribute_value = 0 : attribute_value = 1;
 
-	return FALSE;
+	return false;
 }
 
 TESTCASE(skip_sensor_listener, attribute_int_changer)
@@ -708,7 +707,9 @@ static gboolean change_attribute_str(gpointer gdata)
 {
 	int *handle = reinterpret_cast<int *>(gdata);
 	int len = strlen(attribute_value_str) + 1;
-	sensord_set_attribute_str(*handle, attribute, attribute_value_str, len);
+	int ret = sensord_set_attribute_str(*handle, attribute, attribute_value_str, len);
+	if (ret < 0)
+		return false;
 
 	_N("[ SET ATTRIBUTE STR ] attribute %d, value : %s, len : %d\n", attribute, attribute_value_str, len);
 
@@ -720,7 +721,7 @@ static gboolean change_attribute_str(gpointer gdata)
 		attribute_value_str = attribute_value_str1;
 	}
 
-	return FALSE;
+	return false;
 }
 
 TESTCASE(skip_sensor_listener, attribute_str_changer)

@@ -504,7 +504,13 @@ TESTCASE(skip_sensor_provider, mysensor_get_data_list)
 
 	ret = sensord_get_data_list(handle, data_id, &data_list, &count);
 	ASSERT_TRUE(ret);
-	ASSERT_EQ(count, NUMBER_OF_EVENT);
+	if (count != NUMBER_OF_EVENT) {
+		free(data_list);
+		sensord_stop(handle);
+		sensord_unregister_events(handle, 1);
+		sensord_disconnect(handle);
+		return false;
+	}
 
 	for (int i = 0 ; i < count; i++) {
 		_I("[%llu]", data_list[i].timestamp);
