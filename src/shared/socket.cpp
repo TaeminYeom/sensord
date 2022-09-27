@@ -436,7 +436,7 @@ int socket::get_buffer_size(int type)
 
 	int ret = 0;
 	int buf_size = 0;
-	socklen_t len;
+	socklen_t len = 0;
 
 	ret = getsockopt(m_sock_fd, SOL_SOCKET, type, &buf_size, &len);
 	retvm_if(ret < 0, -EPERM, "Failed to call getsocketopt()");
