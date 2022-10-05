@@ -98,6 +98,10 @@ void sensor_listener_proxy::update_accuracy(std::shared_ptr<ipc::message> msg)
 	sensor_data_t acc_data = {0, };
 	acc_data.accuracy = m_last_accuracy;
 
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	acc_data.timestamp = ((unsigned long long)(ts.tv_sec)*1000000000LL + ts.tv_nsec) / 1000;
+
 	auto acc_msg = ipc::message::create();
 
 	retm_if(!acc_msg, "Failed to allocate memory");
