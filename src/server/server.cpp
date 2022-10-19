@@ -91,6 +91,7 @@ bool server::init(void)
 	is_running.store(true);
 	sd_notify(0, "READY=1");
 
+	_I("server initialization is complete");
 	return true;
 }
 
@@ -109,6 +110,8 @@ void server::deinit(void)
 	m_handler = NULL;
 
 	is_running.store(false);
+
+	_I("server deinitialization is complete");
 }
 
 static void set_cal_data(const char *path)

@@ -52,10 +52,12 @@ static external_sensor_registry_t external_sensors;
 sensor_manager::sensor_manager(ipc::event_loop *loop)
 : m_loop(loop)
 {
+	_I("Create[%p]", this);
 }
 
 sensor_manager::~sensor_manager()
 {
+	_I("Destroy[%p]", this);
 }
 
 bool sensor_manager::init(void)
@@ -79,6 +81,7 @@ bool sensor_manager::init(void)
 
 	show();
 
+	_I("sensor manager initialization is complete");
 	return true;
 }
 
