@@ -90,7 +90,6 @@ ln -s libsensor.so.%{version} %{buildroot}/%{_libdir}/libsensor.so.1
 
 %post
 pushd %{_libdir}
-ln -sf libsensor-genuine.so.%{version} libsensor.so.%{version}
 chsmack -a "_" libsensor.so.%{version}
 popd
 /sbin/ldconfig
@@ -100,7 +99,7 @@ echo "You need to reinstall %{name}-dummy to keep using the APIs after uninstall
 
 %files
 %manifest packaging/sensord.manifest
-%{_libdir}/libsensor-genuine.so.*
+%{_libdir}/libsensor.so.%{version}
 %{_libdir}/libsensord-shared.so
 %{_libdir}/sensor/fusion/libsensor-fusion.so
 %{_libdir}/sensor/physical/libsensor-physical.so
@@ -114,11 +113,17 @@ echo "You need to reinstall %{name}-dummy to keep using the APIs after uninstall
 
 
 %post   dummy
+pushd %{_libdir}
+ln -sf libsensor-dummy.so libsensor.so.%{version}
+chsmack -a "_" libsensor.so.%{version}
+popd
 /sbin/ldconfig
 
 %files  dummy
 %manifest packaging/sensord.manifest
+%exclude %{_libdir}/libsensor.so.%{version}
 %{_libdir}/libsensor.so.*
+%{_libdir}/libsensor-dummy.so
 %license LICENSE.APLv2
 
 
