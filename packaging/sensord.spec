@@ -39,6 +39,10 @@ Summary:    Sensor Framework 'dummy' library
 Provides:   %{name}-profile_tv = %{version}-%{release}
 # To support old-snapshot-based package builds
 Provides:   libsensor.so.2
+# For targets which uses only dummy
+# Prevent to install sensord by providing libsensor.so.<major version>
+Provides:   libsensor.so.%(echo %{version} | cut -d'.' -f1)
+
 
 %description dummy
 This package provides the dummy library of the sensor internal API.
