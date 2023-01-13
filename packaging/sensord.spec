@@ -52,7 +52,7 @@ Installing %{name} replaces this dummy library with the actually functional libr
 %package    devel
 Summary:    Internal Sensor API (Development)
 Group:      System/Development
-Requires:   %{name}-dummy = %{version}-%{release}
+Requires:   %{name} = %{version}-%{release}
 # To support old-snapshot-based package builds
 #Provides:   libsensord-devel
 
