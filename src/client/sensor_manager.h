@@ -47,6 +47,9 @@ public:
 	bool is_supported(sensor_t sensor);
 	bool is_supported(const char *uri);
 
+	int set_attribute(sensor_t sensor, int attribute, int value);
+	int get_attribute(sensor_t sensor, int attribute, int *value);
+
 	/* sensor provider */
 	int add_sensor(sensor_info &info);
 	int add_sensor(sensor_provider *provider);

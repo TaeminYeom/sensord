@@ -114,6 +114,102 @@ bool sensor_manager::is_supported(const char *uri)
 	return false;
 }
 
+int sensor_manager::set_attribute(sensor_t sensor, int attribute, int value)
+{
+	if (!sensor) {
+		_E("Failed to validate the parameter");
+		return -EINVAL;
+	}
+
+	if (!m_cmd_channel) {
+		_E("Failed to connect to server");
+		return -EIO;
+	}
+
+	ipc::message msg;
+	ipc::message reply;
+	cmd_manager_attr_int_t buf = {0, };
+
+	buf.attribute = attribute;
+	buf.value = value;
+
+	sensor_info *info = (sensor_info*)sensor;
+	memcpy(buf.sensor, info->get_uri().c_str(), info->get_uri().size());
+
+	msg.set_type(CMD_MANAGER_SET_ATTR_INT);
+	msg.enclose((char*)&buf, sizeof(buf));
+
+	bool ret = m_cmd_channel->send_sync(msg);
+	if (!ret) {
+		_E("Failed to send command to set attribute");
+		return -EIO;
+	}
+
+	ret = m_cmd_channel->read_sync(reply);
+	if (!ret) {
+		_E("Failed to read reply to set attribute");
+		return -EIO;
+	}
+
+	if (reply.header()->err < 0) {
+		_E("Failed to set attribute");
+		return reply.header()->err;
+	}
+
+	return OP_SUCCESS;
+}
+
+int sensor_manager::get_attribute(sensor_t sensor, int attribute, int *value)
+{
+	if (!sensor || !value) {
+		_E("Failed to validate the parameters");
+		return -EINVAL;
+	}
+
+	if (!m_cmd_channel) {
+		_E("Failed to connect to server");
+		return -EIO;
+	}
+
+	ipc::message msg;
+	ipc::message reply;
+	cmd_manager_attr_int_t buf = {0, };
+
+	buf.attribute = attribute;
+
+	sensor_info *info = (sensor_info*)sensor;
+	memcpy(buf.sensor, info->get_uri().c_str(), info->get_uri().size());
+
+	msg.set_type(CMD_MANAGER_GET_ATTR_INT);
+	msg.enclose((char*)&buf, sizeof(buf));
+
+	bool ret = m_cmd_channel->send_sync(msg);
+	if (!ret) {
+		_E("Failed to send command to get attribute");
+		return -EIO;
+	}
+
+	ret = m_cmd_channel->read_sync(reply);
+	if (!ret) {
+		_E("Failed to read reply to get attribute");
+		return -EIO;
+	}
+
+	if (reply.header()->err < 0) {
+		_E("Failed to get attribute");
+		return reply.header()->err;
+	}
+
+	if (!reply.header()->length || !reply.body()) {
+		_E("Failed to get attribute");
+		return -EIO;
+	}
+
+	*value = ((cmd_manager_attr_int_t *)reply.body())->value;
+
+	return OP_SUCCESS;
+}
+
 int sensor_manager::add_sensor(sensor_info &info)
 {
 	retv_if(is_supported(info.get_uri().c_str()), OP_ERROR);

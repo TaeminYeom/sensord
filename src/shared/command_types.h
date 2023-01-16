@@ -36,6 +36,8 @@ enum cmd_type_e {
 	CMD_MANAGER_SENSOR_LIST,
 	CMD_MANAGER_SENSOR_ADDED,
 	CMD_MANAGER_SENSOR_REMOVED,
+	CMD_MANAGER_SET_ATTR_INT,
+	CMD_MANAGER_GET_ATTR_INT,
 
 	/* Listener */
 	CMD_LISTENER_EVENT = 0x200,
@@ -69,6 +71,12 @@ typedef struct {
 	int sensor_cnt;
 	char data[0];
 } cmd_manager_sensor_list_t;
+
+typedef struct {
+	int attribute;
+	int value;
+	char sensor[NAME_MAX];
+} cmd_manager_attr_int_t;
 
 typedef struct {
 	int listener_id;

@@ -445,8 +445,36 @@ int sensord_listener_set_attribute_str(int handle, int attribute, const char *va
  * @retval 0 Successful
  * @retval -EINVAL Invalid parameter
  * @retval -EPERM Operation not permitted
+ * @retval -EIO Input/Output error
  */
 int sensord_listener_get_attribute_str(int handle, int attribute, char **value, int *len);
+
+/**
+ * @brief Set the attribute to a connected sensor
+ *
+ * @param[in] handle a handle represensting a connected sensor.
+ * @param[in] attribute an attribute to change
+ * @param[in] value an attribute value
+ * @return 0 on success, otherwise a negative error value
+ * @retval 0 Successful
+ * @retval -EINVAL Invalid parameter
+ * @retval -EPERM Operation not permitted
+ * @retval -EIO Input/Output error
+ */
+int sensord_set_attribute_int(sensor_t sensor, int attribute, int value);
+
+/**
+ * @brief Get the attribute to a connected sensor
+ *
+ * @param[in] handle a handle represensting a connected sensor.
+ * @param[in] attribute an attribute to get value
+ * @param[out] value an attribute value
+ * @return 0 on success, otherwise a negative error value
+ * @retval 0 Successful
+ * @retval -EINVAL Invalid parameter
+ * @retval -EPERM Operation not permitted
+ */
+int sensord_get_attribute_int(sensor_t sensor, int attribute, int *value);
 
 /**
  * @brief Send data to sensorhub

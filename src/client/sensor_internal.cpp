@@ -773,6 +773,44 @@ API int sensord_listener_get_attribute_str(int handle, int attribute, char **val
 	return OP_SUCCESS;
 }
 
+API int sensord_set_attribute_int(sensor_t sensor, int attribute, int value)
+{
+	if (!sensor) {
+		_E("Failed to validate the parameter");
+		return -EINVAL;
+	}
+
+	int ret = manager.set_attribute(sensor, attribute, value);
+	if (ret < 0) {
+		_E("Failed to set attribute[%d, %d]", attribute, value);
+		return ret;
+	}
+
+	_D("Set attribute[%s, %d, %d]",
+		((sensor_info *)(sensor))->get_uri().c_str(), attribute, value);
+
+	return OP_SUCCESS;
+}
+
+API int sensord_get_attribute_int(sensor_t sensor, int attribute, int* value)
+{
+	if (!sensor || !value) {
+		_E("Failed to validate the parameter");
+		return -EINVAL;
+	}
+
+	int ret = manager.get_attribute(sensor, attribute, value);
+	if (ret < 0) {
+		_E("Failed to get attribute[%d]", attribute);
+		return ret;
+	}
+
+	_D("Get attribute[%s, %d, %d]",
+		((sensor_info *)(sensor))->get_uri().c_str(), attribute, *value);
+
+	return OP_SUCCESS;
+}
+
 API bool sensord_get_data(int handle, unsigned int data_id, sensor_data_t* sensor_data)
 {
 	sensor::sensor_listener *listener;

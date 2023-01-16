@@ -28,6 +28,7 @@
 #include "sensor_manager.h"
 #include "sensor_listener_proxy.h"
 #include "application_sensor_handler.h"
+#include "command_types.h"
 
 namespace sensor {
 
@@ -49,7 +50,10 @@ private:
 	int manager_connect(ipc::channel *ch, ipc::message &msg);
 	int manager_disconnect(ipc::channel *ch, ipc::message &msg);
 	int manager_get_sensor_list(ipc::channel *ch, ipc::message &msg);
-
+	int manager_preprocess_attr(ipc::channel *ch, cmd_manager_attr_int_t &buf,
+					sensor_handler **sensor);
+	int manager_set_attr_int(ipc::channel *ch, ipc::message &msg);
+	int manager_get_attr_int(ipc::channel *ch, ipc::message &msg);
 
 	int listener_connect(ipc::channel *ch, ipc::message &msg);
 	int listener_disconnect(ipc::channel *ch, ipc::message &msg);

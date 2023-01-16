@@ -30,6 +30,8 @@
 #include "permission_checker.h"
 #include "application_sensor_handler.h"
 
+#define CONVERT_ATTR_TYPE(attr) ((attr) >> 8)
+
 using namespace sensor;
 using namespace ipc;
 
@@ -90,6 +92,10 @@ void server_channel_handler::read(channel *ch, message &msg)
 		err = manager_connect(ch, msg); break;
 	case CMD_MANAGER_SENSOR_LIST:
 		err = manager_get_sensor_list(ch, msg); break;
+	case CMD_MANAGER_SET_ATTR_INT:
+		err = manager_set_attr_int(ch, msg); break;
+	case CMD_MANAGER_GET_ATTR_INT:
+		err = manager_get_attr_int(ch, msg); break;
 	case CMD_LISTENER_CONNECT:
 		err = listener_connect(ch, msg); break;
 	case CMD_LISTENER_START:
@@ -143,6 +149,87 @@ int server_channel_handler::manager_get_sensor_list(channel *ch, message &msg)
 	ch->send_sync(reply);
 
 	delete [] bytes;
+
+	return OP_SUCCESS;
+}
+
+int server_channel_handler::manager_preprocess_attr(channel *ch, cmd_manager_attr_int_t &buf, sensor_handler **sensor)
+{
+	if (!ch || !sensor)
+		return -EINVAL;
+
+	sensor_handler *find_sensor = m_manager->get_sensor(buf.sensor);
+	if (!find_sensor) {
+		_E("Failed to find sensor");
+		return OP_ERROR;
+	}
+
+	sensor_info info = find_sensor->get_sensor_info();
+	sensor_type_t type = (sensor_type_t) CONVERT_ATTR_TYPE(buf.attribute);
+	if (type != info.get_type()) {
+		_E("Invalid attribute with sensor type");
+		return -EINVAL;
+	}
+
+	std::string privilege = info.get_privilege();
+	int ret = has_privileges(ch->get_fd(), privilege);
+	if (!ret) {
+		_E("Permission denied[%s]", privilege.c_str());
+		return -EPERM;
+	}
+	*sensor = find_sensor;
+
+	return OP_SUCCESS;
+}
+
+int server_channel_handler::manager_set_attr_int(channel *ch, message &msg)
+{
+	cmd_manager_attr_int_t buf;
+	msg.disclose((char *)&buf, sizeof(buf));
+
+	sensor_handler *sensor;
+	int ret = manager_preprocess_attr(ch, buf, &sensor);
+	if (ret < 0)
+		return ret;
+
+	ret = sensor->set_attribute(NULL, buf.attribute, buf.value);
+	if (ret < 0) {
+		_E("Failed to set attribute");
+		return ret;
+	}
+
+	return send_reply(ch, OP_SUCCESS);
+}
+
+int server_channel_handler::manager_get_attr_int(channel *ch, message &msg)
+{
+	cmd_manager_attr_int_t buf;
+	msg.disclose((char *)&buf, sizeof(buf));
+
+	sensor_handler *sensor;
+	int ret = manager_preprocess_attr(ch, buf, &sensor);
+	if (ret < 0)
+		return ret;
+
+	int value;
+	ret = sensor->get_attribute(buf.attribute, &value);
+	if (ret < 0) {
+		_E("Failed to get attribute");
+		return ret;
+	}
+
+	message reply;
+	cmd_manager_attr_int_t ret_buf;
+
+	ret_buf.attribute = buf.attribute;
+	ret_buf.value = value;
+
+	reply.enclose((char *)&ret_buf, sizeof(ret_buf));
+	reply.header()->err = OP_SUCCESS;
+	reply.set_type(CMD_MANAGER_GET_ATTR_INT);
+	ret = ch->send_sync(reply);
+	if (!ret)
+		return OP_ERROR;
 
 	return OP_SUCCESS;
 }
