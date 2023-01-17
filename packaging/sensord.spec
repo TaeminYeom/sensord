@@ -22,7 +22,6 @@ BuildRequires:  pkgconfig(cynara-session)
 BuildRequires:  pkgconfig(hal-api-sensor)
 BuildRequires:  pkgconfig(hal-api-common)
 
-Requires:   %{name}-dummy = %{version}-%{release}
 Provides:   %{name}-profile_mobile = %{version}-%{release}
 Provides:   %{name}-profile_wearable = %{version}-%{release}
 Provides:   %{name}-profile_ivi = %{version}-%{release}
@@ -37,11 +36,9 @@ of the Sensor Framework. The library replaces the dummy library installed by %{n
 %package    dummy
 Summary:    Sensor Framework 'dummy' library
 Provides:   %{name}-profile_tv = %{version}-%{release}
+Requires:   %{name} = %{version}-%{release}
 # To support old-snapshot-based package builds
 Provides:   libsensor.so.2
-# For targets which uses only dummy
-# Prevent to install sensord by providing libsensor.so.<major version>
-Provides:   libsensor.so.%(echo %{version} | cut -d'.' -f1)
 
 
 %description dummy
@@ -103,7 +100,7 @@ echo "You need to reinstall %{name}-dummy to keep using the APIs after uninstall
 
 %files
 %manifest packaging/sensord.manifest
-%{_libdir}/libsensor.so.%{version}
+%{_libdir}/libsensor.so.*
 %{_libdir}/libsensord-shared.so
 %{_libdir}/sensor/fusion/libsensor-fusion.so
 %{_libdir}/sensor/physical/libsensor-physical.so
@@ -121,12 +118,20 @@ pushd %{_libdir}
 ln -sf libsensor-dummy.so libsensor.so.%{version}
 chsmack -a "_" libsensor.so.%{version}
 popd
+# Remove sensord files
+rm -f %{_libdir}/libsensord-shared.so
+rm -f %{_libdir}/sensor/fusion/libsensor-fusion.so
+rm -f %{_libdir}/sensor/physical/libsensor-physical.so
+rm -f %{_bindir}/sensord
+rm -f %{_unitdir}/sensord.service
+rm -f %{_unitdir}/sensord.socket
+rm -f %{_unitdir}/multi-user.target.wants/sensord.service
+rm -f %{_unitdir}/sockets.target.wants/sensord.socket
 /sbin/ldconfig
+
 
 %files  dummy
 %manifest packaging/sensord.manifest
-%exclude %{_libdir}/libsensor.so.%{version}
-%{_libdir}/libsensor.so.*
 %{_libdir}/libsensor-dummy.so
 %license LICENSE.APLv2
 
