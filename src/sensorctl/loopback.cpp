@@ -64,7 +64,7 @@ bool loopback_manager::run(int argc, char *argv[])
 		for (int i = 4; i < argc; i++)
 			test_data[i+2] = atoi(argv[i]);
 
-		int error = sensord_set_attribute_str(handle, 0, test_data, sizeof(test_data));
+		int error = sensord_listener_set_attribute_str(handle, 0, test_data, sizeof(test_data));
 		WARN_IF(error != 0, "Failed to set attribute\n");
 		bool ret = sensord_disconnect(handle);
 		WARN_IF(ret != true, "Failed to disconnect\n");
@@ -79,7 +79,7 @@ bool loopback_manager::run(int argc, char *argv[])
 
 		char test_data[4] = {SHUB_INST_LIB_REMOVE, SHUB_LOOP_BACK_LIB, };
 
-		int error = sensord_set_attribute_str(handle, 0, test_data, sizeof(test_data));
+		int error = sensord_listener_set_attribute_str(handle, 0, test_data, sizeof(test_data));
 		WARN_IF(error != 0, "Failed to set attribute\n");
 		bool ret = sensord_disconnect(handle);
 		WARN_IF(ret != true, "Failed to disconnect\n");

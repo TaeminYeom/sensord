@@ -147,7 +147,7 @@ bool sensor_adapter::set_attribute(int handle, int attribute, int value)
 {
 	bool ret;
 
-	ret = sensord_set_attribute_int(handle, attribute, value);
+	ret = sensord_listener_set_attribute_int(handle, attribute, value);
 	ASSERT_TRUE(ret);
 
 	return true;
@@ -157,7 +157,7 @@ bool sensor_adapter::set_attribute(int handle, int attribute, char *value, int s
 {
 	int ret;
 
-	ret = sensord_set_attribute_str(handle, attribute, value, size);
+	ret = sensord_listener_set_attribute_str(handle, attribute, value, size);
 
 	return ((ret == 0) ? true : false);
 }

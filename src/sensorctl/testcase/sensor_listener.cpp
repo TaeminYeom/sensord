@@ -245,10 +245,10 @@ TESTCASE(sensor_listener, set_get_attribute_int_1)
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensor);
-	err = sensord_set_attribute_int(handle, attr, 1);
+	err = sensord_listener_set_attribute_int(handle, attr, 1);
 	ASSERT_EQ(err, 0);
 
-	err = sensord_get_attribute_int(handle, attr, &value);
+	err = sensord_listener_get_attribute_int(handle, attr, &value);
 	ASSERT_EQ(err, 0);
 
 	ASSERT_EQ(value, 1);
@@ -272,10 +272,10 @@ TESTCASE(sensor_listener, set_get_attribute_int_2)
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensor);
-	err = sensord_set_attribute_int(handle, attr, 1);
+	err = sensord_listener_set_attribute_int(handle, attr, 1);
 	ASSERT_EQ(err, 0);
 
-	err = sensord_get_attribute_int(handle, attr, &value);
+	err = sensord_listener_get_attribute_int(handle, attr, &value);
 	ASSERT_EQ(err, 0);
 
 	ASSERT_EQ(value, 1);
@@ -300,11 +300,11 @@ TESTCASE(sensor_listener, set_get_attribute_int_3)
 
 	handle = sensord_connect(sensor);
 
-	err = sensord_set_attribute_int(handle, attr, 1);
+	err = sensord_listener_set_attribute_int(handle, attr, 1);
 	ASSERT_EQ(err, 0);
 
 	for (int i = 0 ; i < 10; i ++) {
-		err = sensord_get_attribute_int(handle, attr, &value);
+		err = sensord_listener_get_attribute_int(handle, attr, &value);
 		ASSERT_EQ(err, 0);
 	}
 
@@ -331,7 +331,7 @@ TESTCASE(sensor_listener, get_attribute_int_1)
 	handle = sensord_connect(sensor);
 
 	// attr 100 value is never set in these tests.
-	err = sensord_get_attribute_int(handle, attr, &value);
+	err = sensord_listener_get_attribute_int(handle, attr, &value);
 	ASSERT_EQ(err, -5);
 
 	ret = sensord_disconnect(handle);
@@ -355,7 +355,7 @@ TESTCASE(sensor_listener, set_attribute_string_1)
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensor);
-	err = sensord_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
+	err = sensord_listener_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
 	ASSERT_EQ(err, 0);
 
 	ret = sensord_disconnect(handle);
@@ -378,10 +378,10 @@ TESTCASE(sensor_listener, set_get_attribute_string_1)
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensor);
-	err = sensord_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
+	err = sensord_listener_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
 	ASSERT_EQ(err, 0);
 
-	err = sensord_get_attribute_str(handle, attr, &(value.get()), &len);
+	err = sensord_listener_get_attribute_str(handle, attr, &(value.get()), &len);
 	ASSERT_EQ(err, 0);
 	ASSERT_EQ(len, TEST_STRING_LEN);
 	ASSERT_EQ(strncmp(value.get(), TEST_STRING, len), 0);
@@ -409,10 +409,10 @@ TESTCASE(sensor_listener, set_get_attribute_string_2)
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensor);
-	err = sensord_set_attribute_str(handle, attr, attr_value, BUF_SIZE);
+	err = sensord_listener_set_attribute_str(handle, attr, attr_value, BUF_SIZE);
 	ASSERT_EQ(err, 0);
 
-	err = sensord_get_attribute_str(handle, attr, &(value.get()), &len);
+	err = sensord_listener_get_attribute_str(handle, attr, &(value.get()), &len);
 	ASSERT_EQ(err, 0);
 	ASSERT_EQ(len, BUF_SIZE);
 
@@ -436,11 +436,11 @@ TESTCASE(sensor_listener, set_get_attribute_string_3)
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensor);
-	err = sensord_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
+	err = sensord_listener_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
 	ASSERT_EQ(err, 0);
 
 	for (int i = 0; i < 10; i++) {
-		err = sensord_get_attribute_str(handle, attr, &(value.get()), &len);
+		err = sensord_listener_get_attribute_str(handle, attr, &(value.get()), &len);
 		ASSERT_EQ(err, 0);
 		ASSERT_EQ(len, TEST_STRING_LEN);
 		ASSERT_EQ(strncmp(value.get(), TEST_STRING, len), 0);
@@ -467,10 +467,10 @@ TESTCASE(sensor_listener, set_get_get_attribute_string_1)
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensor);
-	err = sensord_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
+	err = sensord_listener_set_attribute_str(handle, attr, TEST_STRING, TEST_STRING_LEN);
 	ASSERT_EQ(err, 0);
 
-	err = sensord_get_attribute_str(handle, attr, &(value.get()), &len);
+	err = sensord_listener_get_attribute_str(handle, attr, &(value.get()), &len);
 	ASSERT_EQ(err, 0);
 	ASSERT_EQ(len, TEST_STRING_LEN);
 	ASSERT_EQ(strncmp(value.get(), TEST_STRING, len), 0);
@@ -485,7 +485,7 @@ TESTCASE(sensor_listener, set_get_get_attribute_string_1)
 
 	handle = sensord_connect(sensor);
 
-	err = sensord_get_attribute_str(handle, attr, &(value2.get()), &len);
+	err = sensord_listener_get_attribute_str(handle, attr, &(value2.get()), &len);
 	ASSERT_EQ(err, 0);
 	ASSERT_EQ(len, TEST_STRING_LEN);
 	ASSERT_EQ(strncmp(value2.get(), TEST_STRING, len), 0);
@@ -512,7 +512,7 @@ TESTCASE(sensor_listener, get_attribute_string_2)
 	handle = sensord_connect(sensor);
 
 	// attr 100 value is never set in these tests.
-	err = sensord_get_attribute_str(handle, attr, &(value.get()), &len);
+	err = sensord_listener_get_attribute_str(handle, attr, &(value.get()), &len);
 	ASSERT_EQ(err, -EIO);
 
 	ret = sensord_disconnect(handle);
@@ -616,7 +616,7 @@ static int attribute_value = 0;
 static gboolean change_attribute_int(gpointer gdata)
 {
 	int *handle = reinterpret_cast<int *>(gdata);
-	int ret = sensord_set_attribute_int(*handle, attribute, attribute_value);
+	int ret = sensord_listener_set_attribute_int(*handle, attribute, attribute_value);
 	if (ret < 0)
 		return false;
 
@@ -707,7 +707,7 @@ static gboolean change_attribute_str(gpointer gdata)
 {
 	int *handle = reinterpret_cast<int *>(gdata);
 	int len = strlen(attribute_value_str) + 1;
-	int ret = sensord_set_attribute_str(*handle, attribute, attribute_value_str, len);
+	int ret = sensord_listener_set_attribute_str(*handle, attribute, attribute_value_str, len);
 	if (ret < 0)
 		return false;
 
@@ -767,10 +767,10 @@ TESTCASE(skip_sensor_listener, light_sensor_set_attribute_int_1)
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensor);
-	err = sensord_set_attribute_int(handle, attr, 2);
+	err = sensord_listener_set_attribute_int(handle, attr, 2);
 	ASSERT_EQ(err, 0);
 
-	err = sensord_get_attribute_int(handle, attr, &value);
+	err = sensord_listener_get_attribute_int(handle, attr, &value);
 	ASSERT_EQ(err, 0);
 	ASSERT_EQ(value, 2);
 
@@ -793,7 +793,7 @@ TESTCASE(skip_sensor_listener, light_sensor_get_attribute_int_1)
 	ASSERT_EQ(err, 0);
 
 	handle = sensord_connect(sensor);
-	err = sensord_get_attribute_int(handle, attr, &value);
+	err = sensord_listener_get_attribute_int(handle, attr, &value);
 	ASSERT_EQ(err, 0);
 	ASSERT_EQ(value, 2);
 

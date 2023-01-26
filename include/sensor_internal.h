@@ -395,7 +395,7 @@ bool sensord_change_event_max_batch_latency(int handle, unsigned int event_type,
 bool sensord_set_option(int handle, int option);
 
 /*
- * @brief Set the attribute to a connected sensor
+ * @brief Set the attribute to a connected sensor listener
  *
  * @param[in] handle a handle represensting a connected sensor.
  * @param[in] attribute an attribute to change
@@ -405,10 +405,10 @@ bool sensord_set_option(int handle, int option);
  * @retval -EINVAL Invalid parameter
  * @retval -EPERM Operation not permitted
  */
-int sensord_set_attribute_int(int handle, int attribute, int value);
+int sensord_listener_set_attribute_int(int handle, int attribute, int value);
 
 /*
- * @brief Get the attribute to a connected sensor
+ * @brief Get the attribute to a connected sensor listener
  *
  * @param[in] handle a handle represensting a connected sensor.
  * @param[in] attribute an attribute to get value
@@ -418,10 +418,10 @@ int sensord_set_attribute_int(int handle, int attribute, int value);
  * @retval -EINVAL Invalid parameter
  * @retval -EPERM Operation not permitted
  */
-int sensord_get_attribute_int(int handle, int attribute, int* value);
+int sensord_listener_get_attribute_int(int handle, int attribute, int* value);
 
 /**
- * @brief Set the attribute to a connected sensor
+ * @brief Set the attribute to a connected sensor listener
  *
  * @param[in] handle a handle represensting a connected sensor.
  * @param[in] attribute an attribute to change
@@ -432,10 +432,10 @@ int sensord_get_attribute_int(int handle, int attribute, int* value);
  * @retval -EINVAL Invalid parameter
  * @retval -EPERM Operation not permitted
  */
-int sensord_set_attribute_str(int handle, int attribute, const char *value, int len);
+int sensord_listener_set_attribute_str(int handle, int attribute, const char *value, int len);
 
 /**
- * @brief Get the attribute to a connected sensor
+ * @brief Get the attribute to a connected sensor listener
  *
  * @param[in] handle a handle represensting a connected sensor.
  * @param[in] attribute an attribute to get value
@@ -446,7 +446,7 @@ int sensord_set_attribute_str(int handle, int attribute, const char *value, int 
  * @retval -EINVAL Invalid parameter
  * @retval -EPERM Operation not permitted
  */
-int sensord_get_attribute_str(int handle, int attribute, char **value, int *len);
+int sensord_listener_get_attribute_str(int handle, int attribute, char **value, int *len);
 
 /**
  * @brief Send data to sensorhub

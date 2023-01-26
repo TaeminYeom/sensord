@@ -699,7 +699,7 @@ API bool sensord_set_option(int handle, int option)
 	return true;
 }
 
-API int sensord_set_attribute_int(int handle, int attribute, int value)
+API int sensord_listener_set_attribute_int(int handle, int attribute, int value)
 {
 	sensor::sensor_listener *listener;
 
@@ -718,7 +718,7 @@ API int sensord_set_attribute_int(int handle, int attribute, int value)
 	return OP_SUCCESS;
 }
 
-API int sensord_get_attribute_int(int handle, int attribute, int* value)
+API int sensord_listener_get_attribute_int(int handle, int attribute, int* value)
 {
 	sensor::sensor_listener *listener;
 
@@ -737,7 +737,7 @@ API int sensord_get_attribute_int(int handle, int attribute, int* value)
 	return OP_SUCCESS;
 }
 
-API int sensord_set_attribute_str(int handle, int attribute, const char *value, int len)
+API int sensord_listener_set_attribute_str(int handle, int attribute, const char *value, int len)
 {
 	sensor::sensor_listener *listener;
 
@@ -755,7 +755,7 @@ API int sensord_set_attribute_str(int handle, int attribute, const char *value, 
 	return OP_SUCCESS;
 }
 
-API int sensord_get_attribute_str(int handle, int attribute, char **value, int* len)
+API int sensord_listener_get_attribute_str(int handle, int attribute, char **value, int* len)
 {
 	sensor::sensor_listener *listener;
 
@@ -1140,13 +1140,13 @@ API bool sensord_is_supported_event_type(sensor_t sensor, unsigned int event_typ
 /* deprecated */
 API bool sensord_send_sensorhub_data(int handle, const char *data, int data_len)
 {
-	return (sensord_set_attribute_str(handle, 0, data, data_len) == OP_SUCCESS);
+	return (sensord_listener_set_attribute_str(handle, 0, data, data_len) == OP_SUCCESS);
 }
 
 /* deprecated */
 API bool sensord_send_command(int handle, const char *command, int command_len)
 {
-	return (sensord_set_attribute_str(handle, 0, command, command_len) == OP_SUCCESS);
+	return (sensord_listener_set_attribute_str(handle, 0, command, command_len) == OP_SUCCESS);
 }
 
 /* deprecated */
